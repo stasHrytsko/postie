@@ -2,6 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "echo 'static site: web/'",
-  "outputDirectory": "web"
+  "buildCommand": "rm -rf dist && cp -rL web dist && rm -rf dist/games/*/tools dist/games/*/test.js dist/games/*/*.md dist/games/README.md",
+  "outputDirectory": "dist"
 }
