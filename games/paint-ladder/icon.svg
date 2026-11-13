@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="26" fill="#FCF7EC"/>
+<g fill="none" stroke="#D8C6A9" stroke-width="2"><path d="M38 18v84M60 18v84M82 18v84"/></g>
+<rect x="20" y="20" width="16" height="12" rx="3" fill="#E8B093"/><rect x="40" y="20" width="18" height="12" rx="3" fill="#F1CA7D"/><rect x="62" y="20" width="18" height="12" rx="3" fill="#AECAD1"/><rect x="84" y="20" width="16" height="12" rx="3" fill="#AECAD1"/>
+<rect x="40" y="46" width="18" height="12" rx="3" fill="#E8B093" opacity=".45"/><rect x="62" y="46" width="18" height="12" rx="3" fill="#F1CA7D" opacity=".45"/><rect x="20" y="64" width="16" height="12" rx="3" fill="#B1BA96" opacity=".45"/>
+<rect x="20" y="86" width="16" height="14" rx="3" fill="#B1BA96"/><rect x="40" y="86" width="18" height="14" rx="3" fill="#E8B093"/><rect x="62" y="86" width="18" height="14" rx="3" fill="#AECAD1"/><rect x="84" y="86" width="16" height="14" rx="3" fill="#F1CA7D"/>
+<path d="M53 80h14m-4-3 4 3-4 3M57 77l-4 3 4 3" stroke="#536342" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
