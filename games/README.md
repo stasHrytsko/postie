@@ -6,19 +6,19 @@
 
 | Папка | Игра | Откуда | Уровней |
 |---|---|---|---|
-| `arrow-flip/` | Arrow Flip | stazzi `apps/casual/arrow-flip` | [после порта] |
-| `perfect-fit/` | Perfect Fit | stazzi `apps/casual/perfect-fit` | [после порта] |
-| `the-gap/` | The Gap | stazzi `apps/casual/the-gap` | [после порта] |
-| `slide-out/` | Slide Out | stazzi `apps/casual/slide-out` | [после порта] |
-| `tight-shelf/` | Tight Shelf | stazzi `apps/casual/tight-shelf` | [после порта] |
-| `carpet-layers/` | Carpet Layers | stazzi `apps/casual/carpet-layers` | [после порта] |
-| `outgrow/` | Outgrow | stazzi `apps/casual/outgrow` | [после порта] |
-| `parcels/` | Parcels (+ правила бывшей Cave In) | stazzi `apps/casual/parcels` + postie | [после порта] |
-| `streams/` | Streams | stazzi `apps/casual/rusla` | [после порта] |
-| `pair-up/` | Pair Up | stazzi `apps/casual/pairs` | [после порта] |
-| `hidden-stones/` | Hidden Stones | stazzi `apps/casual/hidden-stones` | [после порта] |
-| `nest/` | Nest | stazzi `apps/casual/nested-tangram` | [после порта] |
-| `recruit-ladder/` | Recruit Ladder | stazzi `apps/midcore/recruit-ladder` | [после порта] |
+| `arrow-flip/` | Arrow Flip | stazzi `apps/casual/arrow-flip` | 25 (уровень 14 исправлен: в stazzi нерешаем) |
+| `perfect-fit/` | Perfect Fit | stazzi `apps/casual/perfect-fit` | 50 |
+| `the-gap/` | The Gap | stazzi `apps/casual/the-gap` | 16 |
+| `slide-out/` | Slide Out | stazzi `apps/casual/slide-out` | 15 |
+| `tight-shelf/` | Tight Shelf | stazzi `apps/casual/tight-shelf` | 17 |
+| `carpet-layers/` | Carpet Layers | stazzi `apps/casual/carpet-layers` | 20 |
+| `outgrow/` | Outgrow | stazzi `apps/casual/outgrow` | 50 |
+| `parcels/` | Parcels (+ правила бывшей Cave In) | stazzi `apps/casual/parcels` + postie | 31 (30 stazzi + 1 «пары») |
+| `streams/` | Streams | stazzi `apps/casual/rusla` | 15 |
+| `pair-up/` | Pair Up | stazzi `apps/casual/pairs` | 11 |
+| `hidden-stones/` | Hidden Stones | stazzi `apps/casual/hidden-stones` | 15 |
+| `nest/` | Nest | stazzi `apps/casual/nested-tangram` | 11 |
+| `recruit-ladder/` | Recruit Ladder | stazzi `apps/midcore/recruit-ladder` | 15 |
 | `shadow-step/` | Shadow Step | только postie (в stazzi — прототип) | 2 |
 | `paint-ladder/` | Paint Ladder | только postie | 1 |
 | `one-each/` | One Each | только postie | 1 |
