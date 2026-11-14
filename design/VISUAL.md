@@ -56,13 +56,13 @@
 **Бумага = CSS + WebP-текстура + тень** (не один PNG):
 1. цвет `#F3E6D6`;
 2. текстура — мелкие волокна, бесшовный тайл 256×256 (`web/kit/paper-texture.webp`, копия в `ref/v2/`), `opacity: .08`, `mix-blend-mode: multiply` — **едва заметна, игрок не должен её замечать**;
-3. края — слегка неровные (позже SVG-маска по контуру; пока скругление 20px + тонкая граница `rgba(91,75,55,.08)`);
+3. **углы острые, без скругления** (решение автора, 2026-11-14); края слегка неровные (позже SVG-маска), тонкая граница `rgba(91,75,55,.08)`;
 4. тень — `0 14px 28px rgba(42,36,31,.16), 0 3px 7px rgba(42,36,31,.06)`.
 
 **Правило кита:** бумага — CSS + текстура + тень; игровая сетка — HTML/SVG; все символы и надписи — настоящие элементы интерфейса (не картинки). Так всё чёткое на любом экране и анимируется.
 
 ```css
-.paper-card { position: relative; isolation: isolate; overflow: hidden; background: #F3E6D6; border-radius: 20px;
+.paper-card { position: relative; isolation: isolate; overflow: hidden; background: #F3E6D6; border-radius: 0;
   box-shadow: 0 14px 28px rgba(42,36,31,.16), 0 3px 7px rgba(42,36,31,.06); }
 .paper-card::before { content: ""; position: absolute; inset: 0; pointer-events: none;
   background: url("paper-texture.webp") repeat; background-size: 256px 256px; opacity: .08; mix-blend-mode: multiply; z-index: 2; }
