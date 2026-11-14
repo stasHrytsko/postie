@@ -133,3 +133,13 @@ html.rmh,html.rmh body{height:100%;margin:0;overflow:hidden;background:#8f969e;o
 .rm .wall,.rm .ov,.rm .ov.play{background-color:var(--wall1);background-image:var(--grain),linear-gradient(180deg,var(--wall1) 0%,var(--wall1) 55%,var(--wall2) 100%);background-repeat:repeat,no-repeat;background-size:512px 512px,cover}
 .rm{background:var(--wall1)}
 .rm .card,.rm .paper,.rm .calo,.rm .calv,.rm .ov.play .stage{box-shadow:0 12px 24px rgba(45,40,40,.15),0 2px 5px rgba(45,40,40,.06)}
+/* Paper UI kit (design/ref/v2/paper-ui, 2026-11-14): background and paper for all games */
+.rm{--wall1:#C9C6BD;--wall2:#C3BEB7}
+.rm .wall,.rm .ov,.rm .ov.play{background-color:#C9C6BD;background-image:linear-gradient(180deg,#CECAC4 0%,#C9C6BD 55%,#C3BEB7 100%);background-size:cover}
+.rm .paper,.rm .card:not(.x),.rm .ov.play .stage,.rm .calo,.rm .calv{position:relative;isolation:isolate;border-radius:6px;border:1px solid rgba(102,79,55,.07);
+  background:linear-gradient(180deg,#F7EBDD 0%,#F3E6D6 52%,#F0E0CE 100%);box-shadow:0 14px 28px rgba(45,39,33,.14),0 3px 7px rgba(45,39,33,.07)}
+.rm .paper::before,.rm .card:not(.x)::before,.rm .ov.play .stage::before,.rm .calo::before,.rm .calv::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;border-radius:inherit;
+  background:url(paper-texture.webp) repeat;background-size:512px 512px}
+.rm .paper>*,.rm .card>*,.rm .ov.play .stage>*,.rm .calo>*,.rm .calv>*{position:relative;z-index:1}
+.rm .card img,.rm .card .d,.rm .card .lv{position:absolute}
+.rm .calo .rings{position:absolute}

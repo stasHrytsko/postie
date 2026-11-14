@@ -1,0 +1,83 @@
+:root {
+  --ui-background-top: #CECAC4;
+  --ui-background: #C9C6BD;
+  --ui-background-bottom: #C3BEB7;
+
+  --paper-top: #F7EBDD;
+  --paper-base: #F3E6D6;
+  --paper-bottom: #F0E0CE;
+  --ink: #2C3E5F;
+  --grid: #81909C;
+
+  --accent-yellow: #D8A43C;
+  --accent-green: #8EA97E;
+  --accent-blue: #6FA3BE;
+  --accent-terracotta: #D77A5E;
+}
+
+/* Outside the paper: very subtle, quiet background. */
+.game-screen {
+  min-height: 100dvh;
+  padding: 16px;
+  background: linear-gradient(
+    180deg,
+    var(--ui-background-top) 0%,
+    var(--ui-background) 55%,
+    var(--ui-background-bottom) 100%
+  );
+  display: grid;
+  place-items: center;
+}
+
+/* Paper is a live layout container, not a stretched screenshot. */
+.paper-card {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 480px);
+  min-height: 550px;
+  padding: clamp(16px, 4vw, 30px);
+  border-radius: 6px; /* almost square corners */
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    var(--paper-top) 0%,
+    var(--paper-base) 52%,
+    var(--paper-bottom) 100%
+  );
+  border: 1px solid rgb(102 79 55 / 7%);
+  box-shadow:
+    0 14px 28px rgb(45 39 33 / 14%),
+    0 3px 7px rgb(45 39 33 / 7%);
+  color: var(--ink);
+}
+
+/* Transparent, seamless, repeating paper fibers. No blend-mode needed. */
+.paper-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('./paper-texture.webp');
+  background-repeat: repeat;
+  background-size: 512px 512px; /* 1024px source -> 2x retina */
+  opacity: 1; /* alpha is already encoded in the texture */
+}
+
+/* Keep UI sharp and interactive above the grain. */
+.paper-content { position: relative; z-index: 1; }
+
+/* Game grid example; adjust to game's own geometry. */
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  aspect-ratio: 1 / 1;
+  border-left: 1px solid var(--grid);
+  border-top: 1px solid var(--grid);
+}
+.puzzle-grid > .cell {
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  border-right: 1px solid var(--grid);
+  border-bottom: 1px solid var(--grid);
+}
