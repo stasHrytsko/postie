@@ -1,5 +1,5 @@
 /* Postie room prototype — visual v2 (design/VISUAL.md): cool calculated room, warm real things from the postman. */
-.rm{--navy:#2E3A55;--paper:#F3EAD8;--kraft:#E6D3B3;--wall1:#CDD2D8;--wall2:#BCC3CB;--wood1:#A88A6B;--wood2:#937659;--seal:#8C3A2E;
+.rm{--navy:#2E3A55;--paper:#F3EAD8;--kraft:#E6D3B3;--wall1:#C0BBB8;--wall2:#BDB7B7;--paper2:#F3E6D6;--grain:url(grain.png);--wood1:#A88A6B;--wood2:#937659;--seal:#8C3A2E;
   --ochre:#B9773A;--dblue:#6F8FB3;--dsage:#4A5246;--mustard:#C9922E;--choco:#8C5A33}
 html.rmh,html.rmh body{height:100%;margin:0;overflow:hidden;background:#8f969e;overscroll-behavior:none}
 .rm{position:fixed;inset:0;max-width:480px;margin:0 auto;overflow:hidden;font-family:'Special Elite',ui-monospace,monospace;color:var(--navy);user-select:none;-webkit-user-select:none;touch-action:none;background:var(--wall1)}
@@ -128,3 +128,8 @@ html.rmh,html.rmh body{height:100%;margin:0;overflow:hidden;background:#8f969e;o
 .rm .ly{pointer-events:none}.rm [data-tap]{pointer-events:auto}
 .rm .stp .in img{filter:none;mix-blend-mode:normal;opacity:1;border-radius:18%;max-width:64px}
 .rm .stp.mini .in img{width:84%}
+
+/* Base background for all games (author, 2026-11-14): calm vertical gradient #C0BBB8 → #BDB7B7 + fine mono grain 512px. No vignette, no light spots. */
+.rm .wall,.rm .ov,.rm .ov.play{background-color:var(--wall1);background-image:var(--grain),linear-gradient(180deg,var(--wall1) 0%,var(--wall1) 55%,var(--wall2) 100%);background-repeat:repeat,no-repeat;background-size:512px 512px,cover}
+.rm{background:var(--wall1)}
+.rm .card,.rm .paper,.rm .calo,.rm .calv,.rm .ov.play .stage{box-shadow:0 12px 24px rgba(45,40,40,.15),0 2px 5px rgba(45,40,40,.06)}
