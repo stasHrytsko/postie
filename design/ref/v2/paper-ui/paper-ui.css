@@ -26,11 +26,14 @@
     var(--ui-background-bottom) 100%
   );
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* keeps the card inside the 16px margin on phones */
   place-items: center;
+  box-sizing: border-box;
 }
 
 /* Paper is a live layout container, not a stretched screenshot. */
 .paper-card {
+  box-sizing: border-box;
   position: relative;
   isolation: isolate;
   width: min(100%, 480px);
