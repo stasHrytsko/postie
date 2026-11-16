@@ -1,17 +1,38 @@
-/* Postie — flat prototype (author decision 2026-11-16): no art, white screen, black and white shell. Logic first, art later.
+/* Postie — prototype shell. Everything is built from tokens, so a look is a set of tokens plus a few touches.
+   Looks (html[data-look]): "post" — paper and ink, the recommended one · "night" — the letter is the light in a dark room ·
+   "plain" — black and white, no character (the logic-only look of 2026-11-16).
    Shapes carry the meaning: a circle is a puzzle (or a level), a square is a stamp. Difficulty is not shown.
-   Overrides the old kit tokens so game boards are flat too. */
+   Colour lives inside the game boards only; the shell has one accent. */
 :root{
+  /* plain */
   --milk:#FFFFFF; --card:#FFFFFF; --sand:#F1F1F3; --line:#DCDCE0;
-  --ink:#1D1D1F; --txt:#1D1D1F; --mut:#77777D; --bad:#E8475F;
-  --apr:#E8475F; --sage:#7BB58A; --blue:#6C8CC4; --butter:#FFCB5C;
-  --font:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:var(--font);
+  --ink:#1D1D1F; --txt:#1D1D1F; --mut:#77777D; --on:#FFFFFF; --bad:#E8475F; --accent:#1D1D1F;
+  --apr:#E8475F; --sage:#7BB58A; --blue:#6C8CC4; --butter:#FFCB5C; --stone:#B9B9C0;
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:var(--font); --voice:var(--font);
+  --stampbg:var(--milk); --r-btn:26px;
 }
-html,body{height:100%;background:#fff;overflow:hidden}
-.fl{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;background:#fff}
+/* post: warm paper, navy ink, one postal red. Serif is the postman's voice; sans is the interface. */
+html[data-look="post"]{
+  --milk:#F5F0E6; --card:#FFFCF5; --sand:#EAE3D3; --line:#D6CDB9;
+  --ink:#1E2A44; --txt:#1E2A44; --mut:#6B6658; --on:#FFFCF5; --bad:#C8442F; --accent:#C8442F;
+  --apr:#D4573F; --sage:#5F9A78; --blue:#4E7BAB; --butter:#E2A534; --stone:#B5AB96;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
+  --stampbg:#EDE4D0;
+}
+/* night: a dark room, the letter is the only warm light */
+html[data-look="night"]{
+  --milk:#131926; --card:#1B2333; --sand:#232D40; --line:#34405A;
+  --ink:#ECE5D5; --txt:#ECE5D5; --mut:#97A0B2; --on:#131926; --bad:#F0705A; --accent:#F2C14E;
+  --apr:#F0705A; --sage:#7CC79A; --blue:#7AA7E0; --butter:#F2C14E; --stone:#5C6780;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
+  --stampbg:#EFE6D2;
+}
+
+html,body{height:100%;background:var(--milk);overflow:hidden}
+.fl{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;background:var(--milk);color:var(--txt)}
 .fl button{font:inherit;color:inherit}
 .fl .top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;min-height:52px;flex:none}
-.fl .top b{font-weight:600;font-size:17px}
+.fl .top b{font:600 18px var(--title);letter-spacing:.01em}
 .fl .top button,.fl .tabs button{border:0;background:none;cursor:pointer}
 .fl .top .tst{color:var(--mut);font-size:13px;min-height:44px;min-width:44px;padding:0 4px}
 .fl .pans{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none}
@@ -20,12 +41,12 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .tabs{flex:none;display:flex;justify-content:center;gap:6px;padding:6px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--sand)}
 .fl .tabs button{min-height:44px;padding:0 16px;color:var(--mut);font-size:15px;border-radius:22px}
 .fl .tabs button.on{color:var(--txt);background:var(--sand);font-weight:600}
-.fl h2{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin:22px 0 8px}
-.fl .letter{font-size:17px;line-height:1.5}
+.fl h2{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:22px 0 8px}
+.fl .letter{font:400 18px/1.55 var(--voice)}
 .fl .letter .re{margin-top:14px}
 .fl .note{color:var(--mut);font-size:14px;margin:10px 0}
 .fl .note.c{text-align:center;margin:0 0 6px}
-.fl .big{width:100%;min-height:52px;border-radius:26px;border:0;background:var(--txt);color:#fff;font-size:16px;font-weight:600;cursor:pointer}
+.fl .big{width:100%;min-height:52px;border-radius:var(--r-btn);border:0;background:var(--ink);color:var(--on);font-size:16px;font-weight:600;cursor:pointer}
 .fl .big[disabled]{background:var(--sand);color:var(--mut);cursor:default}
 .fl .big.o{background:var(--sand);color:var(--txt)}
 .fl .big.ghost{background:none;color:var(--mut);font-weight:500;min-height:44px}
@@ -34,19 +55,20 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .pan.mid{display:flex;align-items:center;justify-content:center}
 .fl .nol{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;color:var(--txt);padding:24px;font-size:15px;text-align:center}
 .fl button.nol{cursor:pointer}
-.fl .nol b{font-size:18px;font-weight:600;margin-top:14px}.fl .nol span{color:var(--mut)}
+.fl .nol b{font:600 22px var(--title);margin-top:16px}.fl .nol span{color:var(--mut)}
 .fl .nol .fine{font-size:13px;margin-top:10px}
 .fl .lnk2{border:0;background:none;min-height:44px;margin-top:8px;font-size:15px;font-weight:600;color:var(--txt);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.fl .envi{width:132px;height:92px;border-radius:10px;border:2px solid var(--txt);position:relative;overflow:hidden}
-.fl .envi::before{content:"";position:absolute;left:50%;top:-68px;width:132px;height:132px;border:2px solid var(--txt);transform:translateX(-50%) rotate(45deg);transform-origin:center}
-.fl .envi.off{border-style:dashed;border-color:var(--line)}.fl .envi.off::before{display:none}
+.fl .envi{width:148px;height:102px;border-radius:8px;border:2px solid var(--ink);background:var(--card);position:relative;overflow:hidden}
+.fl .envi::before{content:"";position:absolute;left:50%;top:-76px;width:148px;height:148px;border:2px solid var(--ink);transform:translateX(-50%) rotate(45deg);transform-origin:center}
+.fl .envi.off{border-style:dashed;border-color:var(--line);background:none}.fl .envi.off::before{display:none}
 
 /* full-screen sheet */
-.fl .sh{position:absolute;inset:0;background:#fff;z-index:5;display:flex;flex-direction:column}
+.fl .sh{position:absolute;inset:0;background:var(--milk);z-index:5;display:flex;flex-direction:column}
 .fl .sh .bar2{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 2px;flex:none;min-height:56px}
-.fl .sh .bar2 .t{flex:1;text-align:center;font-weight:600;min-width:0}
-.fl .sh .bar2 .t small{display:block;font-weight:400;color:var(--mut);font-size:13px}
-.fl .sh .bar2 .ib.txt{width:auto;padding:0 12px;font-size:15px;color:var(--txt)}
+.fl .sh .bar2 .t{flex:1;text-align:center;font:600 18px var(--title);min-width:0}
+.fl .sh .bar2 .t small{display:block;font:400 13px var(--font);color:var(--mut)}
+.fl .sh .bar2 .ib{color:var(--txt)}
+.fl .sh .bar2 .ib.txt{width:auto;padding:0 12px;font-size:15px}
 .fl .sh .body{flex:1;overflow-y:auto;padding:4px 20px 20px}
 .fl .sh .foot{flex:none;padding:8px 20px calc(18px + env(safe-area-inset-bottom))}
 .fl .sh .foot:empty{display:none}
@@ -55,51 +77,52 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 10px;margin-top:18px}
 /* a puzzle — a circle */
 .fl .pzl{border:0;background:none;padding:4px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
-.fl .pzl i{width:64px;height:64px;border-radius:50%;border:2.5px solid var(--txt);display:grid;place-items:center;color:#fff}
-.fl .pzl.ok i{background:var(--txt)}
+.fl .pzl i{width:64px;height:64px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);display:grid;place-items:center;color:var(--on)}
+.fl .pzl.ok i{background:var(--ink)}
 .fl .pzl i svg.ic{width:28px;height:28px;stroke-width:2.6}
 .fl .pzl b{font-size:14px;font-weight:600;text-align:center;line-height:1.2}
 /* a stamp — a square */
-.fl .stamp{aspect-ratio:1;border:2.5px solid var(--txt);border-radius:6px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;text-align:center;min-width:0;cursor:default}
+.fl .stamp{aspect-ratio:1;border:2.5px solid var(--ink);border-radius:6px;background:var(--stampbg);color:var(--txt);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px;text-align:center;min-width:0;cursor:default}
 .fl button.stamp{cursor:pointer}
 .fl .stamp b{font-size:13px;font-weight:600;line-height:1.15}
 .fl .stamp small{font-size:15px;font-variant-numeric:tabular-nums}
-.fl .stamp.on{background:var(--txt);color:#fff}
+.fl .stamp.on{background:var(--ink);color:var(--on)}
 .fl .stamp.used{opacity:.25}
-.fl .stamp.empty{border-style:dashed;border-color:var(--line)}
+.fl .stamp.empty{border-style:dashed;border-color:var(--line);background:none}
 .fl .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.fl .envbig{border:2px solid var(--txt);border-radius:12px;padding:14px 14px 18px;margin-top:10px}
+.fl .envbig{border:2px solid var(--ink);border-radius:10px;background:var(--card);padding:14px 14px 18px;margin-top:10px}
 .fl .envbig .slots{margin:0 0 30px}
 .fl .envbig .to{color:var(--mut);font-size:14px;border-bottom:1px solid var(--line);padding-bottom:6px;width:60%}
 /* a game — just its name and how much is solved */
 .fl .gm{border:0;background:none;padding:10px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;min-height:76px}
-.fl .gm i{font-style:normal;font-size:26px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
+.fl .gm i{font:600 28px/1.1 var(--title);font-style:normal;font-variant-numeric:tabular-nums}
 .fl .gm b{font-size:14px;font-weight:500;color:var(--mut);text-align:center;line-height:1.2}
 /* levels of a game — circles with numbers */
 .fl .lvs{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
-.fl .lvs button{aspect-ratio:1;border-radius:50%;border:2px solid var(--txt);background:#fff;font-size:15px;cursor:pointer;padding:0;color:var(--txt)}
-.fl .lvs .ok{background:var(--txt);color:#fff}
+.fl .lvs button{aspect-ratio:1;border-radius:50%;border:2px solid var(--ink);background:var(--card);font-size:15px;cursor:pointer;padding:0;color:var(--txt)}
+.fl .lvs .ok{background:var(--ink);color:var(--on)}
 
 /* calendar */
 .fl .sent{display:flex;align-items:baseline;gap:8px;margin:18px 0 6px}
-.fl .sent b{font-size:40px;font-weight:600;line-height:1}.fl .sent span{color:var(--mut)}
+.fl .sent b{font:600 44px/1 var(--title)}.fl .sent span{color:var(--mut)}
 .fl .mon{display:flex;align-items:center;justify-content:space-between;margin:12px -10px 4px}
-.fl .mon b{font-weight:600}
+.fl .mon b{font:600 17px var(--title)}
+.fl .mon .ib{color:var(--txt)}
 .fl .days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px 4px;margin-top:8px}
 .fl .days.wk span{text-align:center;font-size:12px;color:var(--mut)}
-.fl .dd{aspect-ratio:1;border-radius:50%;border:1.5px solid transparent;background:#fff;font-size:14px;cursor:pointer;color:var(--txt);padding:0;min-height:36px}
-.fl .dd.s{background:var(--txt);border-color:var(--txt);color:#fff}
+.fl .dd{aspect-ratio:1;border-radius:50%;border:1.5px solid transparent;background:none;font-size:14px;cursor:pointer;color:var(--txt);padding:0;min-height:36px;font-variant-numeric:tabular-nums}
+.fl .dd.s{background:var(--ink);border-color:var(--ink);color:var(--on)}
 .fl .dd.miss{border-color:var(--line);color:var(--mut);cursor:default}
 .fl .dd.no{color:var(--line);cursor:default}
-.fl .dd.t{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--txt)}
+.fl .dd.t{box-shadow:0 0 0 2px var(--milk),0 0 0 4px var(--accent)}
 .fl .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--mut)}
 .fl .legend span{display:flex;align-items:center;gap:6px}
 .fl .legend i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line)}
-.fl .legend i.s{background:var(--txt);border-color:var(--txt)}
-.fl .legend i.t{border-color:transparent;box-shadow:0 0 0 1.5px #fff,0 0 0 3px var(--txt);width:9px;height:9px;margin:0 3px}
+.fl .legend i.s{background:var(--ink);border-color:var(--ink)}
+.fl .legend i.t{border-color:transparent;box-shadow:0 0 0 1.5px var(--milk),0 0 0 3px var(--accent);width:9px;height:9px;margin:0 3px}
 
 /* toast: top of the screen, never over the buttons */
-.fl .toast{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:var(--txt);color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;white-space:nowrap}
+.fl .toast{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:var(--ink);color:var(--on);padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;white-space:nowrap}
 
 /* ---------- one frame for every game ---------- */
 .fl .sh.play .body{padding:0 12px 8px;display:flex;flex-direction:column}
@@ -108,18 +131,55 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .sh.play .stage .stat:empty{display:none}
 .fl .sh.play .say{flex:none;min-height:44px;display:flex;align-items:center;justify-content:center;gap:12px;text-align:center;font-size:14px;color:var(--mut);padding:4px 8px}
 .fl .sh.play .say.bad{color:var(--txt);background:var(--sand);border-radius:12px;justify-content:space-between;text-align:left;padding:8px 8px 8px 14px}
-.fl .sh.play .say button{flex:none;min-height:40px;padding:0 16px;border-radius:20px;border:0;background:var(--txt);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.fl .sh.play .say button{flex:none;min-height:40px;padding:0 16px;border-radius:20px;border:0;background:var(--ink);color:var(--on);font-size:14px;font-weight:600;cursor:pointer}
 .fl .sh.play .foot{padding-top:0}
 .fl .sh.play .foot .row{display:flex;gap:10px;margin:0;justify-content:center;flex-wrap:nowrap}
 .fl .sh.play .foot .btn{flex:1;max-width:180px;min-height:48px;border-radius:24px;border:0;background:var(--sand);color:var(--txt);font-size:15px;font-weight:600;padding:0 12px}
 .fl .sh.play .foot .btn[disabled]{opacity:.45}
 /* popups over the board: solved, rules */
-.fl .pop{position:absolute;inset:0;z-index:6;background:linear-gradient(rgba(255,255,255,.86) 35%,#fff 58%);display:flex;align-items:flex-end;padding:20px 20px calc(18px + env(safe-area-inset-bottom))}
+.fl .pop{position:absolute;inset:0;z-index:6;background:linear-gradient(color-mix(in srgb,var(--milk) 86%,transparent) 35%,var(--milk) 58%);display:flex;align-items:flex-end;padding:20px 20px calc(18px + env(safe-area-inset-bottom))}
 .fl .popbox{width:100%;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:15px;color:var(--mut)}
-.fl .popbox>b{font-size:22px;color:var(--txt)}
-.fl .popbox .okc{width:56px;height:56px;border-radius:50%;background:var(--txt);color:#fff;display:grid;place-items:center}
+.fl .popbox>b{font:600 24px var(--title);color:var(--txt)}
+.fl .popbox .okc{width:56px;height:56px;border-radius:50%;background:var(--ink);color:var(--on);display:grid;place-items:center}
 .fl .popbox .okc svg.ic{width:26px;height:26px;stroke-width:2.6}
 .fl .popbox>span{margin-bottom:8px}
 .fl .popbox.left{align-items:stretch}
 .fl .popbox .rtext{font-size:16px;line-height:1.5;color:var(--txt);margin-bottom:10px;max-height:55vh;overflow-y:auto}
 .fl .popbox .rtext b{font-weight:700}
+/* look picker in the test sheet */
+.fl .looks{display:flex;gap:8px;margin-top:8px}
+.fl .looks button{flex:1;min-height:48px;border-radius:12px;border:2px solid var(--line);background:none;font-weight:600;cursor:pointer}
+.fl .looks button.on{border-color:var(--ink)}
+
+/* ================= touches of the "post" and "night" looks ================= */
+/* the envelope: an airmail edge — the one ornament of the whole app */
+html[data-look="post"] .fl .envi,html[data-look="night"] .fl .envi,
+html[data-look="post"] .fl .envbig,html[data-look="night"] .fl .envbig{
+  border:7px solid;border-radius:0;
+  border-image:repeating-linear-gradient(-45deg,var(--apr) 0 9px,var(--card) 9px 18px,var(--blue) 18px 27px,var(--card) 27px 36px) 7;
+  box-shadow:0 1px 0 var(--line),0 10px 24px -12px rgba(30,42,68,.35)}
+html[data-look="post"] .fl .envi::before,html[data-look="night"] .fl .envi::before{border-width:1.5px;border-color:var(--line);top:-86px}
+html[data-look="post"] .fl .envi.off,html[data-look="night"] .fl .envi.off{border:2px dashed var(--line);border-image:none;box-shadow:none}
+html[data-look="night"] .fl .envi,html[data-look="night"] .fl .envbig{--card:#F3EAD8;--line:#D8CCB2;--mut:#6B6658;color:#1E2A44;background:#F3EAD8}
+html[data-look="night"] .fl .envbig .to{color:#6B6658}
+/* a stamp: perforated edge, a printed frame inside */
+html[data-look="post"] .fl .stamp:not(.empty),html[data-look="night"] .fl .stamp:not(.empty){
+  width:round(down,100%,12px);justify-self:center;border:0;border-radius:0;padding:12px 8px;color:#1E2A44;position:relative;
+  -webkit-mask:linear-gradient(#000 0 0) center/calc(100% - 10px) calc(100% - 10px) no-repeat,radial-gradient(circle,transparent 3.4px,#000 3.9px) -6px -6px/12px 12px;
+          mask:linear-gradient(#000 0 0) center/calc(100% - 10px) calc(100% - 10px) no-repeat,radial-gradient(circle,transparent 3.4px,#000 3.9px) -6px -6px/12px 12px}
+html[data-look="post"] .fl .stamp:not(.empty)::after,html[data-look="night"] .fl .stamp:not(.empty)::after{content:"";position:absolute;inset:8px;border:1.5px solid currentColor;opacity:.55;pointer-events:none}
+html[data-look="post"] .fl .stamp b,html[data-look="night"] .fl .stamp b{font:600 13px/1.1 var(--font)}
+html[data-look="post"] .fl .stamp small,html[data-look="night"] .fl .stamp small{font:600 20px/1 var(--title)}
+html[data-look="post"] .fl .stamp.on,html[data-look="night"] .fl .stamp.on{background:var(--stampbg);color:#1E2A44}
+html[data-look="post"] .fl .slots .stamp.on:nth-child(1),html[data-look="night"] .fl .slots .stamp.on:nth-child(1){transform:rotate(-2deg)}
+html[data-look="post"] .fl .slots .stamp.on:nth-child(2),html[data-look="night"] .fl .slots .stamp.on:nth-child(2){transform:rotate(1.2deg)}
+html[data-look="post"] .fl .slots .stamp.on:nth-child(3),html[data-look="night"] .fl .slots .stamp.on:nth-child(3){transform:rotate(-.8deg)}
+html[data-look="post"] .fl .stamp.empty,html[data-look="night"] .fl .stamp.empty{border-radius:0;border-width:1.5px}
+/* the letter is paper */
+html[data-look="post"] .fl .letter{font-size:19px}
+html[data-look="night"] .fl .letter{background:#F3EAD8;color:#1E2A44;padding:22px 20px 26px;margin-top:8px;font-size:19px;box-shadow:0 18px 40px -18px rgba(0,0,0,.7)}
+/* the primary button and "today" carry the accent sparingly */
+html[data-look="night"] .fl .big:not(.o):not(.ghost):not([disabled]){background:var(--accent);color:#131926}
+html[data-look="post"] .fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(30,42,68,.25)}
+/* boards: softer cells on paper */
+html[data-look="post"] .fl .sh.play .cell{border-color:var(--line)}

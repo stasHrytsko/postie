@@ -1,8 +1,13 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#FFFFFF">
 <title>Postie — daily puzzles</title>
+<script>/* the look is chosen before anything is drawn: post (default) · night · plain — switch in "test" */
+(function () { var l = 'post'; try { l = localStorage.getItem('postie:look') || l; } catch (e) {}
+  document.documentElement.setAttribute('data-look', l);
+  var m = document.createElement('meta'); m.name = 'theme-color'; m.content = { post: '#F5F0E6', night: '#131926', plain: '#FFFFFF' }[l] || '#F5F0E6'; document.head.appendChild(m); })();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap">
 <link rel="stylesheet" href="kit/kit.css">
 <link rel="stylesheet" href="kit/flat.css">
 </head><body><div class="fl" id="app"></div>

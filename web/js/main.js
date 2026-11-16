@@ -15,11 +15,13 @@
    Everything is local (localStorage). "test" in the corner: next day, solve 3, reset. */
 (function () {
   var h = Postie.h, KEY = 'postie:flat:v2', PER_DAY = 9;
-  /* flat piece colours for game boards (shapes stay) */
-  var FLAT = { apr: '#E8475F', blue: '#6C8CC4', sage: '#7BB58A', butter: '#FFCB5C', sand: '#B9B9C0', ink: '#1D1D1F' };
+  /* The look (web/kit/flat.css, html[data-look]) is a set of tokens; boards take their piece colours from the same tokens. */
+  var LOOK = document.documentElement.getAttribute('data-look') || 'post', css = getComputedStyle(document.documentElement);
+  function tok(n) { return css.getPropertyValue('--' + n).trim(); }
+  var FLAT = { apr: tok('apr'), blue: tok('blue'), sage: tok('sage'), butter: tok('butter'), sand: tok('stone'), ink: tok('ink') };
   Postie.PIECES.forEach(function (p) { p.c = FLAT[p.k] || p.c; });
-  Postie.C.milk = Postie.C.card = '#FFFFFF'; Postie.C.ink = Postie.C.txt = '#1D1D1F'; Postie.C.line = '#DCDCE0'; Postie.C.sand = '#F1F1F3';
-  Postie.C.apr = FLAT.apr; Postie.C.blue = FLAT.blue; Postie.C.sage = FLAT.sage; Postie.C.butter = FLAT.butter; Postie.C.bad = '#E8475F'; Postie.C.mut = '#8A8A90';
+  Postie.C.milk = tok('milk'); Postie.C.card = tok('card'); Postie.C.ink = tok('ink'); Postie.C.txt = tok('txt'); Postie.C.line = tok('line'); Postie.C.sand = tok('sand');
+  Postie.C.apr = FLAT.apr; Postie.C.blue = FLAT.blue; Postie.C.sage = FLAT.sage; Postie.C.butter = FLAT.butter; Postie.C.bad = tok('bad'); Postie.C.mut = tok('mut');
 
   /* ---------- letters (voice drafts from world/letters-draft.md; Russian until the author writes the English ones) ---------- */
   var L = {
@@ -373,6 +375,11 @@
     function b(t, f, cls) { o.body.appendChild(h('button', { class: 'big ' + (cls || ''), style: 'margin-top:10px', onclick: f }, [t])); }
     b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.opened = true; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); save(); o.close(); draw(); }, 'o');
+    o.body.appendChild(h('h2', null, ['Look']));
+    o.body.appendChild(h('div', { class: 'looks' }, [['post', 'Post'], ['night', 'Night'], ['plain', 'Plain']].map(function (x) {
+      return h('button', { class: LOOK === x[0] ? 'on' : '', onclick: function () { try { localStorage.setItem('postie:look', x[0]); } catch (e) {} location.reload(); } }, [x[1]]);
+    })));
+    o.body.appendChild(h('h2', null, ['Data']));
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
   }
   window.addEventListener('resize', function () { if (pans) pans.scrollLeft = pan * pans.clientWidth; });
