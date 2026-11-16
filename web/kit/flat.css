@@ -162,22 +162,25 @@ html[data-look="night"] .fl .envbig .to{color:#6B6658}
 .fl .slots .stamp.on:nth-child(2){transform:rotate(1.2deg)}
 .fl .slots .stamp.on:nth-child(3){transform:rotate(-.8deg)}
 .fl .stamp.empty{border-radius:0;border-width:1.5px}
-/* the letter is paper */
+/* the letter */
 .fl .letter{font-size:19px}
-html[data-look="night"] .fl .letter{background:#F3EAD8;color:#1E2A44;padding:22px 20px 26px;margin-top:8px;font-size:19px;box-shadow:0 18px 40px -18px rgba(0,0,0,.7)}
 /* the primary button and "today" carry the accent sparingly */
 html[data-look="night"] .fl .big:not(.o):not(.ghost):not([disabled]){background:var(--accent);color:#131926}
 .fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(30,42,68,.25)}
 /* boards: softer cells on paper */
 .fl .sh.play .cell{border-color:var(--line)}
 
-/* a sent day: popup over the calendar */
-.fl .veil{position:absolute;inset:0;z-index:7;background:color-mix(in srgb,var(--ink) 38%,transparent);display:flex;align-items:center;justify-content:center;padding:20px}
-html[data-look="night"] .fl .veil{background:rgba(0,0,0,.6)}
-.fl .daycard{width:100%;max-height:100%;display:flex;flex-direction:column;background:var(--milk);border-radius:16px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5);overflow:hidden}
-.fl .daycard .dhead{flex:none;display:flex;align-items:center;justify-content:space-between;padding:8px 6px 0 20px}
+/* the letter is its own thing everywhere: a sheet of paper with the postman's words */
+.fl .letter{background:#FFFCF5;color:#1E2A44;padding:24px 22px 28px;margin-top:8px;border-radius:2px;box-shadow:0 1px 0 var(--line),0 14px 30px -18px rgba(30,42,68,.45)}
+html[data-look="night"] .fl .letter{background:#F3EAD8;box-shadow:0 18px 40px -18px rgba(0,0,0,.7)}
+/* a sent day: two things lying over the calendar — the letter and the envelope */
+.fl .veil{position:absolute;inset:0;z-index:7;background:color-mix(in srgb,#1E2A44 80%,transparent);display:flex;align-items:center;justify-content:center;padding:14px 20px}
+html[data-look="night"] .fl .veil{background:rgba(6,9,16,.88)}
+.fl .daycard{width:100%;max-height:100%;display:flex;flex-direction:column}
+.fl .daycard .dhead{flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 0 4px 2px;color:#FFFCF5}
 .fl .daycard .dhead b{font:600 18px var(--title)}
-.fl .daycard .dhead .ib{color:var(--txt)}
-.fl .daycard .dbody{overflow-y:auto;padding:6px 20px 22px}
-.fl .daycard .envbig{margin-top:20px}
+.fl .daycard .dhead .ib{color:#FFFCF5;margin-right:-10px}
+.fl .daycard .dbody{overflow-y:auto;padding:0 2px 16px;margin:0 -2px}
+.fl .daycard .letter{margin-top:0;transform:rotate(-.6deg)}
+.fl .daycard .envbig{margin:18px 0 0;transform:rotate(.5deg)}
 .fl .daycard .envbig .slots{margin-bottom:22px}
