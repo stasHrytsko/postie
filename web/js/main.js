@@ -353,11 +353,16 @@
     p.appendChild(days);
     p.appendChild(h('div', { class: 'legend' }, [h('span', null, [h('i', { class: 's' }), 'sent']), h('span', null, [h('i', { class: 'm' }), 'not sent']), h('span', null, [h('i', { class: 't' }), 'today'])]));
   }
+  /* a sent day: a popup over the calendar — his note and the envelope with the three stamps as they were stuck */
   function openDay(d) {
-    var E = S.env['d' + d], o = sheet(dateStr(d), 'Sent');
-    o.body.appendChild(h('h2', null, ['Letter'])); o.body.appendChild(letterEl(E.letter));
-    o.body.appendChild(h('h2', null, ['Your stamps']));
-    var slots = h('div', { class: 'slots' }); E.stuck.forEach(function (i) { slots.appendChild(stampEl(E.cards[i], 'on')); }); o.body.appendChild(slots);
+    var E = S.env['d' + d], slots = h('div', { class: 'slots' });
+    E.stuck.forEach(function (i) { slots.appendChild(stampEl(E.cards[i], 'on')); });
+    var card = h('div', { class: 'daycard', role: 'dialog', 'aria-label': dateStr(d) }, [
+      h('div', { class: 'dhead' }, [h('b', null, [dateStr(d)]), h('button', { class: 'ib', 'aria-label': 'Close', html: Postie.icon('close'), onclick: close })]),
+      h('div', { class: 'dbody' }, [letterEl(E.letter), h('div', { class: 'envbig' }, [slots, h('div', { class: 'to' }, ['To: the postman'])])])]);
+    var veil = h('div', { class: 'veil', onclick: function (e) { if (e.target === veil) close(); } }, [card]);
+    function close() { veil.remove(); }
+    root.appendChild(veil);
   }
 
   /* ---------- shell ---------- */
