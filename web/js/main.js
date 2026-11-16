@@ -179,7 +179,7 @@
       var inner, width = 0, prevTall = 0, helped = false;
       for (var pass = 0; pass < 6; pass++) {
         clean(); stage.innerHTML = ''; o.foot.innerHTML = '';
-        inner = h('div', { style: width > 0 ? 'max-width:' + width + 'px;margin:0 auto' : '' }); stage.appendChild(inner);
+        inner = h('div', { style: 'width:100%;align-self:center' + (width > 0 ? ';max-width:' + width + 'px' : '') }); stage.appendChild(inner);
         g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
           win: function () { markDone(id, n); setTimeout(solvedPopup, 500); } });
         /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */

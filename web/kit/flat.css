@@ -184,3 +184,13 @@ html[data-look="night"] .fl .veil{background:rgba(6,9,16,.88)}
 .fl .daycard .letter{margin-top:0;transform:rotate(-.6deg)}
 .fl .daycard .envbig{margin:18px 0 0;transform:rotate(.5deg)}
 .fl .daycard .envbig .slots{margin-bottom:22px}
+
+/* Everything sits around the middle of the screen, not under the top edge (author decision 2026-11-16).
+   Spacers above and below share the free room (a little more below — the optical centre); when content is taller, they vanish and it scrolls. */
+.fl .pan,.fl .sh .body,.fl .sh.play .stage{display:flex;flex-direction:column}
+.fl .pan::before,.fl .sh .body::before,.fl .sh.play .stage::before{content:"";flex:1 0 0}
+.fl .pan::after,.fl .sh .body::after,.fl .sh.play .stage::after{content:"";flex:1.35 0 0}
+.fl .pan.mid::before,.fl .pan.mid::after,.fl .sh.play .body::before,.fl .sh.play .body::after{display:none}
+.fl .pan>*,.fl .sh .body>*,.fl .sh.play .stage>*{flex:none}
+.fl .sh.play .body>.stage{flex:1}
+.fl .daycard .dbody{display:block}.fl .daycard .dbody::before,.fl .daycard .dbody::after{display:none}
