@@ -119,7 +119,7 @@
   function stampEl(c) { var g = game(c.id); return h('div', { class: 'slot f d' + c.d }, [g.name, h('small', null, ['level ' + c.n])]); }
 
   /* ---------- play ---------- */
-  function play(id, n, after) {
+  function play(id, n, after, E) {                                      // E: today's envelope, when the level is played from it
     var g = game(id), lv = g.levels[n - 1], cleanups = [], rules = h('div', { class: 'rules', style: 'display:none', html: g.rules || '' }), stage = h('div');
     function clean() { cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
     var o = sheet(g.name, 'Level ' + n, { cls: 'play', onclose: function () { clean(); after && after(); },
@@ -131,9 +131,19 @@
     function mount() {
       clean(); stage.innerHTML = ''; var inner = h('div'); stage.appendChild(inner);
       g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
-        win: function () { markDone(id, n); setTimeout(function () { o.close(); toast('Solved · ' + g.name + ' ' + n); }, 500); } });
+        win: function () { markDone(id, n); setTimeout(function () { if (E && !E.sent) solvedPopup(); else { o.close(); toast('Solved · ' + g.name + ' ' + n); } }, 500); } });
     }
     mount();
+    /* popup after every puzzle of the envelope: Next; from the 3rd also Send letter; after the 10th only Send letter */
+    function solvedPopup() {
+      var sol = solvedIdx(E), nxt = null;
+      E.cards.forEach(function (c, i) { if (nxt == null && sol.indexOf(i) < 0) nxt = c; });
+      var box = h('div', { class: 'popbox' }, [h('span', { class: 'dot ok d' + (E.cards.filter(function (c) { return c.id === id && c.n === n; })[0] || { d: 1 }).d, html: Postie.icon('check') }),
+        h('b', null, ['Solved']), h('span', null, [sol.length + ' of ' + E.cards.length + (sol.length < 3 ? ' · ' + (3 - sol.length) + ' more to send' : '')])]);
+      if (nxt) box.appendChild(h('button', { class: 'big' + (sol.length >= 3 ? ' o' : ''), onclick: function () { o.close(); play(nxt.id, nxt.n, after, E); } }, ['Next']));
+      if (sol.length >= 3) box.appendChild(h('button', { class: 'big', style: 'margin-top:10px', onclick: function () { o.close(); if (sol.length === 3) send(E, sol); else pickStamps(E, sol); } }, ['Send letter']));
+      o.body.parentNode.appendChild(h('div', { class: 'pop' }, [box]));
+    }
   }
 
   /* ---------- Today: empty screen, in the middle — a letter, or no letter (already sent) ---------- */
@@ -158,7 +168,7 @@
       var sol = solvedIdx(E), grid = h('div', { class: 'pz' });
       E.cards.forEach(function (c, i) {
         var ok = sol.indexOf(i) >= 0;
-        grid.appendChild(h('button', { class: 'd' + c.d + (ok ? ' ok' : ''), onclick: function () { play(c.id, c.n, render); } }, [
+        grid.appendChild(h('button', { class: 'd' + c.d + (ok ? ' ok' : ''), onclick: function () { play(c.id, c.n, render, E); } }, [
           h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name]), h('small', null, [DN[c.d] + ' · ' + c.n])]));
       });
       o.body.appendChild(grid);

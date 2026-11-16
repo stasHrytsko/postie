@@ -80,3 +80,9 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .pz .d1 i{border-color:var(--easy)}.fl .pz .d2 i{border-color:var(--mid)}.fl .pz .d3 i{border-color:var(--hard)}.fl .pz .d4 i{border-color:var(--top)}
 .fl .pz .ok.d1 i{background:var(--easy)}.fl .pz .ok.d2 i{background:var(--mid)}.fl .pz .ok.d3 i{background:var(--hard)}.fl .pz .ok.d4 i{background:var(--top)}
 .fl .pz .sel i{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--txt)}
+/* solved popup over the board */
+.fl .pop{position:absolute;inset:0;z-index:6;background:linear-gradient(rgba(255,255,255,.8) 55%,#fff 64%);display:flex;align-items:flex-end;padding:20px 20px calc(18px + env(safe-area-inset-bottom))}
+.fl .popbox{width:100%;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:15px;color:var(--mut)}
+.fl .popbox b{font-size:22px;color:var(--txt);margin-top:10px}
+.fl .popbox .dot{width:56px;height:56px}.fl .popbox .dot svg.ic{width:26px;height:26px}
+.fl .popbox .big{margin-top:18px}
