@@ -102,11 +102,10 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .mon b{font-weight:600}
 .fl .days.wk{margin-top:4px}.fl .days.wk span{text-align:center;font-size:12px;color:var(--mut)}
 .fl .dd{border-color:transparent}
-.fl .dd.o{border-color:var(--txt);border-width:2px}
 .fl .dd.miss{color:var(--mut);cursor:default}
 .fl .dd.no{color:var(--line)}
 .fl .dd.t{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--txt)}
 .fl .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--mut)}
 .fl .legend span{display:flex;align-items:center;gap:6px}
 .fl .legend i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line)}
-.fl .legend i.s{background:var(--txt);border-color:var(--txt)}.fl .legend i.o{border:2px solid var(--txt)}
+.fl .legend i.s{background:var(--txt);border-color:var(--txt)}

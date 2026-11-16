@@ -263,7 +263,7 @@
 
   /* ---------- Letters (calendar) ---------- */
   /* Calendar: a real month. Day d of the game = start date + (d - 1). Prototype: "Next day" moves the date too.
-     sent = filled · opened, not sent = outlined · never opened = plain, nothing to read (the letter is gone; its levels slept over in Games).
+     Two states: sent = filled, tap -> letter + stamps · not sent = plain, nothing to read (the letter is gone; its levels slept over in Games).
      Today -> the Today screen. No way from a day to its levels. */
   var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], calShift = 0;
   function dateOf(d) { var x = new Date(S.start); x.setDate(x.getDate() + d - 1); return x; }
@@ -285,18 +285,16 @@
       if (d < 1 || d > S.day) cls += ' no';
       else if (d === S.day) { cls += ' t' + (E && E.sent ? ' s' : ''); tap = function () { go(1, true); }; }
       else if (E && E.sent) { cls += ' s'; tap = function () { openDay(d); }; }
-      else if (E && E.opened) { cls += ' o'; tap = function () { openDay(d); }; }
       else cls += ' miss';
       days.appendChild(h('button', { class: cls, disabled: tap ? null : 'disabled', onclick: tap }, [String(m)]));
     })(m);
     p.appendChild(days);
-    p.appendChild(h('div', { class: 'legend' }, [h('span', null, [h('i', { class: 's' }), 'sent']), h('span', null, [h('i', { class: 'o' }), 'read, not sent']), h('span', null, [h('i'), 'missed'])]));
+    p.appendChild(h('div', { class: 'legend' }, [h('span', null, [h('i', { class: 's' }), 'sent']), h('span', null, [h('i'), 'not sent'])]));
   }
   function openDay(d) {
-    var E = S.env['d' + d], dt = dateOf(d), o = sheet(dt.getDate() + ' ' + MON[dt.getMonth()], E.sent ? 'Sent' : 'Not sent');
+    var E = S.env['d' + d], dt = dateOf(d), o = sheet(dt.getDate() + ' ' + MON[dt.getMonth()], 'Sent');
     o.body.appendChild(h('h2', null, ['Letter'])); o.body.appendChild(letterEl(E.letter));
     o.body.appendChild(h('h2', null, ['Your stamps']));
-    if (!E.sent) { o.body.appendChild(h('div', { class: 'note' }, ['Not sent.'])); return; }
     var slots = h('div', { class: 'slots' }); E.stuck.forEach(function (i) { slots.appendChild(stampEl(E.cards[i])); }); o.body.appendChild(slots);
   }
 
