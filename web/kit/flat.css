@@ -92,3 +92,6 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .envbig .slot.f{cursor:pointer}
 .fl .envbig .to{color:var(--mut);font-size:14px;border-bottom:1px solid var(--line);padding-bottom:6px;width:60%}
 .fl .pz .used{opacity:.3}
+/* collection: games as circles, the number = unsolved levels */
+.fl .pz .gm i{border-color:var(--txt);color:var(--txt);font-style:normal;font-size:22px;font-weight:600}
+.fl .pz .gm.ok i{background:var(--txt);color:#fff}
