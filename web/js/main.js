@@ -44,8 +44,10 @@
 
   /* ---------- state ---------- */
   var S, pan = 1;
-  function fresh() { return { day: 1, env: {}, got: {}, done: {} }; }
+  function today0() { var t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime(); }
+  function fresh() { return { day: 1, env: {}, got: {}, done: {}, start: today0() }; }
   try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); }
+  if (!S.start) S.start = today0();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function game(id) { return Postie.games.filter(function (g) { return g.id === id; })[0]; }
   function got(id) { return S.got[id] || (S.got[id] = []); }           // level numbers delivered by mail, in order of arrival
@@ -260,23 +262,41 @@
   }
 
   /* ---------- Letters (calendar) ---------- */
+  /* Calendar: a real month. Day d of the game = start date + (d - 1). Prototype: "Next day" moves the date too.
+     sent = filled · opened, not sent = outlined · never opened = plain, nothing to read (the letter is gone; its levels slept over in Games).
+     Today -> the Today screen. No way from a day to its levels. */
+  var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], calShift = 0;
+  function dateOf(d) { var x = new Date(S.start); x.setDate(x.getDate() + d - 1); return x; }
+  function dayOf(date) { return Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - new Date(S.start)) / 864e5) + 1; }
   function drawLetters(p) {
     var sent = 0; for (var k in S.env) if (S.env[k].sent) sent++;
-    p.appendChild(h('h2', null, ['Calendar · ' + sent + ' sent']));
-    var days = h('div', { class: 'days' }), last = Math.max(28, Math.ceil(S.day / 7) * 7);
-    for (var d = 1; d <= last; d++) (function (d) {
-      var E = S.env['d' + d];
-      days.appendChild(h('button', { class: 'dd' + (E && E.sent ? ' s' : '') + (d === S.day ? ' t' : '') + (d > S.day ? ' no' : ''), onclick: function () { if (d <= S.day) openDay(d); } }, [String(d)]));
-    })(d);
+    var now = dateOf(S.day), first = new Date(now.getFullYear(), now.getMonth() + calShift, 1), startM = dateOf(1);
+    var canBack = first > new Date(startM.getFullYear(), startM.getMonth(), 1), canFwd = calShift < 0;
+    p.appendChild(h('div', { class: 'sent' }, [h('b', null, [String(sent)]), h('span', null, [sent === 1 ? 'letter sent' : 'letters sent'])]));
+    p.appendChild(h('div', { class: 'mon' }, [
+      h('button', { class: 'ib', 'aria-label': 'Previous month', disabled: canBack ? null : 'disabled', html: Postie.icon('left'), onclick: function () { calShift--; draw(); } }),
+      h('b', null, [MON[first.getMonth()] + ' ' + first.getFullYear()]),
+      h('button', { class: 'ib', 'aria-label': 'Next month', disabled: canFwd ? null : 'disabled', html: Postie.icon('right'), onclick: function () { calShift++; draw(); } })]));
+    var wk = h('div', { class: 'days wk' }); ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach(function (c) { wk.appendChild(h('span', null, [c])); }); p.appendChild(wk);
+    var days = h('div', { class: 'days' }), lead = (first.getDay() + 6) % 7, n = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    for (var i = 0; i < lead; i++) days.appendChild(h('span'));
+    for (var m = 1; m <= n; m++) (function (m) {
+      var d = dayOf(new Date(first.getFullYear(), first.getMonth(), m)), E = S.env['d' + d], cls = 'dd', tap = null;
+      if (d < 1 || d > S.day) cls += ' no';
+      else if (d === S.day) { cls += ' t' + (E && E.sent ? ' s' : ''); tap = function () { go(1, true); }; }
+      else if (E && E.sent) { cls += ' s'; tap = function () { openDay(d); }; }
+      else if (E && E.opened) { cls += ' o'; tap = function () { openDay(d); }; }
+      else cls += ' miss';
+      days.appendChild(h('button', { class: cls, disabled: tap ? null : 'disabled', onclick: tap }, [String(m)]));
+    })(m);
     p.appendChild(days);
-    p.appendChild(h('div', { class: 'note', style: 'margin-top:16px' }, ['Filled — envelope sent. Tap a day to read his letter.']));
+    p.appendChild(h('div', { class: 'legend' }, [h('span', null, [h('i', { class: 's' }), 'sent']), h('span', null, [h('i', { class: 'o' }), 'read, not sent']), h('span', null, [h('i'), 'missed'])]));
   }
   function openDay(d) {
-    var E = S.env['d' + d], o = sheet('Day ' + d, E && E.sent ? 'Sent' : 'Not sent');
-    if (!E) { o.body.appendChild(h('div', { class: 'note' }, ['The envelope was not opened that day.'])); return; }
+    var E = S.env['d' + d], dt = dateOf(d), o = sheet(dt.getDate() + ' ' + MON[dt.getMonth()], E.sent ? 'Sent' : 'Not sent');
     o.body.appendChild(h('h2', null, ['Letter'])); o.body.appendChild(letterEl(E.letter));
     o.body.appendChild(h('h2', null, ['Your stamps']));
-    if (!E.sent) { o.body.appendChild(h('div', { class: 'note' }, ['No stamps: the envelope stayed here.'])); return; }
+    if (!E.sent) { o.body.appendChild(h('div', { class: 'note' }, ['Not sent.'])); return; }
     var slots = h('div', { class: 'slots' }); E.stuck.forEach(function (i) { slots.appendChild(stampEl(E.cards[i])); }); o.body.appendChild(slots);
   }
 
@@ -289,7 +309,7 @@
     drawLetters(ps[0]); drawToday(ps[1]); drawGames(ps[2]);
     pans = h('div', { class: 'pans' }, ps);
     tabs = h('div', { class: 'tabs' }, ['Letters', 'Today', 'Games'].map(function (t, k) { return h('button', { class: k === pan ? 'on' : '', onclick: function () { go(k, true); } }, [t]); }));
-    var top = h('div', { class: 'top' }, [h('span', { style: 'width:44px' }), h('b', null, ['Day ' + S.day]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
+    var top = h('div', { class: 'top' }, [h('span', { style: 'width:44px' }), h('b', null, [(function () { var x = dateOf(S.day); return x.getDate() + ' ' + MON[x.getMonth()]; })()]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
     root.insertBefore(tabs, root.firstChild); root.insertBefore(pans, tabs); root.insertBefore(top, pans);
     pans.scrollLeft = pan * pans.clientWidth;
     ps.forEach(function (p, i) { p.scrollTop = scrollY[i]; });
@@ -302,7 +322,7 @@
   function testMenu() {
     var o = sheet('Test', 'Prototype tools');
     function b(t, f, cls) { o.body.appendChild(h('button', { class: 'big ' + (cls || ''), style: 'margin-top:10px', onclick: f }, [t])); }
-    b('Next day', function () { S.day++; save(); pan = 1; o.close(); draw(); toast('Day ' + S.day + ': a new envelope'); });
+    b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); toast('A new envelope'); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); o.close(); draw(); }, 'o');
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
     o.body.appendChild(h('div', { class: 'note', style: 'margin-top:20px', html: 'Older prototypes: <a class="lnk" href="room.html">room (visual v2)</a> · <a class="lnk" href="games.html">gallery</a> · <a class="lnk" href="paper.html">paper</a>' }));
