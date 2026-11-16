@@ -52,6 +52,12 @@
   function isDone(id, n) { return (S.done[id] || []).indexOf(n) >= 0; }
   function markDone(id, n) { var d = S.done[id] || (S.done[id] = []); if (d.indexOf(n) < 0) d.push(n); save(); }
   function rnd(seed) { return function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; }
+  /* the collection shows a level only once its envelope has left: today's unsent levels live in the letter only */
+  function shown(id) {
+    var E = S.env['d' + S.day];
+    if (!E || E.sent) return got(id);
+    return got(id).filter(function (n) { return !E.cards.some(function (c) { return c.id === id && c.n === n; }); });
+  }
   function ord(id, n) { return got(id).indexOf(n) + 1; }                // what the player sees: number by order of arrival
   function dOf(id, n) { return (S.top && S.top[id] || []).indexOf(n) >= 0 ? 4 : diff(game(id).levels[n - 1]); }
   function diff(lv) { return Math.max(1, Math.min(3, lv.difficulty || 2)); }
@@ -147,7 +153,7 @@
         if (nxt) btn('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }, sol.length >= 3 ? 'o' : '');
         if (sol.length >= 3) btn('Send letter', function () { o.close(); openEnvelope(E); });
       } else {                                                           // from the collection: next unsolved level of this game, no stamps
-        var a = got(id), rest = a.filter(function (m) { return !isDone(id, m); }), k = a.indexOf(n);
+        var a = shown(id), rest = a.filter(function (m) { return !isDone(id, m); }), k = a.indexOf(n);
         nxt = rest.filter(function (m) { return a.indexOf(m) > k; })[0] || rest[0];
         box.appendChild(h('span', null, [(a.length - rest.length) + ' of ' + a.length + ' in ' + g.name]));
         if (nxt) btn('Next', function () { o.close(); play(id, nxt, after); });
@@ -226,22 +232,23 @@
 
   /* ---------- Games (collection): only what came by mail ---------- */
   function drawGames(p) {
-    var here = Postie.games.filter(function (g) { return got(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'pz' });
+    var here = Postie.games.filter(function (g) { return shown(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'pz' });
     here.forEach(function (g) {
-      var a = got(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length, left = a.length - sv; total += a.length; solved += sv;
+      var a = shown(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length, left = a.length - sv; total += a.length; solved += sv;
       grid.appendChild(h('button', { class: 'gm' + (left ? '' : ' ok'), onclick: function () { openGame(g.id); } }, [
         h('i', { html: left ? String(left) : Postie.icon('check') }), h('b', null, [g.name]), h('small', null, [sv + ' / ' + a.length])]));
     });
+    if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', { style: 'text-align:center' }, ['Puzzles come here after you send the letter.'])])); return; }
     p.appendChild(h('h2', null, ['Collection · ' + solved + ' / ' + total + ' solved']));
     p.appendChild(grid);
-    p.appendChild(h('div', { class: 'note', style: 'margin-top:18px' }, ['The number in the circle — levels still unsolved. New ones arrive by mail.']));
+    p.appendChild(h('div', { class: 'note', style: 'margin-top:18px' }, ['The number in the circle — levels still unsolved. Today\'s puzzles come here after you send the letter.']));
   }
   /* a game: its levels in order of arrival, numbered 1, 2, 3… */
   function openGame(id) {
     var g = game(id), o = sheet(g.name, '', { onclose: draw });
     function render() {
       o.body.innerHTML = '';
-      var a = got(id), sv = a.filter(function (n) { return isDone(id, n); }).length;
+      var a = shown(id), sv = a.filter(function (n) { return isDone(id, n); }).length;
       o.body.appendChild(h('div', { class: 'note' }, [sv + ' of ' + a.length + ' solved']));
       var grid = h('div', { class: 'lvs' });
       a.forEach(function (n, k) {
