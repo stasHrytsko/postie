@@ -3,7 +3,9 @@
    Envelope: 10 new levels a day — 1..5 easy, 1..5 medium, 1..5 hard (9 together) + 1 hardest.
    The letter is readable as soon as the envelope is open. Day 1 is the introduction; later letters fork on
    whether yesterday's envelope was sent and which stamps were on it.
-   To send: solve 3, stick 3 stamps. Every delivered level lands in the collection, solved or not.
+   Today is an empty screen with the letter in the middle (or "no letter" once sent). Tap -> the note -> "Go to puzzles" ->
+   grid 3 x 4 -> after 3 solved "Send letter" appears (more than 3 solved: pick which 3 stamps go on the envelope).
+   An unsent envelope cannot be sent later. Every delivered level lands in the collection, solved or not.
    Everything is local (localStorage). "test" in the corner: next day, solve 3, reset. */
 (function () {
   var h = Postie.h, KEY = 'postie:flat:v1', DN = ['', 'easy', 'medium', 'hard', 'hardest'];
@@ -107,10 +109,11 @@
   function sheet(title, sub, opts) {
     opts = opts || {};
     var body = h('div', { class: 'body' }), t = h('div', { class: 't' }, [title, sub ? h('small', null, [sub]) : null]);
+    var foot = h('div', { class: 'foot' });
     var el = h('div', { class: 'sh ' + (opts.cls || '') }, [h('div', { class: 'bar2' }, [
-      h('button', { class: 'ib', 'aria-label': 'Back', html: Postie.icon('back'), onclick: function () { close(); } }), t, opts.right || h('span', { style: 'width:44px' })]), body]);
+      h('button', { class: 'ib', 'aria-label': 'Back', html: Postie.icon('back'), onclick: function () { close(); } }), t, opts.right || h('span', { style: 'width:44px' })]), body, foot]);
     function close() { el.remove(); if (opts.onclose) opts.onclose(); }
-    root.appendChild(el); return { body: body, close: close };
+    root.appendChild(el); return { body: body, foot: foot, close: close };
   }
   function letterEl(lt) { return h('div', { class: 'letter' }, [h('div', null, [lt.text]), lt.re ? h('div', { class: 're' }, [lt.re]) : null]); }
   function stampEl(c) { var g = game(c.id); return h('div', { class: 'slot f d' + c.d }, [g.name, h('small', null, ['level ' + c.n])]); }
@@ -133,34 +136,59 @@
     mount();
   }
 
-  /* ---------- Today ---------- */
+  /* ---------- Today: empty screen, in the middle — a letter, or no letter (already sent) ---------- */
   function drawToday(p) {
-    var E = envelope(), sol = solvedIdx(E);
-    E.stuck = E.stuck.filter(function (i) { return sol.indexOf(i) >= 0; });
-    p.appendChild(h('h2', null, ['Letter']));
-    p.appendChild(letterEl(E.letter));
-    p.appendChild(h('h2', null, ['Envelope · ' + E.cards.length + ' puzzles']));
-    if (E.cards.length < 10) p.appendChild(h('div', { class: 'note' }, ['Only ' + E.cards.length + ' new levels left in stock — the level generator is not here yet.']));
-    E.cards.forEach(function (c, i) {
-      var ok = sol.indexOf(i) >= 0, on = E.stuck.indexOf(i) >= 0;
-      var row = h('div', { class: 'rowi', role: 'button', tabindex: '0', onclick: function () { play(c.id, c.n, draw); } }, [
-        dot(c.d, ok), h('span', { class: 'nm' }, [game(c.id).name + ' ', h('small', null, [String(c.n)])]), h('small', null, [DN[c.d]])]);
-      if (ok && !E.sent) row.appendChild(h('button', { class: 'stick' + (on ? ' on' : ''), onclick: function (e) {
-        e.stopPropagation();
-        if (on) E.stuck.splice(E.stuck.indexOf(i), 1); else if (E.stuck.length < 3) E.stuck.push(i); else return toast('Only three stamps fit');
-        save(); draw();
-      } }, [on ? 'On envelope' : 'Stick stamp']));
-      p.appendChild(row);
-    });
-    p.appendChild(h('h2', null, ['Stamps on the envelope']));
-    var slots = h('div', { class: 'slots' });
-    for (var k = 0; k < 3; k++) slots.appendChild(E.stuck[k] != null ? stampEl(E.cards[E.stuck[k]]) : h('div', { class: 'slot' }, ['stamp ' + (k + 1)]));
-    p.appendChild(slots);
-    if (E.sent) { p.appendChild(h('button', { class: 'big', disabled: 'disabled' }, ['Sent'])); p.appendChild(h('div', { class: 'note' }, ['New envelope tomorrow. He answers your stamps.'])); return; }
-    var ready = E.stuck.length === 3;
-    p.appendChild(h('button', { class: 'big', disabled: ready ? null : 'disabled', onclick: function () { E.sent = true; save(); draw(); toast('Envelope sent'); } },
-      [sol.length < 3 ? 'Solve ' + (3 - sol.length) + ' more to send' : !ready ? 'Stick ' + (3 - E.stuck.length) + ' more stamp' + (3 - E.stuck.length > 1 ? 's' : '') : 'Send envelope']));
-    if (sol.length > 3) p.appendChild(h('div', { class: 'note' }, [sol.length + ' stamps earned. Three go on the envelope, the rest burn.']));
+    var E = envelope();
+    p.classList.add('mid');
+    if (E.sent) { p.appendChild(h('div', { class: 'nol' }, [h('div', { class: 'envi off' }), h('b', null, ['No letter']), h('span', null, ['Already sent. The next one comes tomorrow.'])])); return; }
+    p.appendChild(h('button', { class: 'nol', onclick: function () { openNote(E); } }, [h('div', { class: 'envi' }), h('b', null, [E.opened ? 'Letter' : 'New letter']), h('span', null, ['Tap to open'])]));
+  }
+  /* the note: his letter, one button below — to the puzzles */
+  function openNote(E) {
+    E.opened = true; save();
+    var o = sheet('Day ' + S.day, 'Letter', { onclose: draw });
+    o.body.appendChild(letterEl(E.letter));
+    o.foot.appendChild(h('button', { class: 'big', onclick: function () { openPuzzles(E); } }, ['Go to puzzles']));
+  }
+  /* the puzzles: grid 3 x 4 for ten; after 3 solved the Send button appears */
+  function openPuzzles(E) {
+    var o = sheet('Day ' + S.day, 'Solve any 3 to send');
+    function render() {
+      o.body.innerHTML = ''; o.foot.innerHTML = '';
+      var sol = solvedIdx(E), grid = h('div', { class: 'pz' });
+      E.cards.forEach(function (c, i) {
+        var ok = sol.indexOf(i) >= 0;
+        grid.appendChild(h('button', { class: 'd' + c.d + (ok ? ' ok' : ''), onclick: function () { play(c.id, c.n, render); } }, [
+          h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name]), h('small', null, [DN[c.d] + ' · ' + c.n])]));
+      });
+      o.body.appendChild(grid);
+      if (E.cards.length < 10) o.body.appendChild(h('div', { class: 'note' }, ['Only ' + E.cards.length + ' new levels left in stock — the level generator is not here yet.']));
+      if (sol.length < 3) return;
+      o.foot.appendChild(h('button', { class: 'big', onclick: function () { if (sol.length === 3) send(E, sol); else pickStamps(E, sol); } }, ['Send letter']));
+    }
+    render();
+  }
+  /* more than 3 solved: choose which 3 stamps go on the envelope, the rest burn */
+  function pickStamps(E, sol) {
+    var o = sheet('Stamps', 'Pick 3 of ' + sol.length + ' · the rest burn'), sel = [];
+    function render() {
+      o.body.innerHTML = ''; o.foot.innerHTML = '';
+      var grid = h('div', { class: 'pz' });
+      sol.forEach(function (i) {
+        var c = E.cards[i], on = sel.indexOf(i) >= 0;
+        grid.appendChild(h('button', { class: 'd' + c.d + ' ok' + (on ? ' sel' : ''), onclick: function () {
+          if (on) sel.splice(sel.indexOf(i), 1); else if (sel.length < 3) sel.push(i); else return toast('Only three stamps fit'); render();
+        } }, [h('i', { html: on ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name]), h('small', null, ['level ' + c.n])]));
+      });
+      o.body.appendChild(grid);
+      o.foot.appendChild(h('button', { class: 'big', disabled: sel.length === 3 ? null : 'disabled', onclick: function () { send(E, sel); } }, ['Send letter · ' + sel.length + '/3']));
+    }
+    render();
+  }
+  function send(E, three) {
+    E.stuck = three.slice(0, 3); E.sent = true; save();
+    Array.prototype.slice.call(root.querySelectorAll('.sh')).forEach(function (x) { x.remove(); });
+    draw(); toast('Letter sent');
   }
 
   /* ---------- Games (collection): only what came by mail ---------- */

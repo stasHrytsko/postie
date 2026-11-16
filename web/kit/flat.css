@@ -59,3 +59,24 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .sh.play .body{padding:4px 12px 28px}
 .fl .toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%);background:var(--txt);color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;white-space:nowrap}
 .fl .rules{border:0;background:var(--sand);border-radius:12px}
+/* Today: one thing in the middle */
+.fl .pan.mid{display:flex;align-items:center;justify-content:center}
+.fl .nol{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;color:var(--txt);padding:24px;font-size:15px}
+.fl button.nol{cursor:pointer}
+.fl .nol b{font-size:18px;font-weight:600;margin-top:14px}.fl .nol span{color:var(--mut)}
+.fl .envi{width:132px;height:92px;border-radius:10px;border:2px solid var(--txt);position:relative;overflow:hidden}
+.fl .envi::before{content:"";position:absolute;left:50%;top:-68px;width:132px;height:132px;border:2px solid var(--txt);transform:translateX(-50%) rotate(45deg);transform-origin:center}
+.fl .envi.off{border-style:dashed;border-color:var(--line)}.fl .envi.off::before{display:none}
+/* sheet footer with the one button */
+.fl .sh .foot{flex:none;padding:0 20px calc(18px + env(safe-area-inset-bottom))}
+.fl .sh .foot:empty{display:none}
+/* puzzles: 3 x 4 */
+.fl .pz{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 10px;margin-top:18px}
+.fl .pz button{border:0;background:none;padding:6px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--txt);min-width:0}
+.fl .pz i{width:64px;height:64px;border-radius:50%;border:3px solid var(--line);display:grid;place-items:center;color:#fff;margin-bottom:4px}
+.fl .pz i svg.ic{width:28px;height:28px;stroke-width:2.6}
+.fl .pz b{font-size:14px;font-weight:600;text-align:center;line-height:1.2}
+.fl .pz small{font-size:12px;color:var(--mut)}
+.fl .pz .d1 i{border-color:var(--easy)}.fl .pz .d2 i{border-color:var(--mid)}.fl .pz .d3 i{border-color:var(--hard)}.fl .pz .d4 i{border-color:var(--top)}
+.fl .pz .ok.d1 i{background:var(--easy)}.fl .pz .ok.d2 i{background:var(--mid)}.fl .pz .ok.d3 i{background:var(--hard)}.fl .pz .ok.d4 i{background:var(--top)}
+.fl .pz .sel i{box-shadow:0 0 0 3px #fff,0 0 0 6px var(--txt)}
