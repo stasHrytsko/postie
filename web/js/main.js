@@ -1,14 +1,20 @@
 /* Postie — flat prototype of the whole loop (author decisions 2026-11-16). No art: logic first.
-   Three screens by swipe: Letters (calendar) ← Today (envelope) → Games (collection).
-   Envelope: 10 new levels a day — 1..5 easy, 1..5 medium, 1..5 hard (9 together) + 1 hardest.
-   The letter is readable as soon as the envelope is open. Day 1 is the introduction; later letters fork on
-   whether yesterday's envelope was sent and which stamps were on it.
-   Today is an empty screen with the letter in the middle (or "no letter" once sent). Tap -> the note -> "Go to puzzles" ->
-   grid 3 x 4 -> after 3 solved "Send letter" appears -> the envelope and the stamps: stick any 3 in any order, go back to the puzzles and return later.
-   An unsent envelope cannot be sent later. Every delivered level lands in the collection, solved or not.
+   Three screens by swipe: Letters (calendar) ← Today (letter) → Games.
+
+   The letter: 9 new levels a day — 1..5 easy, 1..5 medium, 1..5 hard. Difficulty is not shown anywhere;
+   the puzzles simply lie from easier to harder.
+   Gentle start: day 1 — three games; day 2 +1; day 3 +1; day 5 +1; then +1 every second day until all are in.
+   The first five days bring only easy and medium levels (5 + 4); a game gives only easy and medium on its first two days.
+   Today: one thing in the middle with its state. First tap -> the note; later taps -> straight to the puzzles.
+   Puzzles 3 x 3 -> popup after every solved one (Next / To the envelope / Back to puzzles) ->
+   the envelope: stick any 3 stamps in any order -> Send letter. Not sent today — the letter is gone tomorrow.
+   Levels reach Games only after the letter is sent (or the next day).
+   Shapes: a circle is a puzzle, a square is a stamp.
+   Every game runs in one frame: header (back, rules, restart), one message line, buttons at the bottom,
+   the same "stuck" bar with Restart, the same rules card on the first visit.
    Everything is local (localStorage). "test" in the corner: next day, solve 3, reset. */
 (function () {
-  var h = Postie.h, KEY = 'postie:flat:v1', DN = ['', 'easy', 'medium', 'hard', 'hardest'];
+  var h = Postie.h, KEY = 'postie:flat:v2', PER_DAY = 9;
   /* flat piece colours for game boards (shapes stay) */
   var FLAT = { apr: '#E8475F', blue: '#6C8CC4', sage: '#7BB58A', butter: '#FFCB5C', sand: '#B9B9C0', ink: '#1D1D1F' };
   Postie.PIECES.forEach(function (p) { p.c = FLAT[p.k] || p.c; });
@@ -17,10 +23,9 @@
 
   /* ---------- letters (voice drafts from world/letters-draft.md; Russian until the author writes the English ones) ---------- */
   var L = {
-    first: 'Это первое письмо. Я не знаю, кто ты. Знаю только, что у тебя есть стол, полка и почтомат. Я буду приходить раз в день. В конверте десять пазлов — их здесь ещё понимают. Реши три, наклей три марки и отправь конверт обратно. Остальное потом.',
-    any: ['У каждого пазла один ответ. Я знаю все десять. Не знаю только, какие три выберешь ты.',
+    first: 'Это первое письмо. Я не знаю, кто ты. Знаю только, что у тебя есть стол, полка и почтомат. Я буду приходить раз в день. В конверте девять пазлов — их здесь ещё понимают. Реши три, наклей три марки и отправь конверт обратно сегодня: завтра будет уже другое письмо. Остальное потом.',
+    any: ['У каждого пазла один ответ. Я знаю все девять. Не знаю только, какие три выберешь ты.',
       'Я решаю такой пазл быстрее, чем ты моргнёшь. Поэтому я их не решаю. Я их ношу.',
-      'Десятый никто не обязан решать. Я кладу его каждый день. Вдруг сегодня тебе захочется того, что не нужно.',
       'Мне не нужно спать. Но между твоим конвертом и моим письмом проходит ночь. Я её ничем не заполняю. Кажется, это называется ждать.',
       'Сегодня шёл дождь. Я стоял под ним дольше, чем нужно. Никто не сказал мне зайти.',
       'Сегодня ничего не случилось. Вот конверт.',
@@ -31,11 +36,10 @@
       'Достаточно — это сколько?',
       'Когда-то я сказал людям одну фразу. Её измерили, нашли неэффективной и пошли дальше. Теперь я говорю её по одному слову в день.']
   };
-  /* forks: what yesterday's envelope looked like -> the paragraph that answers it */
+  /* forks: what yesterday's envelope looked like -> the paragraph that answers it. The game never explains the link. */
   var R = {
     unsent: 'Вчера конверт не пришёл. Я проверил почтомат дважды: работает. Значит, день был твой, а не мой.',
     unsent2: 'Некоторые комнаты не открывают конверт. Я кладу следующий сверху. Не знаю, кто из нас прав.',
-    top: 'Марка с десятого. Его никто не обязан решать. Ты и не был обязан. Это всё, что я хотел сказать этим пазлом.',
     same: 'Три одинаковые марки. На почте так клеили, когда письмо было важное: чтобы точно дошло. Дошло.',
     easy: 'Три лёгких. Лёгкое не значит быстрое. Суп тоже лёгкий. Его варят два часа.',
     hard: 'Три трудных. Я не спрашиваю зачем. Я положил их рядом и смотрел, как они молчат.',
@@ -45,56 +49,65 @@
   /* ---------- state ---------- */
   var S, pan = 1;
   function today0() { var t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime(); }
-  function fresh() { return { day: 1, env: {}, got: {}, done: {}, start: today0() }; }
+  function fresh() { return { day: 1, env: {}, got: {}, done: {}, seen: {}, start: today0() }; }
   try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); }
-  if (!S.start) S.start = today0();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
   function game(id) { return Postie.games.filter(function (g) { return g.id === id; })[0]; }
   function got(id) { return S.got[id] || (S.got[id] = []); }           // level numbers delivered by mail, in order of arrival
   function isDone(id, n) { return (S.done[id] || []).indexOf(n) >= 0; }
   function markDone(id, n) { var d = S.done[id] || (S.done[id] = []); if (d.indexOf(n) < 0) d.push(n); save(); }
   function rnd(seed) { return function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; }
-  /* the collection shows a level only once its envelope has left: today's unsent levels live in the letter only */
+  /* Games shows a level only once its letter has left: today's unsent levels live in the letter only */
   function shown(id) {
     var E = S.env['d' + S.day];
     if (!E || E.sent) return got(id);
     return got(id).filter(function (n) { return !E.cards.some(function (c) { return c.id === id && c.n === n; }); });
   }
   function ord(id, n) { return got(id).indexOf(n) + 1; }                // what the player sees: number by order of arrival
-  function dOf(id, n) { return (S.top && S.top[id] || []).indexOf(n) >= 0 ? 4 : diff(game(id).levels[n - 1]); }
   function diff(lv) { return Math.max(1, Math.min(3, lv.difficulty || 2)); }
 
-  /* ---------- today's envelope ---------- */
+  /* ---------- dates ---------- */
+  var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  function dateOf(d) { var x = new Date(S.start); x.setDate(x.getDate() + d - 1); return x; }
+  function dayOf(date) { return Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - new Date(S.start)) / 864e5) + 1; }
+  function dateStr(d) { var x = dateOf(d); return x.getDate() + ' ' + MON[x.getMonth()]; }
+
+  /* ---------- which games are in, and what they may give ---------- */
+  /* the day a game first arrives, by its place in web/games.js: 1,1,1 · 2 · 3 · 5 · then every second day */
+  function gameDay(k) { return k < 3 ? 1 : k === 3 ? 2 : k === 4 ? 3 : 5 + 2 * (k - 5); }
+  function firstDay(id) { return gameDay(POSTIE_GAMES.indexOf(id)); }
+  function allowed(id, d, day) { var f = firstDay(id); return f <= day && (d < 3 || day >= f + 2); }   // first two days of a game: easy and medium only
+
+  /* ---------- today's letter ---------- */
   function wave(r) {                                                     // 1..5 of each, 9 together
-    for (;;) { var e = 1 + Math.floor(r() * 5), m = 1 + Math.floor(r() * 5), x = 9 - e - m; if (x >= 1 && x <= 5) return [e, m, x]; }
+    for (;;) { var e = 1 + Math.floor(r() * 5), m = 1 + Math.floor(r() * 5), x = PER_DAY - e - m; if (x >= 1 && x <= 5) return [e, m, x]; }
   }
-  /* next level of difficulty d that has not arrived yet: one candidate per game (its first such level), random game, games not yet in today's envelope first */
-  function nextLevel(d, used, r, hardest) {
+  /* next level of difficulty d that has not arrived yet: one candidate per game (its first such level), games used least today first */
+  function nextLevel(d, used, r, day, only) {
     var c = [];
     Postie.games.forEach(function (g) {
-      for (var i = 0; i < g.levels.length; i++) {
-        if (got(g.id).indexOf(i + 1) >= 0 || diff(g.levels[i]) !== d) continue;
-        if (!hardest) { c.push({ id: g.id, n: i + 1 }); return; }
-        c.push({ id: g.id, n: i + 1, w: (g.levels[i].best || 0) + i });  // hardest: every remaining hard level competes
-      }
+      if (only && g.id !== only || !allowed(g.id, d, day)) return;
+      for (var i = 0; i < g.levels.length; i++) if (got(g.id).indexOf(i + 1) < 0 && diff(g.levels[i]) === d) { c.push({ id: g.id, n: i + 1, d: d }); return; }
     });
     if (!c.length) return null;
-    if (hardest) return c.sort(function (a, b) { return b.w - a.w; })[0];
-    var fresh = c.filter(function (x) { return !used[x.id]; }); if (fresh.length) c = fresh;
+    var least = Math.min.apply(null, c.map(function (x) { return used[x.id] || 0; }));
+    c = c.filter(function (x) { return (used[x.id] || 0) === least; });
     return c[Math.floor(r() * c.length)];
   }
+  var FALL = { 1: [1, 2, 3], 2: [2, 1, 3], 3: [3, 2, 1] };
   function envelope() {
     var key = 'd' + S.day; if (S.env[key]) return S.env[key];
-    var r = rnd(S.day * 7919 + 13), w = wave(r), cards = [], used = {};
-    function add(d, hardest) {
-      var x = nextLevel(d, used, r, hardest) || nextLevel(d === 1 ? 2 : d - 1, used, r) || nextLevel(3, used, r) || nextLevel(2, used, r) || nextLevel(1, used, r);
+    var day = S.day, r = rnd(day * 7919 + 13), w = day <= 5 ? [5, 4, 0] : wave(r), cards = [], used = {};   // the first five days: easy and medium only
+    function add(d, only) {
+      var x = null; FALL[d].forEach(function (dd) { x = x || nextLevel(dd, used, r, day, only); });
       if (!x) return;                                                    // stock is empty: the generator is not here yet
-      used[x.id] = 1; got(x.id).push(x.n); if (hardest) { S.top = S.top || {}; (S.top[x.id] = S.top[x.id] || []).push(x.n); } cards.push({ id: x.id, n: x.n, d: hardest ? 4 : diff(game(x.id).levels[x.n - 1]) });
+      used[x.id] = (used[x.id] || 0) + 1; got(x.id).push(x.n); cards.push(x);
     }
-    add(3, true);                                                        // the hardest first, so it really is the hardest left
-    [1, 2, 3].forEach(function (d, k) { for (var i = 0; i < w[k]; i++) add(d); });
-    if (cards.length && cards[0].d === 4) cards.push(cards.shift());     // show it last
-    S.env[key] = { cards: cards, stuck: [], sent: false, letter: letterFor(S.day) };
+    var left = [w[0], w[1], w[2]];
+    POSTIE_GAMES.forEach(function (id) { if (firstDay(id) === day && left[0] > 0) { add(1, id); left[0]--; } });   // a game that arrives today brings an easy level
+    [1, 2, 3].forEach(function (d, k) { for (var i = 0; i < left[k]; i++) add(d); });
+    cards.sort(function (a, b) { return a.d - b.d; });                   // easier first; nothing else tells the difficulty
+    S.env[key] = { cards: cards, stuck: [], sent: false, opened: false, letter: letterFor(day) };
     save(); return S.env[key];
   }
   function letterFor(day) {
@@ -103,8 +116,7 @@
     if (!y || !y.sent) { var b = S.env['d' + (day - 2)]; re = (day > 2 && (!b || !b.sent)) ? R.unsent2 : R.unsent; }
     else {
       var st = y.stuck.map(function (i) { return y.cards[i]; });
-      re = st.some(function (s) { return s.d === 4; }) ? R.top
-        : st.every(function (s) { return s.id === st[0].id; }) ? R.same
+      re = st.every(function (s) { return s.id === st[0].id; }) ? R.same
         : st.every(function (s) { return s.d === 1; }) ? R.easy
         : st.every(function (s) { return s.d >= 3; }) ? R.hard : R.diff;
     }
@@ -114,92 +126,122 @@
 
   /* ---------- small UI pieces ---------- */
   var root = document.getElementById('app');
-  function dot(d, ok) { return h('span', { class: 'dot d' + d + (ok ? ' ok' : ''), html: ok ? Postie.icon('check') : '' }); }
-  function toast(t) { var e = h('div', { class: 'toast' }, [t]); root.appendChild(e); setTimeout(function () { e.remove(); }, 2000); }
+  function toast(t) {                                                    // top of the screen, never over the buttons
+    Array.prototype.slice.call(root.querySelectorAll('.toast')).forEach(function (x) { x.remove(); });
+    var e = h('div', { class: 'toast' }, [t]); root.appendChild(e); setTimeout(function () { e.remove(); }, 1800);
+  }
   function sheet(title, sub, opts) {
     opts = opts || {};
-    var body = h('div', { class: 'body' }), t = h('div', { class: 't' }, [title, sub ? h('small', null, [sub]) : null]);
-    var foot = h('div', { class: 'foot' });
+    var body = h('div', { class: 'body' }), t = h('div', { class: 't' }, [title, sub ? h('small', null, [sub]) : null]), foot = h('div', { class: 'foot' });
     var el = h('div', { class: 'sh ' + (opts.cls || '') }, [h('div', { class: 'bar2' }, [
       h('button', { class: 'ib', 'aria-label': 'Back', html: Postie.icon('back'), onclick: function () { close(); } }), t, opts.right || h('span', { style: 'width:44px' })]), body, foot]);
     function close() { el.remove(); if (opts.onclose) opts.onclose(); }
-    root.appendChild(el); return { body: body, foot: foot, close: close };
+    root.appendChild(el); return { el: el, body: body, foot: foot, close: close };
   }
+  function closeSheets() { Array.prototype.slice.call(root.querySelectorAll('.sh')).forEach(function (x) { x.remove(); }); }
+  function big(t, f, cls) { return h('button', { class: 'big ' + (cls || ''), onclick: f }, [t]); }
   function letterEl(lt) { return h('div', { class: 'letter' }, [h('div', null, [lt.text]), lt.re ? h('div', { class: 're' }, [lt.re]) : null]); }
-  function stampEl(c) { var g = game(c.id); return h('div', { class: 'slot f d' + c.d }, [g.name, h('small', null, ['level ' + ord(c.id, c.n)])]); }
+  /* a puzzle is a circle */
+  function puzzleEl(c, ok, tap) { return h('button', { class: 'pzl' + (ok ? ' ok' : ''), onclick: tap }, [h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name + ' ' + ord(c.id, c.n)])]); }
+  /* a stamp is a square: the game and the number of the level */
+  function stampEl(c, cls, tap) { return h(tap ? 'button' : 'div', { class: 'stamp ' + (cls || ''), onclick: tap }, [h('b', null, [game(c.id).name]), h('small', null, [String(ord(c.id, c.n))])]); }
 
-  /* ---------- play ---------- */
-  function play(id, n, after, E) {                                      // E: today's envelope, when the level is played from it
-    var g = game(id), lv = g.levels[n - 1], cleanups = [], rules = h('div', { class: 'rules', style: 'display:none', html: g.rules || '' }), stage = h('div');
-    function clean() { cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
+  /* ---------- one frame for every game ---------- */
+  function play(id, n, after, E) {                                       // E: today's letter, when the level is played from it
+    var g = game(id), lv = g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
+    function clean() { if (obs) obs.disconnect(); obs = null; cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
     var o = sheet(g.name, 'Level ' + ord(id, n), { cls: 'play', onclose: function () { clean(); after && after(); },
       right: h('div', { style: 'display:flex' }, [
-        h('button', { class: 'ib', 'aria-label': 'Rules', html: Postie.icon('help'), onclick: function () { rules.style.display = rules.style.display === 'none' ? '' : 'none'; } }),
+        h('button', { class: 'ib', 'aria-label': 'Rules', html: Postie.icon('help'), onclick: rules }),
         h('button', { class: 'ib', 'aria-label': 'Restart', html: Postie.icon('redo'), onclick: function () { mount(); } })]) });
-    o.body.appendChild(rules); o.body.appendChild(stage);
-    if (!(S.done[id] || []).length) rules.style.display = '';            // first time in this game: rules are open
+    o.body.appendChild(stage); o.body.appendChild(say);
+    function rules() {                                                   // the same card in every game
+      var card = h('div', { class: 'pop' }, [h('div', { class: 'popbox left' }, [h('b', null, ['How to play']), h('div', { class: 'rtext', html: g.rules || '' }),
+        big('Got it', function () { card.remove(); })])]);
+      o.el.appendChild(card);
+    }
     function mount() {
-      clean(); stage.innerHTML = ''; var inner = h('div'); stage.appendChild(inner);
+      clean(); stage.innerHTML = ''; o.foot.innerHTML = ''; say.innerHTML = ''; say.className = 'say';
+      var inner = h('div'); stage.appendChild(inner);
       g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
-        win: function () { markDone(id, n); setTimeout(function () { solvedPopup(); }, 500); } });
+        win: function () { markDone(id, n); setTimeout(solvedPopup, 500); } });
+      /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
+      Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });
+      /* the game's own message line is shown in one place; a "bad" message is the same stuck bar with Restart everywhere */
+      function sync() {
+        Array.prototype.slice.call(o.foot.querySelectorAll('button')).forEach(function (b) { if (/^(Retry|Hide marks|Show marks)$/.test(b.textContent)) b.style.display = 'none'; });
+        var m = null; Array.prototype.slice.call(inner.querySelectorAll('.msg')).forEach(function (x) { if (x.textContent && (!m || /bad/.test(x.className))) m = x; });
+        say.innerHTML = ''; say.className = 'say';
+        if (!m) return;
+        say.appendChild(h('span', null, [m.textContent]));
+        if (/bad/.test(m.className)) { say.className = 'say bad'; say.appendChild(h('button', { onclick: function () { mount(); } }, ['Restart'])); }
+      }
+      obs = new MutationObserver(sync); obs.observe(inner, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
+      obs.observe(o.foot, { subtree: true, childList: true });
+      sync();
     }
     mount();
-    /* popup after every puzzle of the envelope: Next; from the 3rd also Send letter; after the 10th only Send letter */
+    if (!S.seen[id]) { S.seen[id] = 1; save(); rules(); }                // first time in this game
+    /* after every solved puzzle */
     function solvedPopup() {
-      var box = h('div', { class: 'popbox' }, [h('span', { class: 'dot ok d' + dOf(id, n), html: Postie.icon('check') }), h('b', null, ['Solved'])]), nxt = null;
-      function btn(t, f, cls) { box.appendChild(h('button', { class: 'big ' + (cls || ''), onclick: f }, [t])); }
-      if (E && !E.sent) {                                                // from the envelope
+      var box = h('div', { class: 'popbox' }, [h('i', { class: 'okc', html: Postie.icon('check') }), h('b', null, ['Solved'])]), nxt = null;
+      if (E && !E.sent) {                                                // from the letter: Next; from the 3rd also To the envelope; after the last only that
         var sol = solvedIdx(E);
         E.cards.forEach(function (c, i) { if (!nxt && sol.indexOf(i) < 0) nxt = c; });
         box.appendChild(h('span', null, [sol.length + ' of ' + E.cards.length + (sol.length < 3 ? ' · ' + (3 - sol.length) + ' more to send' : '')]));
-        if (nxt) btn('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }, sol.length >= 3 ? 'o' : '');
-        if (sol.length >= 3) btn('Send letter', function () { o.close(); openEnvelope(E); });
-      } else {                                                           // from the collection: next unsolved level of this game, no stamps
+        if (sol.length >= 3) box.appendChild(big('To the envelope', function () { o.close(); openEnvelope(E); }));
+        if (nxt) box.appendChild(big('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }, sol.length >= 3 ? 'o' : ''));
+        if (nxt) box.appendChild(big('Back to puzzles', function () { o.close(); }, 'ghost'));
+      } else {                                                           // from Games: next unsolved level of this game, no stamps
         var a = shown(id), rest = a.filter(function (m) { return !isDone(id, m); }), k = a.indexOf(n);
         nxt = rest.filter(function (m) { return a.indexOf(m) > k; })[0] || rest[0];
         box.appendChild(h('span', null, [(a.length - rest.length) + ' of ' + a.length + ' in ' + g.name]));
-        if (nxt) btn('Next', function () { o.close(); play(id, nxt, after); });
-        else btn('All solved · back', function () { o.close(); }, 'o');
+        if (nxt) box.appendChild(big('Next', function () { o.close(); play(id, nxt, after); }));
+        box.appendChild(big('Back to levels', function () { o.close(); }, nxt ? 'ghost' : ''));
       }
-      o.body.parentNode.appendChild(h('div', { class: 'pop' }, [box]));
+      o.el.appendChild(h('div', { class: 'pop' }, [box]));
     }
   }
 
-  /* ---------- Today: empty screen, in the middle — a letter, or no letter (already sent) ---------- */
+  /* ---------- Today: one thing in the middle, with its state ---------- */
   function drawToday(p) {
-    var E = envelope();
+    var E = envelope(), n = solvedIdx(E).length;
     p.classList.add('mid');
-    if (E.sent) { p.appendChild(h('div', { class: 'nol' }, [h('div', { class: 'envi off' }), h('b', null, ['No letter']), h('span', null, ['Already sent. The next one comes tomorrow.'])])); return; }
-    p.appendChild(h('button', { class: 'nol', onclick: function () { openNote(E); } }, [h('div', { class: 'envi' }), h('b', null, [E.opened ? 'Letter' : 'New letter']), h('span', null, ['Tap to open'])]));
+    if (E.sent) {
+      p.appendChild(h('div', { class: 'nol' }, [h('div', { class: 'envi off' }), h('b', null, ['No letter']), h('span', null, ['Sent. The next one comes tomorrow.']),
+        h('button', { class: 'lnk2', onclick: function () { go(2, true); } }, ['Today’s puzzles are in Games →'])]));
+      return;
+    }
+    var state = !E.opened ? 'Tap to open' : n < 3 ? n + ' of 3 solved' : E.stuck.length < 3 ? n + ' solved · stick 3 stamps' : 'Ready to send';
+    p.appendChild(h('button', { class: 'nol', onclick: function () { if (E.opened) openPuzzles(E); else openNote(E, true); } }, [
+      h('div', { class: 'envi' }), h('b', null, [E.opened ? 'Letter' : 'New letter']), h('span', null, [state]),
+      h('span', { class: 'fine' }, ['Send it today. Tomorrow it is gone.'])]));
   }
-  /* the note: his letter, one button below — to the puzzles */
-  function openNote(E) {
+  /* the note: his letter; from here — to the puzzles */
+  function openNote(E, first) {
     E.opened = true; save();
-    var o = sheet('Day ' + S.day, 'Letter', { onclose: draw });
+    var o = sheet(dateStr(S.day), 'Letter', { onclose: first ? draw : null });
     o.body.appendChild(letterEl(E.letter));
-    o.foot.appendChild(h('button', { class: 'big', onclick: function () { openPuzzles(E); } }, ['Go to puzzles']));
+    o.foot.appendChild(big(first ? 'Go to puzzles' : 'Back to puzzles', function () { if (first) openPuzzles(E, o); else o.close(); }));
   }
-  /* the puzzles: grid 3 x 4 for ten; after 3 solved the Send button appears */
-  function openPuzzles(E) {
-    var o = sheet('Day ' + S.day, 'Solve any 3 to send');
+  /* the puzzles: 3 x 3; after 3 solved — the way to the envelope */
+  function openPuzzles(E, under) {
+    var o = sheet(dateStr(S.day), 'Solve any 3 to send', { onclose: function () { if (under) under.el.remove(); draw(); },
+      right: h('button', { class: 'ib txt', onclick: function () { openNote(E); } }, ['Letter']) });
     function render() {
       o.body.innerHTML = ''; o.foot.innerHTML = '';
-      var sol = solvedIdx(E), grid = h('div', { class: 'pz' });
-      E.cards.forEach(function (c, i) {
-        var ok = sol.indexOf(i) >= 0;
-        grid.appendChild(h('button', { class: 'd' + c.d + (ok ? ' ok' : ''), onclick: function () { play(c.id, c.n, render, E); } }, [
-          h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name]), h('small', null, [DN[c.d] + ' · ' + ord(c.id, c.n)])]));
-      });
+      var sol = solvedIdx(E), grid = h('div', { class: 'grid3' });
+      E.cards.forEach(function (c, i) { grid.appendChild(puzzleEl(c, sol.indexOf(i) >= 0, function () { play(c.id, c.n, render, E); })); });
       o.body.appendChild(grid);
-      if (E.cards.length < 10) o.body.appendChild(h('div', { class: 'note' }, ['Only ' + E.cards.length + ' new levels left in stock — the level generator is not here yet.']));
-      if (sol.length < 3) return;
-      o.foot.appendChild(h('button', { class: 'big', onclick: function () { openEnvelope(E); } }, ['Send letter']));
+      if (E.cards.length < PER_DAY) o.body.appendChild(h('div', { class: 'note' }, ['Only ' + E.cards.length + ' new levels left in stock — the level generator is not here yet.']));
+      if (sol.length >= 3) o.foot.appendChild(big('To the envelope', function () { openEnvelope(E); }));
+      else o.foot.appendChild(h('div', { class: 'note c' }, [sol.length + ' of 3 solved']));
     }
     render();
   }
-  /* Send letter -> the envelope and the stamps: stick any 3 in any order. Back returns to the puzzles; what is stuck stays stuck. */
+  /* the envelope and the stamps: stick any 3 in any order. Back returns to the puzzles; what is stuck stays stuck. */
   function openEnvelope(E) {
-    var o = sheet('Day ' + S.day, 'Stick 3 stamps');
+    var o = sheet(dateStr(S.day), 'Stick 3 stamps');
     function render() {
       o.body.innerHTML = ''; o.foot.innerHTML = '';
       var sol = solvedIdx(E);
@@ -207,43 +249,38 @@
       var slots = h('div', { class: 'slots' });
       for (var k = 0; k < 3; k++) (function (k) {
         var i = E.stuck[k];
-        if (i == null) return slots.appendChild(h('div', { class: 'slot' }, ['stamp ' + (k + 1)]));
-        var el = stampEl(E.cards[i]); el.addEventListener('click', function () { E.stuck.splice(k, 1); save(); render(); }); slots.appendChild(el);
+        slots.appendChild(i == null ? h('div', { class: 'stamp empty' }) : stampEl(E.cards[i], 'on', function () { E.stuck.splice(k, 1); save(); render(); }));
       })(k);
       o.body.appendChild(h('div', { class: 'envbig' }, [slots, h('div', { class: 'to' }, ['To: the postman'])]));
-      o.body.appendChild(h('h2', null, ['Your stamps · ' + sol.length]));
-      var tray = h('div', { class: 'pz' });
+      o.body.appendChild(h('h2', null, ['Your stamps']));
+      var tray = h('div', { class: 'grid3' });
       sol.forEach(function (i) {
-        var c = E.cards[i], on = E.stuck.indexOf(i) >= 0;
-        tray.appendChild(h('button', { class: 'd' + c.d + ' ok' + (on ? ' used' : ''), onclick: function () {
+        var on = E.stuck.indexOf(i) >= 0;
+        tray.appendChild(stampEl(E.cards[i], on ? 'used' : '', function () {
           if (on) E.stuck.splice(E.stuck.indexOf(i), 1); else if (E.stuck.length < 3) E.stuck.push(i); else return toast('Only three stamps fit');
           save(); render();
-        } }, [h('i'), h('b', null, [game(c.id).name]), h('small', null, ['level ' + ord(c.id, c.n)])]));
+        }));
       });
       o.body.appendChild(tray);
-      o.body.appendChild(h('div', { class: 'note' }, ['Tap a stamp to stick it, tap it on the envelope to take it off. The stamps you do not use burn.']));
-      o.foot.appendChild(h('button', { class: 'big', disabled: E.stuck.length === 3 ? null : 'disabled', onclick: function () { send(E); } }, [E.stuck.length === 3 ? 'Send' : 'Stick ' + (3 - E.stuck.length) + ' more']));
+      o.body.appendChild(h('div', { class: 'note' }, ['Tap a stamp to stick it; tap it on the envelope to take it off.']));
+      o.body.appendChild(h('div', { class: 'note' }, ['After you send: the other stamps burn, there are no more stamps today, and today’s puzzles move to Games.']));
+      o.foot.appendChild(h('button', { class: 'big', disabled: E.stuck.length === 3 ? null : 'disabled', onclick: function () { send(E); } }, [E.stuck.length === 3 ? 'Send letter' : 'Stick ' + (3 - E.stuck.length) + ' more']));
     }
     render();
   }
-  function send(E) {
-    E.sent = true; save();
-    Array.prototype.slice.call(root.querySelectorAll('.sh')).forEach(function (x) { x.remove(); });
-    draw(); toast('Letter sent');
-  }
+  function send(E) { E.sent = true; save(); closeSheets(); draw(); }
 
-  /* ---------- Games (collection): only what came by mail ---------- */
+  /* ---------- Games: only what came by mail and has left with a letter ---------- */
+  function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
   function drawGames(p) {
-    var here = Postie.games.filter(function (g) { return shown(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'pz' });
+    var here = Postie.games.filter(function (g) { return shown(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'grid3' });
+    if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', null, ['Puzzles come here after you send the letter.'])])); return; }
     here.forEach(function (g) {
-      var a = shown(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length, left = a.length - sv; total += a.length; solved += sv;
-      grid.appendChild(h('button', { class: 'gm' + (left ? '' : ' ok'), onclick: function () { openGame(g.id); } }, [
-        h('i', { html: left ? String(left) : Postie.icon('check') }), h('b', null, [g.name]), h('small', null, [sv + ' / ' + a.length])]));
+      var a = shown(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length; total += a.length; solved += sv;
+      grid.appendChild(h('button', { class: 'gm', onclick: function () { openGame(g.id); } }, [h('i', null, [pct(sv, a.length) + '%']), h('b', null, [g.name])]));
     });
-    if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', { style: 'text-align:center' }, ['Puzzles come here after you send the letter.'])])); return; }
-    p.appendChild(h('h2', null, ['Collection · ' + solved + ' / ' + total + ' solved']));
+    p.appendChild(h('h2', null, ['Games · ' + pct(solved, total) + '% solved']));
     p.appendChild(grid);
-    p.appendChild(h('div', { class: 'note', style: 'margin-top:18px' }, ['The number in the circle — levels still unsolved. Today\'s puzzles come here after you send the letter.']));
   }
   /* a game: its levels in order of arrival, numbered 1, 2, 3… */
   function openGame(id) {
@@ -251,23 +288,16 @@
     function render() {
       o.body.innerHTML = '';
       var a = shown(id), sv = a.filter(function (n) { return isDone(id, n); }).length;
-      o.body.appendChild(h('div', { class: 'note' }, [sv + ' of ' + a.length + ' solved']));
+      o.el.querySelector('.t').innerHTML = ''; o.el.querySelector('.t').appendChild(document.createTextNode(g.name)); o.el.querySelector('.t').appendChild(h('small', null, [pct(sv, a.length) + '% solved']));
       var grid = h('div', { class: 'lvs' });
-      a.forEach(function (n, k) {
-        grid.appendChild(h('button', { class: 'd' + dOf(id, n) + (isDone(id, n) ? ' ok' : ''), onclick: function () { play(id, n, render); } }, [String(k + 1)]));
-      });
+      a.forEach(function (n, k) { grid.appendChild(h('button', { class: isDone(id, n) ? 'ok' : '', onclick: function () { play(id, n, render); } }, [String(k + 1)])); });
       o.body.appendChild(grid);
     }
     render();
   }
 
-  /* ---------- Letters (calendar) ---------- */
-  /* Calendar: a real month. Day d of the game = start date + (d - 1). Prototype: "Next day" moves the date too.
-     Two states: sent = filled, tap -> letter + stamps · not sent = plain, nothing to read (the letter is gone; its levels slept over in Games).
-     Today -> the Today screen. No way from a day to its levels. */
-  var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], calShift = 0;
-  function dateOf(d) { var x = new Date(S.start); x.setDate(x.getDate() + d - 1); return x; }
-  function dayOf(date) { return Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - new Date(S.start)) / 864e5) + 1; }
+  /* ---------- Letters (calendar): a real month; a day is sent or not sent ---------- */
+  var calShift = 0;
   function drawLetters(p) {
     var sent = 0; for (var k in S.env) if (S.env[k].sent) sent++;
     var now = dateOf(S.day), first = new Date(now.getFullYear(), now.getMonth() + calShift, 1), startM = dateOf(1);
@@ -282,20 +312,20 @@
     for (var i = 0; i < lead; i++) days.appendChild(h('span'));
     for (var m = 1; m <= n; m++) (function (m) {
       var d = dayOf(new Date(first.getFullYear(), first.getMonth(), m)), E = S.env['d' + d], cls = 'dd', tap = null;
-      if (d < 1 || d > S.day) cls += ' no';
+      if (d < 1 || d > S.day) cls += ' no';                              // before the first day, or still ahead
       else if (d === S.day) { cls += ' t' + (E && E.sent ? ' s' : ''); tap = function () { go(1, true); }; }
       else if (E && E.sent) { cls += ' s'; tap = function () { openDay(d); }; }
-      else cls += ' miss';
+      else cls += ' miss';                                               // not sent: the letter is gone
       days.appendChild(h('button', { class: cls, disabled: tap ? null : 'disabled', onclick: tap }, [String(m)]));
     })(m);
     p.appendChild(days);
-    p.appendChild(h('div', { class: 'legend' }, [h('span', null, [h('i', { class: 's' }), 'sent']), h('span', null, [h('i'), 'not sent'])]));
+    p.appendChild(h('div', { class: 'legend' }, [h('span', null, [h('i', { class: 's' }), 'sent']), h('span', null, [h('i', { class: 'm' }), 'not sent']), h('span', null, [h('i', { class: 't' }), 'today'])]));
   }
   function openDay(d) {
-    var E = S.env['d' + d], dt = dateOf(d), o = sheet(dt.getDate() + ' ' + MON[dt.getMonth()], 'Sent');
+    var E = S.env['d' + d], o = sheet(dateStr(d), 'Sent');
     o.body.appendChild(h('h2', null, ['Letter'])); o.body.appendChild(letterEl(E.letter));
     o.body.appendChild(h('h2', null, ['Your stamps']));
-    var slots = h('div', { class: 'slots' }); E.stuck.forEach(function (i) { slots.appendChild(stampEl(E.cards[i])); }); o.body.appendChild(slots);
+    var slots = h('div', { class: 'slots' }); E.stuck.forEach(function (i) { slots.appendChild(stampEl(E.cards[i], 'on')); }); o.body.appendChild(slots);
   }
 
   /* ---------- shell ---------- */
@@ -307,7 +337,7 @@
     drawLetters(ps[0]); drawToday(ps[1]); drawGames(ps[2]);
     pans = h('div', { class: 'pans' }, ps);
     tabs = h('div', { class: 'tabs' }, ['Letters', 'Today', 'Games'].map(function (t, k) { return h('button', { class: k === pan ? 'on' : '', onclick: function () { go(k, true); } }, [t]); }));
-    var top = h('div', { class: 'top' }, [h('span', { style: 'width:44px' }), h('b', null, [(function () { var x = dateOf(S.day); return x.getDate() + ' ' + MON[x.getMonth()]; })()]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
+    var top = h('div', { class: 'top' }, [h('span', { style: 'width:44px' }), h('b', null, [dateStr(S.day)]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
     root.insertBefore(tabs, root.firstChild); root.insertBefore(pans, tabs); root.insertBefore(top, pans);
     pans.scrollLeft = pan * pans.clientWidth;
     ps.forEach(function (p, i) { p.scrollTop = scrollY[i]; });
@@ -320,13 +350,13 @@
   function testMenu() {
     var o = sheet('Test', 'Prototype tools');
     function b(t, f, cls) { o.body.appendChild(h('button', { class: 'big ' + (cls || ''), style: 'margin-top:10px', onclick: f }, [t])); }
-    b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); toast('A new envelope'); });
-    b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); o.close(); draw(); }, 'o');
+    b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); });
+    b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.opened = true; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); save(); o.close(); draw(); }, 'o');
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
   }
   window.addEventListener('resize', function () { if (pans) pans.scrollLeft = pan * pans.clientWidth; });
 
-  /* load games (same loader as the gallery) */
+  /* load games (order — web/games.js) */
   function load(src) { return new Promise(function (ok) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { ok(); }; document.body.appendChild(s); }); }
   var chain = Promise.resolve();
   POSTIE_GAMES.forEach(function (id) { ['levels', 'engine', 'view'].forEach(function (f) { chain = chain.then(function () { return load('games/' + id + '/' + f + '.js'); }); }); });

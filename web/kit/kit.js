@@ -87,7 +87,13 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
   };
 
   /* small building blocks games share */
-  P.stat = function (pairs) { return pairs.map(function (p) { return '<span>' + p[0] + ' <b>' + p[1] + '</b></span>'; }).join(''); };
+  /* The stat line shows only what the player needs to finish the level: goals and limits ("Blocks left", "Moves left", "Lines 2 / 5").
+     Plain counters and records (moves made, best, undo count) are not part of the game's logic and are not shown (author decision, 2026-11-16). */
+  var NOSTAT = { Best: 1, Undo: 1, Moves: 1, Taps: 1, Shots: 1, Swaps: 1, Move: 1 };
+  P.stat = function (pairs) {
+    return pairs.filter(function (p) { return !NOSTAT[p[0]] && !(p[0] === 'Pieces' && typeof p[1] === 'number'); })
+      .map(function (p) { return '<span>' + p[0] + ' <b>' + p[1] + '</b></span>'; }).join('');
+  };
   P.btn = function (label, onclick, kind) { return P.h('button', { class: 'btn ' + (kind || ''), onclick: onclick }, [label]); };
   return P;
 })();

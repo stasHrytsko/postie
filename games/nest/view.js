@@ -79,7 +79,7 @@
         if (anim) Postie.pop(svg);
         /* text */
         var names = [L.name], y = s.root; s.path.forEach(function (i) { y = y.children[i]; names.push(y.name); });
-        stat.innerHTML = '<span>' + names.join(' › ') + '</span><span>Moves <b>' + s.moves + '</b></span>';
+        stat.innerHTML = '<span>' + names.join(' › ') + '</span>';
         undoB.disabled = !hist.length || over;
         outB.style.display = s.path.length ? '' : 'none'; outB.disabled = !E.canExit(s) || over;
         var nm = s.path.length ? x.name : L.name.toLowerCase(), t, cls = '';

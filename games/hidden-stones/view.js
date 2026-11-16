@@ -22,7 +22,7 @@
     rules: 'Stones are hidden in the grid. <b>Tap an edge</b> to shoot a ray in — you only see where it ends up: ' +
       '<b>✕</b> it hit a stone, <b>↩</b> it came back out where it went in, the <b>same number</b> on two edges — in at one, out at the other. ' +
       'A stone straight ahead stops a ray; a stone diagonally ahead turns it 90° away; a stone beside the entry sends it straight back. ' +
-      '<b>Drag</b> across cells to sketch a path. <b>Tap a cell</b> to mark a stone, mark them all and press <b>Check</b>. Fewer shots is better.',
+      '<b>Drag</b> across cells to sketch a path. <b>Tap a cell</b> to mark a stone, mark them all and press <b>Check</b>.',
     mount: function (root, ctx) {
       css();
       var h = Postie.h, E = ctx.engine, L = ctx.level, n = L.n, s = E.fresh(L), lines = [], last = null, pen = null;
