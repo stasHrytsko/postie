@@ -86,3 +86,9 @@ html,body{height:100%;background:#fff;overflow:hidden}
 .fl .popbox b{font-size:22px;color:var(--txt);margin-top:10px}
 .fl .popbox .dot{width:56px;height:56px}.fl .popbox .dot svg.ic{width:26px;height:26px}
 .fl .popbox .big{margin-top:18px}
+/* envelope with stamp slots */
+.fl .envbig{border:2px solid var(--txt);border-radius:12px;padding:14px 14px 18px;margin-top:10px}
+.fl .envbig .slots{margin:0 0 34px}
+.fl .envbig .slot.f{cursor:pointer}
+.fl .envbig .to{color:var(--mut);font-size:14px;border-bottom:1px solid var(--line);padding-bottom:6px;width:60%}
+.fl .pz .used{opacity:.3}
