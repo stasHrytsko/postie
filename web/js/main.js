@@ -147,6 +147,7 @@
   function stampEl(c, cls, tap) { return h(tap ? 'button' : 'div', { class: 'stamp ' + (cls || ''), onclick: tap }, [h('b', null, [game(c.id).name]), h('small', null, [String(ord(c.id, c.n))])]); }
 
   /* ---------- one frame for every game ---------- */
+  var NOSCALE = { 'carpet-layers': 1, 'perfect-fit': 1 };
   function play(id, n, after, E) {                                       // E: today's letter, when the level is played from it
     var g = game(id), lv = g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
     function clean() { if (obs) obs.disconnect(); obs = null; cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
@@ -161,12 +162,28 @@
       o.el.appendChild(card);
     }
     function mount() {
-      clean(); stage.innerHTML = ''; o.foot.innerHTML = ''; say.innerHTML = ''; say.className = 'say';
-      var inner = h('div'); stage.appendChild(inner);
-      g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
-        win: function () { markDone(id, n); setTimeout(solvedPopup, 500); } });
-      /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
-      Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });
+      say.innerHTML = ''; say.className = 'say';
+      /* Fit the board into the screen: if the game is taller than the room it has, give it a narrower column and build it again.
+         Boards size themselves from their width, so they shrink as a whole and all pointer maths stays in real pixels. */
+      var inner, width = 0;
+      for (var pass = 0; pass < 5; pass++) {
+        clean(); stage.innerHTML = ''; o.foot.innerHTML = '';
+        inner = h('div', { style: width ? 'max-width:' + width + 'px;margin:0 auto' : '' }); stage.appendChild(inner);
+        g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
+          win: function () { markDone(id, n); setTimeout(solvedPopup, 500); } });
+        /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
+        Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });
+        var room = stage.clientHeight, tall = stage.scrollHeight, w = inner.clientWidth;
+        if (!room || tall <= room + 1 || w < 220) break;
+        width = Math.max(200, Math.floor(w * Math.max(0.6, room / tall) - 4));
+      }
+      /* Still too tall (the board has fixed sizes): shrink the whole board as a picture. Not for games that drag pieces
+         by pixel sizes of their own (their maths would be off) — those keep scrolling. */
+      var room2 = stage.clientHeight, tall2 = stage.scrollHeight;
+      if (room2 && tall2 > room2 + 1 && !NOSCALE[id]) {
+        var k = Math.max(0.6, (room2 - 2) / tall2);
+        inner.style.transformOrigin = 'top center'; inner.style.transform = 'scale(' + k + ')'; inner.style.marginBottom = -Math.ceil(tall2 * (1 - k)) + 'px';
+      }
       /* the game's own message line is shown in one place; a "bad" message is the same stuck bar with Restart everywhere */
       function sync() {
         Array.prototype.slice.call(o.foot.querySelectorAll('button')).forEach(function (b) { if (/^(Retry|Hide marks|Show marks)$/.test(b.textContent)) b.style.display = 'none'; });
