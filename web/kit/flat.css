@@ -1,30 +1,20 @@
-/* Postie — prototype shell. Everything is built from tokens, so a look is a set of tokens plus a few touches.
-   Looks (html[data-look]): "post" — paper and ink, the recommended one · "night" — the letter is the light in a dark room ·
-   "plain" — black and white, no character (the logic-only look of 2026-11-16).
+/* Postie — the shell. Everything is built from tokens: the look is a set of tokens plus a few touches (design/LOOK.md).
+   Two looks (html[data-look], author decision 2026-11-16): "post" — light: warm paper, navy ink, one postal red;
+   "night" — dark: a dark room where the letter is the only warm light. The toggle is in the corner of the home screen.
+   Serif is the postman's voice (letter, dates, numbers on stamps); sans is the interface.
    Shapes carry the meaning: a circle is a puzzle (or a level), a square is a stamp. Difficulty is not shown.
    Colour lives inside the game boards only; the shell has one accent. */
 :root{
-  /* plain */
-  --milk:#FFFFFF; --card:#FFFFFF; --sand:#F1F1F3; --line:#DCDCE0;
-  --ink:#1D1D1F; --txt:#1D1D1F; --mut:#77777D; --on:#FFFFFF; --bad:#E8475F; --accent:#1D1D1F;
-  --apr:#E8475F; --sage:#7BB58A; --blue:#6C8CC4; --butter:#FFCB5C; --stone:#B9B9C0;
-  --font:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:var(--font); --voice:var(--font);
-  --stampbg:var(--milk); --r-btn:26px;
-}
-/* post: warm paper, navy ink, one postal red. Serif is the postman's voice; sans is the interface. */
-html[data-look="post"]{
   --milk:#F5F0E6; --card:#FFFCF5; --sand:#EAE3D3; --line:#D6CDB9;
   --ink:#1E2A44; --txt:#1E2A44; --mut:#6B6658; --on:#FFFCF5; --bad:#C8442F; --accent:#C8442F;
   --apr:#D4573F; --sage:#5F9A78; --blue:#4E7BAB; --butter:#E2A534; --stone:#B5AB96;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
-  --stampbg:#EDE4D0;
+  --stampbg:#EDE4D0; --r-btn:26px;
 }
-/* night: a dark room, the letter is the only warm light */
 html[data-look="night"]{
-  --milk:#131926; --card:#1B2333; --sand:#232D40; --line:#34405A;
+  --milk:#131926; --card:#1B2333; --sand:#232D40; --line:#3A4764;
   --ink:#ECE5D5; --txt:#ECE5D5; --mut:#97A0B2; --on:#131926; --bad:#F0705A; --accent:#F2C14E;
   --apr:#F0705A; --sage:#7CC79A; --blue:#7AA7E0; --butter:#F2C14E; --stone:#5C6780;
-  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
   --stampbg:#EFE6D2;
 }
 
@@ -146,40 +136,37 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .popbox.left{align-items:stretch}
 .fl .popbox .rtext{font-size:16px;line-height:1.5;color:var(--txt);margin-bottom:10px;max-height:55vh;overflow-y:auto}
 .fl .popbox .rtext b{font-weight:700}
-/* look picker in the test sheet */
-.fl .looks{display:flex;gap:8px;margin-top:8px}
-.fl .looks button{flex:1;min-height:48px;border-radius:12px;border:2px solid var(--line);background:none;font-weight:600;cursor:pointer}
-.fl .looks button.on{border-color:var(--ink)}
+.fl .top .ib.lk{width:44px;height:44px;color:var(--mut)}
 
 /* ================= touches of the "post" and "night" looks ================= */
 /* the envelope: an airmail edge — the one ornament of the whole app */
-html[data-look="post"] .fl .envi,html[data-look="night"] .fl .envi,
-html[data-look="post"] .fl .envbig,html[data-look="night"] .fl .envbig{
+.fl .envi,
+.fl .envbig{
   border:7px solid;border-radius:0;
   border-image:repeating-linear-gradient(-45deg,var(--apr) 0 9px,var(--card) 9px 18px,var(--blue) 18px 27px,var(--card) 27px 36px) 7;
   box-shadow:0 1px 0 var(--line),0 10px 24px -12px rgba(30,42,68,.35)}
-html[data-look="post"] .fl .envi::before,html[data-look="night"] .fl .envi::before{border-width:1.5px;border-color:var(--line);top:-86px}
-html[data-look="post"] .fl .envi.off,html[data-look="night"] .fl .envi.off{border:2px dashed var(--line);border-image:none;box-shadow:none}
+.fl .envi::before{border-width:1.5px;border-color:var(--line);top:-86px}
+.fl .envi.off{border:2px dashed var(--line);border-image:none;box-shadow:none}
 html[data-look="night"] .fl .envi,html[data-look="night"] .fl .envbig{--card:#F3EAD8;--line:#D8CCB2;--mut:#6B6658;color:#1E2A44;background:#F3EAD8}
 html[data-look="night"] .fl .envbig .to{color:#6B6658}
 /* a stamp: perforated edge, a printed frame inside */
-html[data-look="post"] .fl .stamp:not(.empty),html[data-look="night"] .fl .stamp:not(.empty){
+.fl .stamp:not(.empty){
   width:round(down,100%,12px);justify-self:center;border:0;border-radius:0;padding:12px 8px;color:#1E2A44;position:relative;
   -webkit-mask:linear-gradient(#000 0 0) center/calc(100% - 10px) calc(100% - 10px) no-repeat,radial-gradient(circle,transparent 3.4px,#000 3.9px) -6px -6px/12px 12px;
           mask:linear-gradient(#000 0 0) center/calc(100% - 10px) calc(100% - 10px) no-repeat,radial-gradient(circle,transparent 3.4px,#000 3.9px) -6px -6px/12px 12px}
-html[data-look="post"] .fl .stamp:not(.empty)::after,html[data-look="night"] .fl .stamp:not(.empty)::after{content:"";position:absolute;inset:8px;border:1.5px solid currentColor;opacity:.55;pointer-events:none}
-html[data-look="post"] .fl .stamp b,html[data-look="night"] .fl .stamp b{font:600 13px/1.1 var(--font)}
-html[data-look="post"] .fl .stamp small,html[data-look="night"] .fl .stamp small{font:600 20px/1 var(--title)}
-html[data-look="post"] .fl .stamp.on,html[data-look="night"] .fl .stamp.on{background:var(--stampbg);color:#1E2A44}
-html[data-look="post"] .fl .slots .stamp.on:nth-child(1),html[data-look="night"] .fl .slots .stamp.on:nth-child(1){transform:rotate(-2deg)}
-html[data-look="post"] .fl .slots .stamp.on:nth-child(2),html[data-look="night"] .fl .slots .stamp.on:nth-child(2){transform:rotate(1.2deg)}
-html[data-look="post"] .fl .slots .stamp.on:nth-child(3),html[data-look="night"] .fl .slots .stamp.on:nth-child(3){transform:rotate(-.8deg)}
-html[data-look="post"] .fl .stamp.empty,html[data-look="night"] .fl .stamp.empty{border-radius:0;border-width:1.5px}
+.fl .stamp:not(.empty)::after{content:"";position:absolute;inset:8px;border:1.5px solid currentColor;opacity:.55;pointer-events:none}
+.fl .stamp b{font:600 13px/1.1 var(--font)}
+.fl .stamp small{font:600 20px/1 var(--title)}
+.fl .stamp.on{background:var(--stampbg);color:#1E2A44}
+.fl .slots .stamp.on:nth-child(1){transform:rotate(-2deg)}
+.fl .slots .stamp.on:nth-child(2){transform:rotate(1.2deg)}
+.fl .slots .stamp.on:nth-child(3){transform:rotate(-.8deg)}
+.fl .stamp.empty{border-radius:0;border-width:1.5px}
 /* the letter is paper */
-html[data-look="post"] .fl .letter{font-size:19px}
+.fl .letter{font-size:19px}
 html[data-look="night"] .fl .letter{background:#F3EAD8;color:#1E2A44;padding:22px 20px 26px;margin-top:8px;font-size:19px;box-shadow:0 18px 40px -18px rgba(0,0,0,.7)}
 /* the primary button and "today" carry the accent sparingly */
 html[data-look="night"] .fl .big:not(.o):not(.ghost):not([disabled]){background:var(--accent);color:#131926}
-html[data-look="post"] .fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(30,42,68,.25)}
+.fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(30,42,68,.25)}
 /* boards: softer cells on paper */
-html[data-look="post"] .fl .sh.play .cell{border-color:var(--line)}
+.fl .sh.play .cell{border-color:var(--line)}

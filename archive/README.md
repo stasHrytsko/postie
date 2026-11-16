@@ -12,6 +12,7 @@
 | `world/world-v1.md` | `world/archive.md` | Первая версия мира («Механизм», слои, сезоны, ложный злодей) |
 | `world/notes-layer1-draft.md` | `world/` | Черновик записок под прежний «слой 1» |
 | `games/paint-ladder/` | `games/` | Игра убрана из набора (решение автора, 2026-11-16) |
+| `VISUAL-v2-2026-11-14.md`, `design-v2/` | `design/VISUAL.md`, `design/ref/v2/` | Визуал v2 со сканами бумаги и текстурами; заменён обликом Post / Night (`design/LOOK.md`) |
 | `design-v1/` | `design/ref/*.webp`, корень (`m_*.png`) | Дизайн Milk · Garden (2026-11-03) и скриншоты старого сайта |
 
 **Удалено из `web/`** (есть в истории git, коммит `49a472d`): прототип комнаты v2 (`room.html`, `js/room.js`, `kit/room.css`), галерея по Almanac (`games.html`, `js/app.js`), макет старого потока письма (`app.html`), страница референсов (`design.html`, `ref/`), демо бумаги (`paper.html`, `kit/paper-ui.css`, `kit/paper-texture.webp`, `kit/grain.png`). Комплект Paper UI остаётся в `design/ref/v2/paper-ui/`.

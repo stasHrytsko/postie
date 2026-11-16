@@ -16,12 +16,21 @@
 (function () {
   var h = Postie.h, KEY = 'postie:flat:v2', PER_DAY = 9;
   /* The look (web/kit/flat.css, html[data-look]) is a set of tokens; boards take their piece colours from the same tokens. */
-  var LOOK = document.documentElement.getAttribute('data-look') || 'post', css = getComputedStyle(document.documentElement);
-  function tok(n) { return css.getPropertyValue('--' + n).trim(); }
-  var FLAT = { apr: tok('apr'), blue: tok('blue'), sage: tok('sage'), butter: tok('butter'), sand: tok('stone'), ink: tok('ink') };
-  Postie.PIECES.forEach(function (p) { p.c = FLAT[p.k] || p.c; });
-  Postie.C.milk = tok('milk'); Postie.C.card = tok('card'); Postie.C.ink = tok('ink'); Postie.C.txt = tok('txt'); Postie.C.line = tok('line'); Postie.C.sand = tok('sand');
-  Postie.C.apr = FLAT.apr; Postie.C.blue = FLAT.blue; Postie.C.sage = FLAT.sage; Postie.C.butter = FLAT.butter; Postie.C.bad = tok('bad'); Postie.C.mut = tok('mut');
+  var LOOK = document.documentElement.getAttribute('data-look') === 'night' ? 'night' : 'post';
+  function applyLook() {
+    document.documentElement.setAttribute('data-look', LOOK);
+    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = LOOK === 'night' ? '#131926' : '#F5F0E6';
+    var css = getComputedStyle(document.documentElement), tok = function (n) { return css.getPropertyValue('--' + n).trim(); };
+    var F = { apr: tok('apr'), blue: tok('blue'), sage: tok('sage'), butter: tok('butter'), sand: tok('stone'), ink: tok('ink') };
+    Postie.PIECES.forEach(function (p) { p.c = F[p.k] || p.c; });
+    ['milk', 'card', 'ink', 'txt', 'line', 'sand', 'bad', 'mut'].forEach(function (k) { Postie.C[k] = tok(k); });
+    Postie.C.apr = F.apr; Postie.C.blue = F.blue; Postie.C.sage = F.sage; Postie.C.butter = F.butter;
+  }
+  applyLook();
+  /* light / dark: the button in the corner of the home screen; the choice is remembered, before it — the phone's own setting */
+  function toggleLook() { LOOK = LOOK === 'night' ? 'post' : 'night'; try { localStorage.setItem('postie:look', LOOK); } catch (e) {} applyLook(); draw(); }
+  var SUN = '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>';
+  var MOON = '<svg class="ic" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a7 7 0 1010.5 10.5z"/></svg>';
 
   /* ---------- letters (voice drafts from world/letters-draft.md; Russian until the author writes the English ones) ---------- */
   var L = {
@@ -360,7 +369,7 @@
     drawLetters(ps[0]); drawToday(ps[1]); drawGames(ps[2]);
     pans = h('div', { class: 'pans' }, ps);
     tabs = h('div', { class: 'tabs' }, ['Letters', 'Today', 'Games'].map(function (t, k) { return h('button', { class: k === pan ? 'on' : '', onclick: function () { go(k, true); } }, [t]); }));
-    var top = h('div', { class: 'top' }, [h('span', { style: 'width:44px' }), h('b', null, [dateStr(S.day)]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
+    var top = h('div', { class: 'top' }, [h('button', { class: 'ib lk', 'aria-label': LOOK === 'night' ? 'Light look' : 'Dark look', html: LOOK === 'night' ? SUN : MOON, onclick: toggleLook }), h('b', null, [dateStr(S.day)]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
     root.insertBefore(tabs, root.firstChild); root.insertBefore(pans, tabs); root.insertBefore(top, pans);
     pans.scrollLeft = pan * pans.clientWidth;
     ps.forEach(function (p, i) { p.scrollTop = scrollY[i]; });
@@ -375,11 +384,6 @@
     function b(t, f, cls) { o.body.appendChild(h('button', { class: 'big ' + (cls || ''), style: 'margin-top:10px', onclick: f }, [t])); }
     b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.opened = true; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); save(); o.close(); draw(); }, 'o');
-    o.body.appendChild(h('h2', null, ['Look']));
-    o.body.appendChild(h('div', { class: 'looks' }, [['post', 'Post'], ['night', 'Night'], ['plain', 'Plain']].map(function (x) {
-      return h('button', { class: LOOK === x[0] ? 'on' : '', onclick: function () { try { localStorage.setItem('postie:look', x[0]); } catch (e) {} location.reload(); } }, [x[1]]);
-    })));
-    o.body.appendChild(h('h2', null, ['Data']));
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
   }
   window.addEventListener('resize', function () { if (pans) pans.scrollLeft = pan * pans.clientWidth; });
