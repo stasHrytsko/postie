@@ -323,7 +323,6 @@
     b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); toast('A new envelope'); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); o.close(); draw(); }, 'o');
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
-    o.body.appendChild(h('div', { class: 'note', style: 'margin-top:20px', html: 'Older prototypes: <a class="lnk" href="room.html">room (visual v2)</a> · <a class="lnk" href="games.html">gallery</a> · <a class="lnk" href="paper.html">paper</a>' }));
   }
   window.addEventListener('resize', function () { if (pans) pans.scrollLeft = pan * pans.clientWidth; });
 
