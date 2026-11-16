@@ -87,4 +87,4 @@ StreamingAssets/levels/  StreamingAssets/letters/
 ## 8. Открыто
 
 - Генератор уровней: для каких игр, как мерить сложность одинаково.
-- Сколько игр в MVP (`CONCEPT.md` §8).
+- Какие 12 игр в MVP (`CONCEPT.md` §8).
