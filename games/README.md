@@ -20,7 +20,6 @@
 | `nest/` | Nest | stazzi `apps/casual/nested-tangram` | 11 |
 | `recruit-ladder/` | Recruit Ladder | stazzi `apps/midcore/recruit-ladder` | 15 |
 | `shadow-step/` | Shadow Step | только postie (в stazzi — прототип) | 2 |
-| `paint-ladder/` | Paint Ladder | только postie | 1 |
 | `one-each/` | One Each | только postie | 1 |
 
 Порядок игр — `web/games.js`.
