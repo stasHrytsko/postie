@@ -39,7 +39,7 @@
       root.appendChild(stat); root.appendChild(board); root.appendChild(msg);
       root.appendChild(h('div', { class: 'row' }, [undoB, goB]));
 
-      var W, col, GOAL = 52, TOP = 70, RH = 50, START = 64, H, TOK = 0;
+      var W, col, GOAL = 52, TOP = 74, RH = 60, START = 70, H, TOK = 0;   /* roomy rows: 60 px between schools */
       function cx(l) { return col * l + col / 2; }
       function cy(r) { return r < 0 ? TOP + 7 * RH + START / 2 - 4 : TOP + (6 - r) * RH + RH / 2; } /* r = -1: start row */
       function edge(r) { return TOP + (7 - r) * RH; } /* boundary just below row r (between r-1 and r) */
@@ -90,8 +90,8 @@
       }
 
       function layout() {
-        W = Math.min(root.clientWidth || 358, 380); col = W / 4; H = TOP + 7 * RH + START;
-        TOK = Math.min(col - 14, 66);
+        W = Math.min(root.clientWidth || 358, 460); col = W / 4; H = TOP + 7 * RH + START;   /* lanes use the full width */
+        TOK = Math.max(62, Math.min(col - 22, 66));   /* a recruit holds three marks */
         board.style.width = W + 'px'; board.style.height = H + 'px';
       }
       function draw() {
@@ -102,14 +102,14 @@
         var fin = E.done(s) ? E.lanesWon(s) : null;
         for (var l = 0; l < 4; l++) {
           board.appendChild(h('div', { class: 'ln', style: 'left:' + (cx(l) - 1) + 'px;top:' + (TOP - 8) + 'px;height:' + (7 * RH + 8 + START / 2) + 'px' }));
-          var g = h('div', { class: 'goal' + (fin ? (fin[l] ? ' ok' : ' no') : ''), style: 'left:' + (col * l + 4) + 'px;top:0;width:' + (col - 8) + 'px' },
+          var g = h('div', { class: 'goal' + (fin ? (fin[l] ? ' ok' : ' no') : ''), style: 'left:' + (col * l + 8) + 'px;top:0;width:' + (col - 16) + 'px' },
             E.need(L, l).map(function (k) { return tile('mini', k); }));
           if (fin) g.appendChild(h('span', { class: 'res', html: Postie.icon(fin[l] ? 'check' : 'close') }));
           board.appendChild(g);
           for (var r = 0; r < 7; r++) {
             var k = E.school(L, r, l); if (k === null) continue;
-            var t = tile('sc', k, 34);
-            t.style.left = (cx(l) - 17) + 'px'; t.style.top = (cy(r) - 17) + 'px';
+            var t = tile('sc', k, 30);
+            t.style.left = (cx(l) - 15) + 'px'; t.style.top = (cy(r) - 15) + 'px';
             if (r < s.row - 1) t.classList.add('past');
             board.appendChild(t);
           }

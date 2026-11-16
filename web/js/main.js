@@ -165,17 +165,21 @@
       say.innerHTML = ''; say.className = 'say';
       /* Fit the board into the screen: if the game is taller than the room it has, give it a narrower column and build it again.
          Boards size themselves from their width, so they shrink as a whole and all pointer maths stays in real pixels. */
-      var inner, width = 0;
-      for (var pass = 0; pass < 5; pass++) {
+      var inner, width = 0, prevTall = 0, helped = false;
+      for (var pass = 0; pass < 6; pass++) {
         clean(); stage.innerHTML = ''; o.foot.innerHTML = '';
-        inner = h('div', { style: width ? 'max-width:' + width + 'px;margin:0 auto' : '' }); stage.appendChild(inner);
+        inner = h('div', { style: width > 0 ? 'max-width:' + width + 'px;margin:0 auto' : '' }); stage.appendChild(inner);
         g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
           win: function () { markDone(id, n); setTimeout(solvedPopup, 500); } });
         /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
         Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });
         var room = stage.clientHeight, tall = stage.scrollHeight, w = inner.clientWidth;
-        if (!room || tall <= room + 1 || w < 220) break;
-        width = Math.max(200, Math.floor(w * Math.max(0.6, room / tall) - 4));
+        if (!room || tall <= room + 1) break;
+        /* narrowing did not make it shorter (rows of fixed height): go back to the full width and scale instead */
+        if (width > 0 && tall >= prevTall - 2) { if (helped) break; width = -1; continue; }
+        if (width > 0) helped = true;
+        if (width < 0 || w < 220) break;
+        prevTall = tall; width = Math.max(200, Math.floor(w * Math.max(0.6, room / tall) - 4));
       }
       /* Still too tall (the board has fixed sizes): shrink the whole board as a picture. Not for games that drag pieces
          by pixel sizes of their own (their maths would be off) — those keep scrolling. */
