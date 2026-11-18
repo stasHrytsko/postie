@@ -159,10 +159,10 @@
 
   /* ---------- one frame for every game ---------- */
   var NOSCALE = { 'carpet-layers': 1, 'perfect-fit': 1 };
-  function play(id, n, after, E) {                                       // E: today's letter, when the level is played from it
+  function play(id, n, after, E, all) {                                  // E: today's letter, when the level is played from it; all: from test > All levels
     var g = game(id), lv = g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
     function clean() { if (obs) obs.disconnect(); obs = null; cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
-    var o = sheet(g.name, 'Level ' + ord(id, n), { cls: 'play', onclose: function () { clean(); after && after(); },
+    var o = sheet(g.name, 'Level ' + (all ? n : ord(id, n)), { cls: 'play', onclose: function () { clean(); after && after(); },
       right: h('div', { style: 'display:flex' }, [
         h('button', { class: 'ib', 'aria-label': 'Rules', html: Postie.icon('help'), onclick: rules }),
         h('button', { class: 'ib', 'aria-label': 'Restart', html: Postie.icon('redo'), onclick: function () { mount(); } })]) });
@@ -181,7 +181,7 @@
         clean(); stage.innerHTML = ''; o.foot.innerHTML = '';
         inner = h('div', { style: 'width:100%;align-self:center' + (width > 0 ? ';max-width:' + width + 'px' : '') }); stage.appendChild(inner);
         g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
-          win: function () { markDone(id, n); setTimeout(solvedPopup, 500); } });
+          win: function () { if (all) markAll(id, n); else markDone(id, n); setTimeout(solvedPopup, 500); } });
         /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
         Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });
         var room = stage.clientHeight, tall = stage.scrollHeight, w = inner.clientWidth;
@@ -217,7 +217,12 @@
     /* after every solved puzzle */
     function solvedPopup() {
       var box = h('div', { class: 'popbox' }, [h('i', { class: 'okc', html: Postie.icon('check') }), h('b', null, ['Solved'])]), nxt = null;
-      if (E && !E.sent) {                                                // from the letter: Next; from the 3rd also To the envelope; after the last only that
+      if (all) {                                                         // test > All levels: every level by its number in levels.js, no stamps, no letter
+        nxt = n < g.levels.length ? n + 1 : null;
+        box.appendChild(h('span', null, ['Level ' + n + ' of ' + g.levels.length]));
+        if (nxt) box.appendChild(big('Next', function () { o.close(); play(id, nxt, after, null, true); }));
+        box.appendChild(big('Back to levels', function () { o.close(); }, nxt ? 'ghost' : ''));
+      } else if (E && !E.sent) {                                         // from the letter: Next; from the 3rd also To the envelope; after the last only that
         var sol = solvedIdx(E);
         E.cards.forEach(function (c, i) { if (!nxt && sol.indexOf(i) < 0) nxt = c; });
         box.appendChild(h('span', null, [sol.length + ' of ' + E.cards.length + (sol.length < 3 ? ' · ' + (3 - sol.length) + ' more to send' : '')]));
@@ -328,6 +333,29 @@
     render();
   }
 
+  /* ---------- test > All levels: every game and every level there is, outside the daily loop (for the author) ---------- */
+  function isAll(id, n) { return ((S.all || {})[id] || []).indexOf(n) >= 0; }
+  function markAll(id, n) { S.all = S.all || {}; var d = S.all[id] || (S.all[id] = []); if (d.indexOf(n) < 0) d.push(n); save(); }
+  function openAll() {
+    var total = 0; Postie.games.forEach(function (g) { total += g.levels.length; });
+    var o = sheet('All levels', Postie.games.length + ' games · ' + total + ' levels'), grid = h('div', { class: 'grid3' });
+    Postie.games.forEach(function (g) {
+      var sv = g.levels.filter(function (l, i) { return isAll(g.id, i + 1); }).length;
+      grid.appendChild(h('button', { class: 'gm', onclick: function () { openAllGame(g.id); } }, [h('i', null, [sv + ' / ' + g.levels.length]), h('b', null, [g.name])]));
+    });
+    o.body.appendChild(grid);
+  }
+  function openAllGame(id) {
+    var g = game(id), o = sheet(g.name, g.levels.length + ' levels');
+    function render() {
+      o.body.innerHTML = '';
+      var grid = h('div', { class: 'lvs' });
+      g.levels.forEach(function (l, i) { grid.appendChild(h('button', { class: isAll(id, i + 1) ? 'ok' : '', onclick: function () { play(id, i + 1, render, null, true); } }, [String(i + 1)])); });
+      o.body.appendChild(grid);
+    }
+    render();
+  }
+
   /* ---------- Letters (calendar): a real month; a day is sent or not sent ---------- */
   var calShift = 0;
   function drawLetters(p) {
@@ -387,6 +415,7 @@
   function testMenu() {
     var o = sheet('Test', 'Prototype tools');
     function b(t, f, cls) { o.body.appendChild(h('button', { class: 'big ' + (cls || ''), style: 'margin-top:10px', onclick: f }, [t])); }
+    b('All games and levels', function () { o.close(); openAll(); }, 'o');
     b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.opened = true; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); save(); o.close(); draw(); }, 'o');
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
