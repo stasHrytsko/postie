@@ -6,5 +6,5 @@ var POSTIE_GAMES = [
   'streams', 'parcels', 'knock-through', 'outgrow', 'perfect-fit', 'hidden-stones',
   'arrow-flip', 'slide-out', 'the-gap', 'carpet-layers', 'shadow-step'
 ];
-var POSTIE_BENCH = ['tight-shelf', 'nest', 'one-each', 'recruit-ladder'];
+var POSTIE_BENCH = ['tight-shelf', 'nest', 'one-each', 'recruit-ladder', 'square-up'];
 if (typeof module !== 'undefined') module.exports = POSTIE_GAMES.concat(POSTIE_BENCH);
