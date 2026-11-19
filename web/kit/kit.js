@@ -97,7 +97,8 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
   P.btn = function (label, onclick, kind) { return P.h('button', { class: 'btn ' + (kind || ''), onclick: onclick }, [label]); };
 
   /* The hand (author 2026-11-19, as in stazzi): a finger that shows a gesture — on level 0, on the level that brings a new move,
-     and on the "?" card. Points are page coordinates (clientX/Y); 1 point = tap, 2+ = drag along them.
+     and on the "?" card. Points are page coordinates (clientX/Y); 1 point = tap, 2+ = drag along them;
+     a list of such gestures ([[p], [q]]) = one after another (tap, then tap).
        var hd = Postie.hand(host)        host: a positioned element the hand is drawn over (pointer-events: none)
        hd.show(points)                   loop the gesture until hide()
        hd.play(points, root) -> Promise  do the gesture once and drive real pointer events, so the game makes the move itself
@@ -121,13 +122,23 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
     }
     function dur(pts) { return pts.length === 1 ? 1300 : 2100; }
     function hide() { gen++; clearTimeout(timer); if (anim) anim.cancel(); anim = null; el.style.opacity = 0; }
+    function seq(pts) { return pts && pts.length && Array.isArray(pts[0]) ? pts : [pts]; }
     function show(pts) {
       hide(); if (!pts || !pts.length || still || !el.animate) return;
-      var g = gen;
-      (function loop() { if (g !== gen) return; anim = el.animate(frames(pts), { duration: dur(pts), easing: 'ease-in-out' }); anim.onfinish = function () { if (g === gen) timer = setTimeout(loop, 450); }; })();
+      var g = gen, list = seq(pts), i = 0;
+      (function loop() {
+        if (g !== gen) return;
+        var one = list[i]; anim = el.animate(frames(one), { duration: dur(one), easing: 'ease-in-out' });
+        anim.onfinish = function () { if (g !== gen) return; i = (i + 1) % list.length; timer = setTimeout(loop, i ? 120 : 450); };
+      })();
     }
     /* once, and the game feels real pointer events at the hand's fingertip */
     function play(pts, root) {
+      var list = seq(pts);
+      if (list.length > 1) return list.reduce(function (p, one) { return p.then(function (ok) { return ok === false ? false : playOne(one, root); }); }, Promise.resolve(true));
+      return playOne(list[0], root);
+    }
+    function playOne(pts, root) {
       hide(); var g = gen;
       return new Promise(function (done) {
         var d = still || !el.animate ? 400 : dur(pts), t0 = null, phase = 0, id = 77, tgt = null;
