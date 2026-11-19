@@ -13,6 +13,7 @@
 | `world/world-v1.md` | `world/archive.md` | Первая версия мира («Механизм», слои, сезоны, ложный злодей) |
 | `world/notes-layer1-draft.md` | `world/` | Черновик записок под прежний «слой 1» |
 | `games/paint-ladder/` | `games/` | Игра убрана из набора (решение автора, 2026-11-16) |
+| `games/pair-up/` | `games/` | Слита с Parcels (решение автора, 2026-11-19): её правило пар живёт в Parcels как кубики с точками, её уровни 1–10 — уровни Parcels с точками |
 | `VISUAL-v2-2026-11-14.md`, `design-v2/` | `design/VISUAL.md`, `design/ref/v2/` | Визуал v2 со сканами бумаги и текстурами; заменён обликом Post / Night (`design/LOOK.md`) |
 | `design-v1/` | `design/ref/*.webp`, корень (`m_*.png`) | Дизайн Milk · Garden (2026-11-03) и скриншоты старого сайта |
 

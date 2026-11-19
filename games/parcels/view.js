@@ -1,17 +1,14 @@
 /* Parcels — screen. Gesture: drag a frame from one cell to the opposite corner and let go (one finger). No undo (stazzi author decision):
-   a dead end offers Retry (and the header restart). The rules text switches by the level's rule set ('numbers' / 'pairs'). */
+   a dead end shows the stuck bar with Restart. One rules text for every level: numbers, dots, or both (author 2026-11-19). */
 (function () {
-  var RULES = {
-    numbers: '<b>Drag a frame</b> over the cubes around <b>one number</b>: it must hold exactly that many cubes (a 6 can be 1×6, 2×3, 3×2 or 6×1). The parcel ships and everything above it <b>falls</b>. Ship every cube.',
-    pairs: '<b>New rules — pairs.</b> <b>Drag a frame</b> around exactly <b>one black and one white dot</b>; empty cells are fine, stones (dark tiles) are not. The framed cells vanish and everything above them <b>falls</b>, stones too. Clear every dot — stones stay.'
-  };
+  var RULES = '<b>Drag a frame</b> over cubes and let go. A parcel is either <b>one number</b> with exactly that many cubes (a 6 can be 1×6, 2×3, 3×2 or 6×1), or <b>one black and one white dot</b> with any cubes around them. The parcel ships and everything above it <b>falls</b>. Ship every cube.';
   var CSS = '' +
     '.pc-board{position:relative;margin:12px auto;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.pc-board .grid{margin:0}' +
     '.pc-board .cell{border-radius:var(--r8)}' +
     '.pc-board .cell.gap{background:transparent;border-style:dashed;opacity:.6}' +
     '.pc-board .cell.num{color:#fff;font:700 22px var(--font)}' +
-    '.pc-dot{width:52%;height:52%;border-radius:50%;background:var(--ink)}' +
+    '.pc-dot{width:46%;height:46%;border-radius:50%;background:var(--ink)}' +
     '.pc-dot.w{background:var(--card);box-shadow:inset 0 0 0 3px var(--ink)}' +
     '.pc-frame{position:absolute;border:3px dashed var(--mut);border-radius:var(--r12);pointer-events:none;display:none}' +
     '.pc-frame.ok{border-style:solid;border-color:var(--ink)}' +
@@ -21,17 +18,10 @@
   var still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   Postie.register({
-    id: 'parcels', name: 'Parcels', rules: RULES.numbers,
+    id: 'parcels', name: 'Parcels', rules: RULES,
     mount: function (root, ctx) {
       css();
-      var h = Postie.h, E = ctx.engine, L = ctx.level, pairs = L.rules === 'pairs', s = E.fresh(L), busy = false;
-      /* the shell shows one rules text per game: switch it to this level's rule set */
-      var rb = root.parentNode && root.parentNode.querySelector('.rules');
-      if (rb) {
-        rb.innerHTML = RULES[L.rules];
-        var seen = false; try { seen = localStorage.getItem('postie:rules:parcels:' + L.rules) === '1'; } catch (e) {}
-        if (pairs && !seen) rb.style.display = '';
-      }
+      var h = Postie.h, E = ctx.engine, L = ctx.level, s = E.fresh(L), busy = false;
       var stat = h('div', { class: 'stat' }), msg = h('div', { class: 'msg' });
       var gap = 5, cellMax = 58;
       var grid = h('div', { class: 'grid', style: 'grid-template-columns:repeat(' + L.w + ',1fr);gap:' + gap + 'px' });
@@ -62,8 +52,7 @@
         var f = cur(); place(fr, f); fr.style.display = 'block';
         fr.classList.toggle('ok', E.check(s, f[0], f[1], f[2], f[3]) === null);
         var n = 0;
-        if (pairs) n = (f[2] - f[0] + 1) * (f[3] - f[1] + 1);
-        else for (var r = f[0]; r <= f[2]; r++) for (var c = f[1]; c <= f[3]; c++) if (s.g[r][c]) n++;
+        for (var r = f[0]; r <= f[2]; r++) for (var c = f[1]; c <= f[3]; c++) if (s.g[r][c]) n++;
         badge.textContent = n;
       }
       board.addEventListener('pointerdown', function (e) {
@@ -87,14 +76,14 @@
 
       function why(f, err) {
         if (err === 'gap') return 'Only cubes: a parcel has no empty cells.';
-        if (err === 'no_number') return 'A parcel needs one number.';
+        if (err === 'mixed') return 'A number and dots never share a parcel.';
+        if (err === 'empty') return 'A parcel needs one number, or one black and one white dot.';
         if (err === 'many_numbers') return 'Only one number per parcel.';
         if (err === 'wrong_size') {
           var num = 0; for (var r = f[0]; r <= f[2]; r++) for (var c = f[1]; c <= f[3]; c++) if (s.g[r][c].v > 0) num = s.g[r][c].v;
           return 'That frame holds ' + (f[2] - f[0] + 1) * (f[3] - f[1] + 1) + ' cubes — the number says ' + num + '.';
         }
-        if (err === 'stone') return 'No stones inside a frame.';
-        return 'A frame needs exactly one black and one white dot.';
+        return 'Dots go in pairs: exactly one black and one white.';
       }
 
       function ship(f) {
@@ -115,24 +104,18 @@
         }
         setTimeout(function () {
           box.remove(); busy = false;
-          if (s.status === 'won') ctx.win(pairs ? 'Every pair cleared' : 'All parcels shipped');
-          else if (s.status === 'failed') {
-            try { localStorage.setItem('postie:rules:parcels:' + L.rules, '1'); } catch (x) {}
-            say(pairs ? 'Stuck: no pair can be framed any more.' : 'No parcels left: no frame fits. Some cubes stay behind.', true); retry.style.display = '';
-          }
+          if (s.status === 'won') ctx.win('All parcels shipped');
+          else if (s.status === 'failed') { say('No parcels left: no frame fits. Some cubes stay behind.', true); retry.style.display = ''; }
         }, still ? 60 : Math.max(280, 120 + fallMs));
-        if (s.status === 'won') { try { localStorage.setItem('postie:rules:parcels:' + L.rules, '1'); } catch (x) {} }
       }
 
       function draw() {
-        stat.innerHTML = Postie.stat([[pairs ? 'Pairs' : 'Parcels', s.shipped + ' / ' + s.total]]);
+        stat.innerHTML = Postie.stat([['Parcels', s.shipped + ' / ' + s.total]]);
         grid.innerHTML = '';
         for (var r = 0; r < L.h; r++) for (var c = 0; c < L.w; c++) {
           var x = s.g[r][c], cls = 'cell', kids = [], lab = 'empty';
-          if (pairs) {
-            if (x && x.v === 'S') { cls += ' wall'; lab = 'stone'; }
-            else if (x) { kids.push(h('span', { class: 'pc-dot' + (x.v === 'W' ? ' w' : '') })); lab = x.v === 'W' ? 'white dot' : 'black dot'; }
-          } else if (!x) cls += ' gap';
+          if (!x) cls += ' gap';
+          else if (x.v === 'B' || x.v === 'W') { cls += ' c-butter'; kids.push(h('span', { class: 'pc-dot' + (x.v === 'W' ? ' w' : '') })); lab = x.v === 'W' ? 'cube with a white dot' : 'cube with a black dot'; }
           else if (x.v > 0) { cls += ' c-apr num'; kids.push(String(x.v)); lab = 'number ' + x.v; }
           else { cls += ' c-butter'; lab = 'cube'; }
           grid.appendChild(h('div', { class: cls, 'data-r': r, 'data-c': c, 'data-id': x ? x.id : null, 'aria-label': lab }, kids));
