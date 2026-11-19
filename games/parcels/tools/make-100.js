@@ -2,7 +2,10 @@
      1–8    numbers only, 4×4 → 5×5
      9–11   numbers + exactly one pair (9 teaches the pair: its solution opens with the pair, the hand shows it)
      12–15  numbers + two pairs
-     16–100 mixed, step by step harder; flavour changes level to level (balanced / few pairs / many pairs / numbers only now and then)
+     16–90  mixed, step by step harder; flavour changes level to level (balanced / few pairs / many pairs / numbers only now and then)
+     91–100 7×7, steps 5–6 (author 2026-11-19: the big board at the end)
+   Two builders: steps 1–3 — a random cover of the board (parcels ship top to bottom); steps 4–6 and 7×7 — tools/reverse.js
+   (author's idea 2026-11-19: start from an empty board and put parcels in, under older ones — gravity becomes part of the answer).
    Step = how hard a level is, from two measures together (author 2026-11-19: one measure is not enough — level "2" had 8 parcels):
      parcels: <=4 -> 1, 5–6 -> 2, 7–8 -> 3, 9–10 -> 4, 11 -> 5, 12+ -> 6
      traps (share of good first frames): 1 -> 1, >=.75 -> 2, >=.5 -> 3, >=.3 -> 4, >=.18 -> 5, else 6
@@ -30,7 +33,8 @@ function plan() {
   const FL = ['bal', 'few', 'bal', 'many', 'bal', 'few', 'bal', 'many', 'bal', 'num'], VAR = [0, 1, 0, -1, 1, 0, 1, -1, 0, 1];
   for (let i = 16; i <= 100; i++) {
     const base = 2 + Math.floor((i - 16) / 85 * 4);                     // 2 -> 5 over the run
-    add(Math.max(2, Math.min(6, base + VAR[(i - 16) % 10])), FL[(i - 16) % 10]);
+    const st = Math.max(2, Math.min(6, base + VAR[(i - 16) % 10]));
+    if (i > 90) add(Math.max(5, st), FL[(i - 16) % 10], { big: true }); else add(st, FL[(i - 16) % 10]);
   }
   return P;
 }
@@ -95,6 +99,32 @@ function make(slot, seed) {
   if (slot.teach) { const f = r.solution[0]; let b = false; for (let i = f[0]; i <= f[2]; i++) for (let j = f[1]; j <= f[3]; j++) if (L.rows[i][j] === 'B') b = true; if (!b) return null; }
   return Object.assign(L, { step: st, difficulty: diffOf(st), parcels: n, pairs: k, good: +q.toFixed(2), seed, solution: r.solution });
 }
+const RV = require('./reverse.js');
+function revSpec(slot) {
+  if (slot.big) return { w: 7, h: 7, n: [10, 14], maxA: 8, minA: 3, side: 4, deep: 0.9, climb: 6 };
+  return [null, null, null, null, { w: 6, h: 6, n: [8, 10], maxA: 6, minA: 2, side: 3, deep: 0.8, climb: 20 },
+    { w: 6, h: 6, n: [8, 11], maxA: 8, minA: 3, side: 4, deep: 0.9, climb: 25 }, { w: 6, h: 6, n: [9, 13], maxA: 8, minA: 3, side: 4, deep: 0.9, climb: 30 }][slot.step];
+}
+function makeRev(slot, seed) {
+  const sp = revSpec(slot), rnd = rng(seed);
+  const L0 = RV.build(seed, Object.assign({ pairs: 0 }, sp)); if (!L0) return null;
+  const n = L0.parcels, k = pairsFor(slot.fl, n, rnd), B = L0.B, area = p => p.ww * p.hh;
+  if (k > 0) {                                                          // choose which parcels carry pairs (numbers need area <= 9)
+    const idx = B.placed.map((p, i) => i).sort(() => rnd() - 0.5), ps = new Set(idx.slice(0, k));
+    B.mark = B.placed.map((p, i) => RV.pick(rnd, area(p), ps.has(i)));
+    if (B.placed.some((p, i) => !ps.has(i) && area(p) > 9)) return null;
+  }
+  let L = RV.level(B); if (!L) return null;
+  let r = solve(L), q = r.goodFirst / r.firstMoves, st = stepOf(n, q);
+  for (let i = 0; i < sp.climb && st < slot.step; i++) {               // climb: move one marker inside its parcel
+    const m2 = B.mark.slice(), x = Math.floor(rnd() * n); m2[x] = RV.pick(rnd, area(B.placed[x]), m2[x].pair);
+    const B2 = Object.assign({}, B, { mark: m2 }), L2 = RV.level(B2); if (!L2) continue;
+    const r2 = solve(L2), q2 = r2.goodFirst / r2.firstMoves;
+    if (q2 <= q) { B.mark = m2; L = L2; r = r2; q = q2; st = stepOf(n, q); }
+  }
+  if (st !== slot.step) return null;
+  return { w: L.w, h: L.h, rows: L.rows, step: st, difficulty: diffOf(st), parcels: n, pairs: k, good: +q.toFixed(2), seed, built: 'reverse', solution: L.solution };
+}
 function stazziFits(slot, used) {                                         // a numbers-only slot from step 4: reuse stazzi's levels
   global.Postie.levels = global.Postie.levels || {};
   const src = require(path.join(__dirname, 'stazzi-numbers.json'));
@@ -111,12 +141,12 @@ if (require.main === module) {
   if (process.argv[2] === 'write') { require('./write-100.js')(P); return; }
   const k = +process.argv[2] || 0, nW = +process.argv[3] || 1, used = new Set(), reuse = {};
   fs.mkdirSync(OUT, { recursive: true });
-  P.forEach((slot, i) => { if (slot.fl === 'num' && slot.step >= 4) reuse[i] = stazziFits(slot, used); });   // same in every worker
+  P.forEach((slot, i) => { if (slot.fl === 'num' && slot.step >= 4 && !slot.big) reuse[i] = stazziFits(slot, used); });   // same in every worker
   P.forEach((slot, i) => {
     if (i % nW !== k) return;
     const file = path.join(OUT, 'slot-' + (i + 1) + '.json'); if (fs.existsSync(file)) return;
     let L = reuse[i] || null;
-    for (let seed = 1 + i * 10000; !L && seed < i * 10000 + 3000; seed++) L = make(slot, seed);
+    for (let seed = 1 + i * 10000; !L && seed < i * 10000 + 3000; seed++) L = slot.step >= 4 || slot.big ? makeRev(slot, seed) : make(slot, seed);
     if (!L) { console.log('slot', i + 1, 'FAILED', JSON.stringify(slot)); return; }
     fs.writeFileSync(file, JSON.stringify(Object.assign(L, { slot: i + 1, fl: slot.fl, teach: !!slot.teach })));
     console.log('slot', i + 1, 'step', L.step, L.w + 'x' + L.h, 'parcels', L.parcels, 'pairs', L.pairs, 'good', L.good);
