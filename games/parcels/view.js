@@ -2,18 +2,23 @@
    a dead end shows the stuck bar with Restart. One rules text for every level: numbers, dots, or both (author 2026-11-19). */
 (function () {
   var RULES = '<b>Drag a frame</b> over cubes and let go. A parcel is either <b>one number</b> with exactly that many cubes (a 6 can be 1×6, 2×3, 3×2 or 6×1), or <b>one black and one white dot</b> with any cubes around them. The parcel ships and everything above it <b>falls</b>. Ship every cube.';
+  /* own colours (author 2026-11-19: no mustard): plain cube — light kraft, number — blue, dots — ink and paper in both looks */
   var CSS = '' +
+    '.pc-board{--pc-cube:#E4D9C3;--pc-edge:#D3C6AB;--pc-num:#4E7BAB;--pc-numtx:#FFFCF5;--pc-blk:#1E2A44;--pc-wht:#FFFCF5}' +
+    'html[data-look=night] .pc-board{--pc-cube:#3A4764;--pc-edge:#4A5878;--pc-num:#7AA7E0;--pc-numtx:#131926;--pc-blk:#0E1420;--pc-wht:#ECE5D5}' +
+    '.pc-board .cell.cube{background:var(--pc-cube);border-color:var(--pc-edge)}' +
+    '.pc-board .cell.cube.num{background:var(--pc-num);border-color:var(--pc-num);color:var(--pc-numtx)}' +
     '.pc-board{position:relative;margin:12px auto;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.pc-board .grid{margin:0}' +
     '.pc-board .cell{border-radius:var(--r8)}' +
     '.pc-board .cell.gap{background:transparent;border-style:dashed;opacity:.6}' +
-    '.pc-board .cell.num{color:#fff;font:700 22px var(--font)}' +
-    '.pc-dot{width:46%;height:46%;border-radius:50%;background:var(--ink)}' +
-    '.pc-dot.w{background:var(--card);box-shadow:inset 0 0 0 3px var(--ink)}' +
+    '.pc-board .cell.num{font:700 22px var(--font)}' +
+    '.pc-dot{width:46%;height:46%;border-radius:50%;background:var(--pc-blk)}' +
+    '.pc-dot.w{background:var(--pc-wht);box-shadow:inset 0 0 0 3px var(--pc-blk)}' +
     '.pc-frame{position:absolute;border:3px dashed var(--mut);border-radius:var(--r12);pointer-events:none;display:none}' +
     '.pc-frame.ok{border-style:solid;border-color:var(--ink)}' +
     '.pc-frame .badge{left:100%;top:0}' +
-    '.pc-box{position:absolute;background:var(--butter);border:2px solid var(--txt);border-radius:var(--r12);pointer-events:none}';
+    '.pc-box{position:absolute;background:var(--pc-cube);border:2px solid var(--txt);border-radius:var(--r12);pointer-events:none}';
   function css() { if (document.getElementById('pc-css')) return; var s = document.createElement('style'); s.id = 'pc-css'; s.textContent = CSS; document.head.appendChild(s); }
   var still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -115,9 +120,9 @@
         for (var r = 0; r < L.h; r++) for (var c = 0; c < L.w; c++) {
           var x = s.g[r][c], cls = 'cell', kids = [], lab = 'empty';
           if (!x) cls += ' gap';
-          else if (x.v === 'B' || x.v === 'W') { cls += ' c-butter'; kids.push(h('span', { class: 'pc-dot' + (x.v === 'W' ? ' w' : '') })); lab = x.v === 'W' ? 'cube with a white dot' : 'cube with a black dot'; }
-          else if (x.v > 0) { cls += ' c-apr num'; kids.push(String(x.v)); lab = 'number ' + x.v; }
-          else { cls += ' c-butter'; lab = 'cube'; }
+          else if (x.v === 'B' || x.v === 'W') { cls += ' cube'; kids.push(h('span', { class: 'pc-dot' + (x.v === 'W' ? ' w' : '') })); lab = x.v === 'W' ? 'cube with a white dot' : 'cube with a black dot'; }
+          else if (x.v > 0) { cls += ' cube num'; kids.push(String(x.v)); lab = 'number ' + x.v; }
+          else { cls += ' cube'; lab = 'cube'; }
           grid.appendChild(h('div', { class: cls, 'data-r': r, 'data-c': c, 'data-id': x ? x.id : null, 'aria-label': lab }, kids));
         }
       }
