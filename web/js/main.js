@@ -47,14 +47,20 @@
       'Достаточно — это сколько?',
       'Когда-то я сказал людям одну фразу. Её измерили, нашли неэффективной и пошли дальше. Теперь я говорю её по одному слову в день.']
   };
-  /* forks: what yesterday's envelope looked like -> the paragraph that answers it. The game never explains the link. */
+  /* his answer to yesterday's envelope (author 2026-11-19): every envelope that came gets ONE phrase the next day, and the phrase
+     names the very stamps that were on it — that is why the player wants to send and see. The game never explains the link.
+     l — the three stamps as they were stuck ("Streams 3, Parcels 1 и Outgrow 2"). Voice drafts; the author writes the final ones. */
   var R = {
     unsent: 'Вчера конверт не пришёл. Я проверил почтомат дважды: работает. Значит, день был твой, а не мой.',
     unsent2: 'Некоторые комнаты не открывают конверт. Я кладу следующий сверху. Не знаю, кто из нас прав.',
-    same: 'Три одинаковые марки. На почте так клеили, когда письмо было важное: чтобы точно дошло. Дошло.',
-    easy: 'Три лёгких. Лёгкое не значит быстрое. Суп тоже лёгкий. Его варят два часа.',
-    hard: 'Три трудных. Я не спрашиваю зачем. Я положил их рядом и смотрел, как они молчат.',
-    diff: 'Три разные. Я разложил их на столе и долго менял местами. Порядка не нашёл. Оставил так.'
+    first: function (l) { return l + '. Первый конверт от тебя — я положил его на стол и до вечера ничего рядом не клал.'; },
+    same: function (l, g) { return l + '. Три ' + g + ' — так клеили, когда письмо было важное: чтобы точно дошло.'; },
+    two: function (l, a, b) { return l + '. Две ' + a + ' и одна ' + b + ' — не знаю, какая здесь лишняя.'; },
+    num: function (l, n) { return l + '. На всех трёх ' + n + ' — не знаю, заметил ли ты.'; },
+    fresh: function (l, g) { return l + '. Такой, как ' + g + ', у меня на столе ещё не было — я освободил для неё место.'; },
+    easy: function (l) { return l + '. Три лёгких — лёгкое не значит быстрое.'; },
+    hard: function (l) { return l + '. Три трудных — я не спрашиваю зачем.'; },
+    diff: function (l) { return l + '. Три разные — я долго менял их местами, порядка не нашёл.'; }
   };
 
   /* ---------- state ---------- */
@@ -129,12 +135,28 @@
       re = miss === 1 ? R.unsent : miss === 2 ? R.unsent2 : null;        // from the third day in a row — an ordinary letter, not a word about it
     }
     else {
-      var st = y.stuck.map(function (i) { return y.cards[i]; });
-      re = st.every(function (s) { return s.id === st[0].id; }) ? R.same
-        : st.every(function (s) { return s.d === 1; }) ? R.easy
-        : st.every(function (s) { return s.d >= 3; }) ? R.hard : R.diff;
+      re = reply(y, day);
     }
     return { text: L.any[Math.floor(r() * L.any.length)], re: re };
+  }
+  /* one phrase about the three stamps of yesterday's envelope; what he notices: a first envelope, three alike, two and one,
+     the same number on all three, a game his table has not seen, then the rest */
+  function reply(y, day) {
+    var st = y.stuck.map(function (i) { return y.cards[i]; });
+    var nm = st.map(function (s) { return game(s.id).name; }), no = st.map(function (s) { return ord(s.id, s.n); });
+    var l = nm[0] + ' ' + no[0] + ', ' + nm[1] + ' ' + no[1] + ' и ' + nm[2] + ' ' + no[2];
+    var seen = {}, any = false;                                          // the games on the envelopes that came before this one
+    for (var d = 1; d < day - 1; d++) { var e = S.env['d' + d]; if (e && e.sent) { any = true; e.stuck.forEach(function (i) { seen[e.cards[i].id] = 1; }); } }
+    if (!any) return R.first(l);
+    var kinds = nm.filter(function (x, k) { return nm.indexOf(x) === k; });
+    if (kinds.length === 1) return R.same(l, nm[0]);
+    if (kinds.length === 2) { var a = nm.filter(function (x) { return nm.indexOf(x) !== nm.lastIndexOf(x); })[0]; return R.two(l, a, kinds[0] === a ? kinds[1] : kinds[0]); }
+    if (no[0] === no[1] && no[1] === no[2]) return R.num(l, no[0]);
+    var fr = st.filter(function (s) { return !seen[s.id]; });
+    if (fr.length === 1) return R.fresh(l, game(fr[0].id).name);
+    if (st.every(function (s) { return s.d === 1; })) return R.easy(l);
+    if (st.every(function (s) { return s.d >= 3; })) return R.hard(l);
+    return R.diff(l);
   }
   function solvedIdx(E) { var a = []; E.cards.forEach(function (c, i) { if (isDone(c.id, c.n)) a.push(i); }); return a; }
 
