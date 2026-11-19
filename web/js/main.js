@@ -87,7 +87,7 @@
   /* the day a game first arrives, by its place in web/games.js: 1,1,1 · 2 · 3 · 5 · then every second day */
   function gameDay(k) { return k < 3 ? 1 : k === 3 ? 2 : k === 4 ? 3 : 5 + 2 * (k - 5); }
   function firstDay(id) { return gameDay(POSTIE_GAMES.indexOf(id)); }
-  function allowed(id, d, day) { var f = firstDay(id); return f <= day && (d < 3 || day >= f + 2); }   // first two days of a game: easy and medium only
+  function allowed(id, d, day) { var f = firstDay(id); return POSTIE_GAMES.indexOf(id) >= 0 && f <= day && (d < 3 || day >= f + 2); }   // first two days of a game: easy and medium only
 
   /* ---------- today's letter ---------- */
   function wave(r) {                                                     // 1..5 of each, 9 together
@@ -338,12 +338,16 @@
   function markAll(id, n) { S.all = S.all || {}; var d = S.all[id] || (S.all[id] = []); if (d.indexOf(n) < 0) d.push(n); save(); }
   function openAll() {
     var total = 0; Postie.games.forEach(function (g) { total += g.levels.length; });
-    var o = sheet('All levels', Postie.games.length + ' games · ' + total + ' levels'), grid = h('div', { class: 'grid3' });
-    Postie.games.forEach(function (g) {
-      var sv = g.levels.filter(function (l, i) { return isAll(g.id, i + 1); }).length;
-      grid.appendChild(h('button', { class: 'gm', onclick: function () { openAllGame(g.id); } }, [h('i', null, [sv + ' / ' + g.levels.length]), h('b', null, [g.name])]));
+    var o = sheet('All levels', Postie.games.length + ' games · ' + total + ' levels');
+    [['In the game', POSTIE_GAMES], ['Bench', POSTIE_BENCH]].forEach(function (part) {   // the bench never comes in a letter
+      var grid = h('div', { class: 'grid3' });
+      Postie.games.forEach(function (g) {
+        if (part[1].indexOf(g.id) < 0) return;
+        var sv = g.levels.filter(function (l, i) { return isAll(g.id, i + 1); }).length;
+        grid.appendChild(h('button', { class: 'gm', onclick: function () { openAllGame(g.id); } }, [h('i', null, [sv + ' / ' + g.levels.length]), h('b', null, [g.name])]));
+      });
+      o.body.appendChild(h('h2', null, [part[0]])); o.body.appendChild(grid);
     });
-    o.body.appendChild(grid);
   }
   function openAllGame(id) {
     var g = game(id), o = sheet(g.name, g.levels.length + ' levels');
@@ -425,6 +429,7 @@
   /* load games (order — web/games.js) */
   function load(src) { return new Promise(function (ok) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { ok(); }; document.body.appendChild(s); }); }
   var chain = Promise.resolve();
-  POSTIE_GAMES.forEach(function (id) { ['levels', 'engine', 'view'].forEach(function (f) { chain = chain.then(function () { return load('games/' + id + '/' + f + '.js'); }); }); });
-  chain.then(function () { Postie.games.sort(function (a, b) { return POSTIE_GAMES.indexOf(a.id) - POSTIE_GAMES.indexOf(b.id); }); draw(); });
+  var ALL = POSTIE_GAMES.concat(POSTIE_BENCH);                         // the bench is loaded too: test > All games and levels
+  ALL.forEach(function (id) { ['levels', 'engine', 'view'].forEach(function (f) { chain = chain.then(function () { return load('games/' + id + '/' + f + '.js'); }); }); });
+  chain.then(function () { Postie.games.sort(function (a, b) { return ALL.indexOf(a.id) - ALL.indexOf(b.id); }); draw(); });
 })();

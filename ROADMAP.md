@@ -9,7 +9,7 @@
 ## 0. Решения, без которых дальше нельзя
 
 - [x] **1. На чём собирать.** → **Capacitor**: текущий веб-прототип заворачивается в нативные приложения iOS и Android, игры не переписываются (решение автора, 2026-11-17; Unity отменён). `TECH.md`.
-- [~] **2. Какие 12 игр** идут в MVP. 2026-11-19: точно 10 — Arrow Flip, The Gap, Slide Out, Tight Shelf, Outgrow, Parcels + Pair Up (одна игра), Streams, Carpet Layers, Perfect Fit, Bracket (из stazzi, ещё не перенесена); возможно — Nest, Recruit Ladder, Shadow Step, One Each, Forward / Back и Knock Through (обе из stazzi); осталось выбрать 2 и решить Hidden Stones.
+- [x] **2. Какие 12 игр** → смесь, дедукция в ядре: Streams, Parcels + Pair Up, Knock Through, Hidden Stones, Perfect Fit, Outgrow · Arrow Flip, Slide Out, The Gap, Carpet Layers, Shadow Step, Bracket; запасные — Tight Shelf, Nest, One Each, Recruit Ladder, Forward / Back, Add Up, Crown Fit. `CONCEPT.md` §1.
 - [ ] **3. Логика марок** — что значат игра, номер, набор и порядок трёх марок; на ней строятся развилки писем.
 - [ ] **4. Деньги** — бесплатно без рекламы / платная загрузка / подписка / реклама вне решения. Влияет на анкеты сторов и аналитику.
 - [ ] **5. Название** — проверить товарный знак Postie (USPTO, EUIPO, классы 9 и 41), домены, прямой поиск в App Store и Google Play.
@@ -61,3 +61,4 @@
 | 2026-11-17 | 1 | Capacitor вместо Unity — `TECH.md` |
 | 2026-11-17 | — | Добавлен п. 13: дизайн и UI kit до товарного вида; всего 28 пунктов |
 | 2026-11-19 | 2 | 10 игр точно, 6 возможно; Parcels + Pair Up — одна игра; Bracket из stazzi — `CONCEPT.md` §1 |
+| 2026-11-19 | 2 | 12 игр выбраны: смесь, дедукция в ядре; лавка запасных; в прототипе письма — только игры MVP (`web/games.js`) |

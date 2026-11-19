@@ -22,7 +22,7 @@
 | `shadow-step/` | Shadow Step | только postie (в stazzi — прототип) | 2 |
 | `one-each/` | One Each | только postie | 1 |
 
-Порядок игр — `web/games.js`.
+Порядок игр — `web/games.js`: `POSTIE_GAMES` — игры MVP в порядке прихода в письме, `POSTIE_BENCH` — запасные (в письма не приходят).
 
 ## Что лежит в папке игры
 
