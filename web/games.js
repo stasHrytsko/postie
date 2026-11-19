@@ -3,8 +3,8 @@
    Not here yet: Bracket (in stazzi, to be ported). Pair Up lives inside Parcels (dots), its folder is in archive/games.
    POSTIE_BENCH — the bench: kept in games/, playable from test > All games and levels, never in the letter. */
 var POSTIE_GAMES = [
-  'streams', 'parcels', 'knock-through', 'outgrow', 'perfect-fit', 'hidden-stones',
-  'arrow-flip', 'slide-out', 'the-gap', 'carpet-layers', 'shadow-step'
+  'streams', 'parcels', 'knock-through', 'square-up', 'outgrow', 'perfect-fit',
+  'arrow-flip', 'the-gap', 'carpet-layers', 'shadow-step'
 ];
-var POSTIE_BENCH = ['tight-shelf', 'nest', 'one-each', 'recruit-ladder', 'square-up'];
+var POSTIE_BENCH = ['tight-shelf', 'nest', 'one-each', 'recruit-ladder', 'hidden-stones', 'slide-out'];   // author 2026-11-19: Hidden Stones and Slide Out to the bench (classics, little of their own), Square Up into the game
 if (typeof module !== 'undefined') module.exports = POSTIE_GAMES.concat(POSTIE_BENCH);
