@@ -124,7 +124,10 @@
   function letterFor(day) {
     if (day === 1) return { text: L.first, re: null };
     var r = rnd(day * 104729), y = S.env['d' + (day - 1)], re;
-    if (!y || !y.sent) { var b = S.env['d' + (day - 2)]; re = (day > 2 && (!b || !b.sent)) ? R.unsent2 : R.unsent; }
+    if (!y || !y.sent) {                                                 // he sees the empty mailbox and does not count the days (author 2026-11-19):
+      var miss = 1; while (miss < 3 && day - miss > 1 && !((S.env['d' + (day - miss - 1)] || {}).sent)) miss++;   // one line the first day, another the second,
+      re = miss === 1 ? R.unsent : miss === 2 ? R.unsent2 : null;        // from the third day in a row — an ordinary letter, not a word about it
+    }
     else {
       var st = y.stuck.map(function (i) { return y.cards[i]; });
       re = st.every(function (s) { return s.id === st[0].id; }) ? R.same
