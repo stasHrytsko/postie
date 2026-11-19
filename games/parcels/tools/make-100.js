@@ -101,14 +101,16 @@ function make(slot, seed) {
 }
 const RV = require('./reverse.js');
 function revSpec(slot) {
-  if (slot.big) return { w: 7, h: 7, n: [10, 14], maxA: 8, minA: 3, side: 4, deep: 0.9, climb: 6 };
+  if (slot.big) return { w: 7, h: 7, n: [11, 15], maxA: 6, minA: 3, side: 3, deep: 0.95, climb: 3 };
   return [null, null, null, null, { w: 6, h: 6, n: [8, 10], maxA: 6, minA: 2, side: 3, deep: 0.8, climb: 20 },
-    { w: 6, h: 6, n: [8, 11], maxA: 8, minA: 3, side: 4, deep: 0.9, climb: 25 }, { w: 6, h: 6, n: [9, 13], maxA: 8, minA: 3, side: 4, deep: 0.9, climb: 30 }][slot.step];
+    { w: 6, h: 6, n: [10, 13], maxA: 6, minA: 2, side: 3, deep: 0.95, climb: 15 }, { w: 6, h: 6, n: [10, 13], maxA: 6, minA: 2, side: 3, deep: 0.95, climb: 15 }][slot.step];
 }
 function makeRev(slot, seed) {
   const sp = revSpec(slot), rnd = rng(seed);
   const L0 = RV.build(seed, Object.assign({ pairs: 0 }, sp)); if (!L0) return null;
-  const n = L0.parcels, k = pairsFor(slot.fl, n, rnd), B = L0.B, area = p => p.ww * p.hh;
+  const n = L0.parcels, B = L0.B, area = p => p.ww * p.hh;
+  let k = pairsFor(slot.fl, n, rnd);
+  if (slot.step >= 5) k = Math.min(k, slot.fl === 'many' ? 5 : 3);   // pairs are flexible and make a level easier: fewer of them at the top
   if (k > 0) {                                                          // choose which parcels carry pairs (numbers need area <= 9)
     const idx = B.placed.map((p, i) => i).sort(() => rnd() - 0.5), ps = new Set(idx.slice(0, k));
     B.mark = B.placed.map((p, i) => RV.pick(rnd, area(p), ps.has(i)));
@@ -116,13 +118,13 @@ function makeRev(slot, seed) {
   }
   let L = RV.level(B); if (!L) return null;
   let r = solve(L), q = r.goodFirst / r.firstMoves, st = stepOf(n, q);
-  for (let i = 0; i < sp.climb && st < slot.step; i++) {               // climb: move one marker inside its parcel
+  for (let i = 0; i < sp.climb && st < Math.min(slot.step, 5); i++) {   // climb: move one marker inside its parcel
     const m2 = B.mark.slice(), x = Math.floor(rnd() * n); m2[x] = RV.pick(rnd, area(B.placed[x]), m2[x].pair);
     const B2 = Object.assign({}, B, { mark: m2 }), L2 = RV.level(B2); if (!L2) continue;
     const r2 = solve(L2), q2 = r2.goodFirst / r2.firstMoves;
     if (q2 <= q) { B.mark = m2; L = L2; r = r2; q = q2; st = stepOf(n, q); }
   }
-  if (st !== slot.step) return null;
+  if (slot.step >= 5 ? st < 5 : st !== slot.step) return null;    // 5 and 6 are both "hard" in the letter; 6 is rare by chance
   return { w: L.w, h: L.h, rows: L.rows, step: st, difficulty: diffOf(st), parcels: n, pairs: k, good: +q.toFixed(2), seed, built: 'reverse', solution: L.solution };
 }
 function stazziFits(slot, used) {                                         // a numbers-only slot from step 4: reuse stazzi's levels
