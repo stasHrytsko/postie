@@ -18,6 +18,7 @@
 | `hidden-stones/` | Hidden Stones | stazzi `apps/casual/hidden-stones` | 15 |
 | `nest/` | Nest | stazzi `apps/casual/nested-tangram` | 11 |
 | `recruit-ladder/` | Recruit Ladder | stazzi `apps/midcore/recruit-ladder` | 15 |
+| `knock-through/` | Knock Through | stazzi `apps/midcore/knock-through` — только ядро + генератор | 100 + уровень 0 |
 | `shadow-step/` | Shadow Step | только postie (в stazzi — прототип) | 2 |
 | `one-each/` | One Each | только postie | 1 |
 
