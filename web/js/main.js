@@ -186,6 +186,7 @@
       clearTimeout(gt); if (!guide || gi >= guide.length || o.el.querySelector('.pop')) { if (hd) hd.hide(); return; }
       gt = setTimeout(function () { if (!hd) hd = Postie.hand(o.el); var pts = g.gesture(stage, guide[gi], lv); if (pts) hd.show(pts); }, 350);
     }
+    function back() { if (guide && gi > 0 && gi <= guide.length) { gi--; showGuide(); } }   // the game's Undo: the hand steps back too
     function moved(m) {
       if (!guide) return;
       if (gi < guide.length && JSON.stringify(m) === JSON.stringify(guide[gi])) gi++; else gi = guide.length;   // off the sample: the hand stops
@@ -201,7 +202,7 @@
       for (var pass = 0; pass < 6; pass++) {
         clean(); stage.innerHTML = ''; o.foot.innerHTML = '';
         inner = h('div', { style: 'width:100%;align-self:center' + (width > 0 ? ';max-width:' + width + 'px' : '') }); stage.appendChild(inner);
-        g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); }, moved: moved,
+        g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); }, moved: moved, back: back,
           win: function () { if (hd) hd.hide(); if (tut) { S.tut = S.tut || {}; S.tut[id] = 1; S.seen[id] = 1; save(); } else if (all) markAll(id, n); else markDone(id, n); setTimeout(solvedPopup, 500); } });
         /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
         Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });

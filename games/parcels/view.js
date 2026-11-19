@@ -1,5 +1,5 @@
-/* Parcels — screen. Gesture: drag a frame from one cell to the opposite corner and let go (one finger). No undo (stazzi author decision):
-   a dead end shows the stuck bar with Restart. One rules text for every level: numbers, dots, or both (author 2026-11-19). */
+/* Parcels — screen. Gesture: drag a frame from one cell to the opposite corner and let go (one finger). Undo takes back the last parcel
+   (author 2026-11-19, roadmap step 14; stazzi had none); a dead end shows the stuck bar with Restart, and Undo still works there. One rules text for every level: numbers, dots, or both (author 2026-11-19). */
 (function () {
   var RULES = '<b>Drag a frame</b> over cubes and let go. A parcel is either <b>one number</b> with exactly that many cubes (a 6 can be 1×6, 2×3, 3×2 or 6×1), or <b>one black and one white dot</b> with any cubes around them. The parcel ships and everything above it <b>falls</b>. Ship every cube.';
   /* own colours (author 2026-11-19: no mustard): plain cube — light kraft, number — blue, dots — ink and paper in both looks */
@@ -46,9 +46,16 @@
       var fr = h('div', { class: 'pc-frame' }), badge = h('span', { class: 'badge' }); fr.appendChild(badge);
       var board = h('div', { class: 'pc-board', style: 'max-width:' + (L.w * cellMax + (L.w - 1) * gap) + 'px' }, [grid, fr]);
       var retry = Postie.btn('Retry', reset, 's'); retry.style.display = 'none';
-      root.appendChild(stat); root.appendChild(board); root.appendChild(msg); root.appendChild(h('div', { class: 'row' }, [retry]));
+      var hist = [], undoB = Postie.btn('Undo', undo, 'o s');
+      root.appendChild(stat); root.appendChild(board); root.appendChild(msg); if (!ctx.demo) root.appendChild(h('div', { class: 'row' }, [undoB, retry]));
 
-      function reset() { s = E.fresh(L); busy = false; retry.style.display = 'none'; say(''); draw(); }
+      function reset() { s = E.fresh(L); hist = []; busy = false; retry.style.display = 'none'; say(''); draw(); }
+      function snap(x) { return { w: x.w, h: x.h, g: x.g.map(function (row) { return row.slice(); }), shipped: x.shipped, total: x.total, status: x.status }; }
+      function undo() {
+        if (busy || !hist.length || s.status === 'won') return;
+        s = hist.pop(); retry.style.display = 'none'; say(''); draw();
+        if (ctx.back) ctx.back();
+      }
       function say(t, bad) { msg.className = 'msg' + (bad ? ' bad' : ''); msg.textContent = t; }
 
       /* geometry: cell under a point, clamped to the board edge (a finger off the board keeps the frame on the nearest edge cell) */
@@ -108,6 +115,7 @@
         var err = E.check(s, f[0], f[1], f[2], f[3]);
         if (err) { Postie.shake(board); say(why(f, err)); return; }
         var box = h('div', { class: 'pc-box' }); place(box, f); board.appendChild(box);
+        hist.push(snap(s));
         var res = E.frame(s, f[0], f[1], f[2], f[3]);
         if (ctx.moved) ctx.moved(f);
         busy = true;
@@ -124,12 +132,13 @@
         setTimeout(function () {
           box.remove(); busy = false;
           if (s.status === 'won') ctx.win('All parcels shipped');
-          else if (s.status === 'failed') { say('No parcels left: no frame fits. Some cubes stay behind.', true); retry.style.display = ''; }
+          else if (s.status === 'failed') { say('No frame fits. Undo or restart.', true); retry.style.display = ''; }
         }, still ? 60 : Math.max(280, 120 + fallMs));
       }
 
       function draw() {
         stat.innerHTML = Postie.stat([['Parcels', s.shipped + ' / ' + s.total]]);
+        undoB.disabled = !hist.length || s.status === 'won';
         grid.innerHTML = '';
         for (var r = 0; r < L.h; r++) for (var c = 0; c < L.w; c++) {
           var x = s.g[r][c], cls = 'cell', kids = [], lab = 'empty';
