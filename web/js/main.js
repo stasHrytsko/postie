@@ -47,20 +47,19 @@
       'Достаточно — это сколько?',
       'Когда-то я сказал людям одну фразу. Её измерили, нашли неэффективной и пошли дальше. Теперь я говорю её по одному слову в день.']
   };
-  /* his answer to yesterday's envelope (author 2026-11-19): every envelope that came gets ONE phrase the next day, and the phrase
-     names the very stamps that were on it — that is why the player wants to send and see. The game never explains the link.
-     l — the three stamps as they were stuck ("Streams 3, Parcels 1 и Outgrow 2"). Voice drafts; the author writes the final ones. */
+  /* the letter (author 2026-11-19) = a short phrase about yesterday's envelope + a phrase, a thought or a question of his own (L above).
+     Every envelope that came gets the phrase. It NEVER names the stamps — no game, no number: the game does not explain
+     the link between the letter and the stamps, the player has to get there alone. Texts — world/letters-draft.md, R-. */
   var R = {
     unsent: 'Вчера конверт не пришёл. Я проверил почтомат дважды: работает. Значит, день был твой, а не мой.',
     unsent2: 'Некоторые комнаты не открывают конверт. Я кладу следующий сверху. Не знаю, кто из нас прав.',
-    first: function (l) { return l + '. Первый конверт от тебя — я положил его на стол и до вечера ничего рядом не клал.'; },
-    same: function (l, g) { return l + '. Три ' + g + ' — так клеили, когда письмо было важное: чтобы точно дошло.'; },
-    two: function (l, a, b) { return l + '. Две ' + a + ' и одна ' + b + ' — не знаю, какая здесь лишняя.'; },
-    num: function (l, n) { return l + '. На всех трёх ' + n + ' — не знаю, заметил ли ты.'; },
-    fresh: function (l, g) { return l + '. Такой, как ' + g + ', у меня на столе ещё не было — я освободил для неё место.'; },
-    easy: function (l) { return l + '. Три лёгких — лёгкое не значит быстрое.'; },
-    hard: function (l) { return l + '. Три трудных — я не спрашиваю зачем.'; },
-    diff: function (l) { return l + '. Три разные — я долго менял их местами, порядка не нашёл.'; }
+    first: 'Конверт пришёл. Я положил его на стол. До вечера ничего рядом не клал.',
+    same: 'Три одинаковые марки. На почте так клеили, когда письмо было важное: чтобы точно дошло. Дошло.',
+    two: 'Две одинаковые и одна другая. Не знаю, какая здесь лишняя. Может быть, две.',
+    fresh: 'Новая марка. Такой у меня на столе ещё не было. Я освободил для неё место. Его оказалось много.',
+    easy: 'Три лёгких. Лёгкое не значит быстрое. Суп тоже лёгкий. Его варят два часа.',
+    hard: 'Три трудных. Я не спрашиваю зачем. Я положил их рядом и смотрел, как они молчат.',
+    diff: 'Три разные. Я разложил их на столе и долго менял местами. Порядка не нашёл. Оставил так.'
   };
 
   /* ---------- state ---------- */
@@ -139,24 +138,20 @@
     }
     return { text: L.any[Math.floor(r() * L.any.length)], re: re };
   }
-  /* one phrase about the three stamps of yesterday's envelope; what he notices: a first envelope, three alike, two and one,
-     the same number on all three, a game his table has not seen, then the rest */
+  /* the short phrase about yesterday's envelope. What he notices, in this order: a first envelope, three alike, two and one,
+     a game his table has not seen, three easy, three hard, three different. The stamps themselves are never named. */
   function reply(y, day) {
-    var st = y.stuck.map(function (i) { return y.cards[i]; });
-    var nm = st.map(function (s) { return game(s.id).name; }), no = st.map(function (s) { return ord(s.id, s.n); });
-    var l = nm[0] + ' ' + no[0] + ', ' + nm[1] + ' ' + no[1] + ' и ' + nm[2] + ' ' + no[2];
+    var st = y.stuck.map(function (i) { return y.cards[i]; }), ids = st.map(function (s) { return s.id; });
     var seen = {}, any = false;                                          // the games on the envelopes that came before this one
     for (var d = 1; d < day - 1; d++) { var e = S.env['d' + d]; if (e && e.sent) { any = true; e.stuck.forEach(function (i) { seen[e.cards[i].id] = 1; }); } }
-    if (!any) return R.first(l);
-    var kinds = nm.filter(function (x, k) { return nm.indexOf(x) === k; });
-    if (kinds.length === 1) return R.same(l, nm[0]);
-    if (kinds.length === 2) { var a = nm.filter(function (x) { return nm.indexOf(x) !== nm.lastIndexOf(x); })[0]; return R.two(l, a, kinds[0] === a ? kinds[1] : kinds[0]); }
-    if (no[0] === no[1] && no[1] === no[2]) return R.num(l, no[0]);
-    var fr = st.filter(function (s) { return !seen[s.id]; });
-    if (fr.length === 1) return R.fresh(l, game(fr[0].id).name);
-    if (st.every(function (s) { return s.d === 1; })) return R.easy(l);
-    if (st.every(function (s) { return s.d >= 3; })) return R.hard(l);
-    return R.diff(l);
+    if (!any) return R.first;
+    var kinds = ids.filter(function (x, k) { return ids.indexOf(x) === k; }).length;
+    if (kinds === 1) return R.same;
+    if (kinds === 2) return R.two;
+    if (st.filter(function (s) { return !seen[s.id]; }).length === 1) return R.fresh;
+    if (st.every(function (s) { return s.d === 1; })) return R.easy;
+    if (st.every(function (s) { return s.d >= 3; })) return R.hard;
+    return R.diff;
   }
   function solvedIdx(E) { var a = []; E.cards.forEach(function (c, i) { if (isDone(c.id, c.n)) a.push(i); }); return a; }
 
@@ -176,7 +171,7 @@
   }
   function closeSheets() { Array.prototype.slice.call(root.querySelectorAll('.sh')).forEach(function (x) { x.remove(); }); }
   function big(t, f, cls) { return h('button', { class: 'big ' + (cls || ''), onclick: f }, [t]); }
-  function letterEl(lt) { return h('div', { class: 'letter' }, [h('div', null, [lt.text]), lt.re ? h('div', { class: 're' }, [lt.re]) : null]); }
+  function letterEl(lt) { return h('div', { class: 'letter' }, [lt.re ? h('div', { class: 're' }, [lt.re]) : null, h('div', null, [lt.text])]); }   // first the phrase about yesterday's envelope, then his own
   /* a puzzle is a circle */
   function puzzleEl(c, ok, tap) { return h('button', { class: 'pzl' + (ok ? ' ok' : ''), onclick: tap }, [h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name + ' ' + ord(c.id, c.n)])]); }
   /* a stamp is a square: the game and the number of the level */

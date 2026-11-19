@@ -33,7 +33,7 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .tabs button.on{color:var(--txt);background:var(--sand);font-weight:600}
 .fl h2{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:22px 0 8px}
 .fl .letter{font:400 18px/1.55 var(--voice)}
-.fl .letter .re{margin-top:14px}
+.fl .letter .re{margin-bottom:14px}
 .fl .note{color:var(--mut);font-size:14px;margin:10px 0}
 .fl .note.c{text-align:center;margin:0 0 6px}
 .fl .big{width:100%;min-height:52px;border-radius:var(--r-btn);border:0;background:var(--ink);color:var(--on);font-size:16px;font-weight:600;cursor:pointer}
