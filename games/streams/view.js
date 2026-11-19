@@ -14,14 +14,13 @@
 
   Postie.register({
     id: 'streams', name: 'Streams',
-    rules: '<b>Drag the line</b> from the dark dot through <b>every cell</b> to the ring. At the <b>fork</b> the line splits: lead each branch to the ring with its number. ' +
+    rules: '<b>Drag the line</b> from the dark dot to the <b>fork</b>: it splits. Lead each branch to the ring with its number, through <b>every cell</b>. ' +
       'Later levels have a pool of moves: each cell costs 1, a <b>+N</b> cell gives N back. Drag a line back to undo it.',
-    /* level 0: one line through six cells */
-    tutorial: { w: 3, h: 2, start: 0, fork: null, arrows: [], finish: [3], drops: [], energy: null, solution: [[0, 1], [0, 2], [0, 5], [0, 4], [0, 3]] },
+    /* level 0 (author 2026-11-19: the fork from the very first level): trunk into the fork, then each branch to its ring */
+    tutorial: { w: 3, h: 3, start: 0, fork: 4, arrows: [3, 5], finish: [8, 2], drops: [], energy: null, solution: [[0, 1], [0, 4], [1, 3], [1, 6], [1, 7], [1, 8], [2, 5], [2, 2]] },
     demo: [
-      { say: 'Drag the line through <b>every cell</b> to the ring.', level: { w: 3, h: 2, start: 0, fork: null, arrows: [], finish: [3], drops: [], energy: null, solution: [[0, 1], [0, 2], [0, 5], [0, 4], [0, 3]] } },
-      { say: 'At the <b>fork</b> the line splits: lead each branch to its ring.', level: { w: 3, h: 3, start: 0, fork: 4, arrows: [3, 5], finish: [8, 2], drops: [], energy: null, solution: [[0, 1], [0, 4], [1, 3], [1, 6], [1, 7], [1, 8], [2, 5], [2, 2]] } },
-      { say: 'Later: each cell costs a move, <b>+N</b> gives moves back.', level: { w: 3, h: 2, start: 0, fork: null, arrows: [], finish: [3], drops: [[2, 3]], energy: 3, solution: [[0, 1], [0, 2], [0, 5], [0, 4], [0, 3]] } }
+      { say: 'Drag the line to the <b>fork</b>: it splits. Lead each branch to its ring, through <b>every cell</b>.', level: { w: 3, h: 3, start: 0, fork: 4, arrows: [3, 5], finish: [8, 2], drops: [], energy: null, solution: [[0, 1], [0, 4], [1, 3], [1, 6], [1, 7], [1, 8], [2, 5], [2, 2]] } },
+      { say: 'Later: each cell costs a move, <b>+N</b> gives moves back.', level: { w: 3, h: 3, start: 0, fork: 4, arrows: [3, 5], finish: [8, 2], drops: [[6, 3]], energy: 5, solution: [[0, 1], [0, 4], [1, 3], [1, 6], [1, 7], [1, 8], [2, 5], [2, 2]] } }
     ],
     /* a move = [line, cell]; the gesture = drag from the line's tip (its cell before this one in the sample, the start or the fork) */
     gesture: function (root, m, L) {

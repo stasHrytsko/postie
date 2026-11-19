@@ -1,12 +1,13 @@
-// Streams — 100 levels by games/GENERATOR.md (author 2026-11-19: first no pool of moves, later drops and the pool join).
-//   1–8    one line through every cell (like Zip), 3×3 → 5×5
-//   9      teaches the fork (teach: the hand leads the trunk into the fork and the first branch out of it)
-//   10–30  forks with 2–3 branches and lines, no pool
-//   31     teaches drops and the pool (one line, a drop on the way)
-//   32–90  mix: no pool / pool with drops; from 50 the pool often makes you switch branches
-//   91–100 7×7 finale, hard only (author 2026-11-19)
+// Streams — 100 levels by games/GENERATOR.md (author 2026-11-19: the fork from the very first level — it is what makes the game;
+// harder by more branches (up to 3), drops with the pool, and the board up to 8×8).
+//   0      (view.js) teaches the fork
+//   1–8    trunk + 2 branches, no pool, 3×3 → 5×5
+//   9–30   2 → 3 branches, no pool, 4×4 → 6×5
+//   31     teaches drops and the pool (teach: the hand up to the first drop)
+//   32–80  mix: no pool / pool with drops (2 branches: the pool forces switching), 5×5 → 7×7
+//   81–100 finale, hard: 7×7 with the pool, 8×8 with 3 branches (no pool: on 8×8 it does not cut ways)
 // Built from the answer (stazzi gen-levels.mjs): a random cover of the board by the trunk and branches first, the level is its skeleton.
-// Measures: cells (<=12 → 1, <=16 → 2, <=20 → 3, <=25 → 4, <=30 → 5, more → 6) and traps along the answer (share of the moves that
+// Measures: cells (<=12 → 1, <=16 → 2, <=20 → 3, <=25 → 4, <=30 → 5, more → 6; 49+ cells add 1: a big board takes long to read) and traps along the answer (share of the moves that
 // keep a cover possible, averaged over the moments with a choice); a pool that forces switching adds 1. step = ceil(average).
 // Run: node make-100.mjs k n (workers) · node make-100.mjs write
 import { writeFileSync, readFileSync, mkdirSync, existsSync } from 'node:fs';
@@ -74,33 +75,34 @@ const diffOf = (st) => st <= 2 ? 1 : st <= 4 ? 2 : 3;
 
 export function plan() {
   const P = [], add = (w, h, B, pool, extra) => P.push(Object.assign({ w, h, B, pool }, extra || {}));
-  add(3, 3, 1); add(3, 3, 1); add(4, 3, 1); add(4, 4, 1); add(4, 4, 1); add(4, 4, 1); add(5, 4, 1); add(5, 5, 1);
-  add(4, 4, 2, false, { teach: 'fork' });
-  const sizes = [[4, 4], [5, 4], [5, 5], [6, 5], [6, 6]];
-  for (let i = 10; i <= 100; i++) {
-    if (i === 31) { add(4, 4, 1, true, { teach: 'pool' }); continue; }
-    if (i > 90) { add(7, 7, i % 2 ? 3 : 2, false, { hard: true }); continue; }   // 7×7 without the pool: with it, too many covers pass
-    const t = (i - 10) / 90, sz = sizes[Math.max(0, Math.min(3, Math.floor(t * 4 + ((i % 3) - 1) * 0.4)))];
-    const B = i % 5 === 0 ? 1 : i % 3 === 0 ? 3 : 2;
-    const pool = i > 31 && (i % 2 === 0);
-    const cells = sz[0] * sz[1], b = B === 1 && cells > 20 ? 2 : B === 3 && cells < 20 ? 2 : B;   // 3 branches need room; big boards fork
-    add(sz[0], sz[1], b, pool, { interleave: pool && i >= 50 && b > 1 });   // one line has nothing to switch
+  [[3, 3], [3, 3], [4, 3], [4, 4], [4, 4], [5, 4], [5, 4], [5, 5]].forEach(([w, h]) => add(w, h, 2, false));
+  const early = [[4, 4], [5, 4], [5, 5], [5, 5], [6, 5], [6, 5]];
+  for (let i = 9; i <= 30; i++) { const sz = early[Math.min(5, Math.floor((i - 9) / 22 * 6 + (i % 2) * 0.5))]; add(sz[0], sz[1], i >= 15 && sz[0] * sz[1] >= 20 && i % 3 !== 0 ? 3 : 2, false); }
+  add(4, 4, 2, true, { teach: 'pool' });
+  const mid = [[5, 5], [6, 5], [6, 6], [6, 6], [7, 7]];
+  for (let i = 32; i <= 80; i++) {
+    const sz = mid[Math.min(4, Math.floor((i - 32) / 49 * 5))], pool = i % 2 === 0, B = sz[0] * sz[1] >= 25 && i % 3 === 0 ? 3 : 2;
+    add(sz[0], sz[1], B, pool, { interleave: pool && B === 2 && i >= 45 });
+  }
+  for (let i = 81; i <= 100; i++) {
+    if (i % 2) add(8, 8, 3, false, { hard: true });
+    else add(7, 7, i % 4 === 0 ? 3 : 2, true, { interleave: i % 4 !== 0, hard: true });
   }
   return P;
 }
 export function make(slot, seed) {
   const rand = rng(seed * 7919 + slot.w * 31 + slot.h);
   const made = randomCover(slot.w, slot.h, slot.B, rand); if (!made) return null;
-  const all = covers(made.sk, slot.w * slot.h >= 49 ? 60000 : 6000); if (all.truncated) return null;
+  const all = covers(made.sk, slot.w * slot.h >= 64 ? 200000 : slot.w * slot.h >= 49 ? 60000 : 6000); if (all.truncated) return null;
   let drops = new Map(), energy = null;
   if (slot.pool) {
     let ok = false;
     for (let t = 0; t < 12 && !ok; t++) {
-      const d = randomDrops(made.sk, made.paths, slot.B === 1 ? 2 : 3, rand); if (!d) break;
-      const e = minEnergy(made.paths, d, 30); if (e === null || e < 3) continue;
+      const d = randomDrops(made.sk, made.paths, slot.B === 1 ? 2 : Math.max(3, Math.round(slot.w * slot.h / 8)), rand); if (!d) break;
+      const e = minEnergy(made.paths, d, slot.w * slot.h); if (e === null || e < 3) continue;   // whether the pool bites is measured below: how many ways it cuts
       let feasible = 0, seq = 0;
       for (const p of all.list) { if (!play(p, d, e).ok) continue; feasible++; if (playSequential(p, d, e)) seq++; }
-      if (feasible < 1 || feasible > 3) continue;
+      if (feasible < 1 || feasible > Math.max(3, all.list.length * (slot.B >= 3 ? 0.3 : 0.05))) continue;   // the pool must cut most ways (3 branches: most, not all but three)
       if (slot.interleave && seq > 0) continue;
       drops = d; energy = e; ok = true;
     }
@@ -109,33 +111,32 @@ export function make(slot, seed) {
   const L = { w: slot.w, h: slot.h, start: made.sk.start, fork: made.sk.fork, arrows: made.sk.arrows, finish: made.sk.finish, drops: [...drops.entries()], energy };
   const a = analyze(L); if (!a.best) return null;
   const order = a.best.order;
-  if (slot.teach === 'fork' && order[0][0] !== 0) return null;
   const q = trapShare(L, all.list.filter((p) => play(p, drops, energy).ok), order);
   let st = Math.ceil((stepP(slot.w * slot.h) + stepQ(q)) / 2);
   if (a.needsSwitch) st = Math.min(6, st + 1);
+  if (slot.w * slot.h >= 49) st = Math.min(6, st + 1);
   /* check the answer on the real engine */
   const s = E.fresh(L); for (const [line, cell] of order) if (!E.step(L, s, line, cell)) return null;
   if (!E.won(s)) return null;
   const extra = {};
-  if (slot.teach === 'fork') extra.teach = order.findIndex(([line]) => line > 0) + 1;      // the hand: trunk, fork, the first branch step
   if (slot.teach === 'pool') { const i = order.findIndex(([, c]) => drops.has(c)); if (i < 0) return null; extra.teach = i + 1; }
   return Object.assign(L, { step: st, difficulty: diffOf(st), covers: all.list.length, good: +q.toFixed(2), switch: a.needsSwitch, seed, solution: order }, extra);
 }
 const P = plan();
-const main = import.meta.url === new URL(process.argv[1], 'file://').href || process.argv[1].endsWith('make-100.mjs');
+const main = (process.argv[1] || '').endsWith('make-100.mjs');
 if (!main) { /* imported */ } else if (process.argv[2] === 'write') {
   const Ls = P.map((s, i) => JSON.parse(readFileSync(new URL('slot-' + (i + 1) + '.json', OUT), 'utf8')));
-  Ls.forEach((x) => { let st = Math.ceil((stepP(x.w * x.h) + stepQ(x.good)) / 2); if (x.switch) st = Math.min(6, st + 1); x.step = st; x.difficulty = diffOf(st); });   // the measure as it is now
-  const forkAt = P.findIndex((s) => s.teach === 'fork') + 1, poolAt = P.findIndex((s) => s.teach === 'pool') + 1;
+  Ls.forEach((x) => { let st = Math.ceil((stepP(x.w * x.h) + stepQ(x.good)) / 2); if (x.switch) st = Math.min(6, st + 1); if (x.w * x.h >= 49) st = Math.min(6, st + 1); x.step = st; x.difficulty = diffOf(st); });   // the measure as it is now
+  const poolAt = P.findIndex((s) => s.teach === 'pool') + 1;
   const body = Ls.map((x, i) => {
-    const needs = x.fork !== null && i + 1 !== forkAt ? forkAt : x.energy !== null && i + 1 !== poolAt ? poolAt : null;
-    return `  { w: ${x.w}, h: ${x.h}, start: ${x.start}, fork: ${x.fork}, arrows: [${x.arrows.join(', ')}], finish: [${x.finish.join(', ')}], drops: ${JSON.stringify(x.drops).replace(/,/g, ', ')}, energy: ${x.energy},\n    step: ${x.step}, difficulty: ${x.difficulty}, covers: ${x.covers}, good: ${x.good},${x.teach ? ' teach: ' + x.teach + ',' : ''}${needs && !(x.fork !== null && x.energy !== null && i + 1 < poolAt) ? ' needs: ' + needs + ',' : ''} seed: ${x.seed},\n    solution: ${JSON.stringify(x.solution).replace(/,/g, ', ')} }`;
+    const needs = x.energy !== null && i + 1 !== poolAt ? poolAt : null;
+    return `  { w: ${x.w}, h: ${x.h}, start: ${x.start}, fork: ${x.fork}, arrows: [${x.arrows.join(', ')}], finish: [${x.finish.join(', ')}], drops: ${JSON.stringify(x.drops).replace(/,/g, ', ')}, energy: ${x.energy},\n    step: ${x.step}, difficulty: ${x.difficulty}, covers: ${x.covers}, good: ${x.good},${x.teach ? ' teach: ' + x.teach + ',' : ''}${needs ? ' needs: ' + needs + ',' : ''} seed: ${x.seed},\n    solution: ${JSON.stringify(x.solution).replace(/,/g, ', ')} }`;
   }).join(',\n');
   writeFileSync(new URL('../levels.js', import.meta.url), `/* Streams — 100 levels, made by tools/make-100.mjs (games/GENERATOR.md). Cells are indexes r * w + c.
    start: the start dot. fork: fork cell (null = one line). arrows[k]: first cell of branch k+1. finish[k]: its ring (no fork: the line's ring).
    drops: [cell, +X]. energy: the shared pool of moves at the start; null = no pool (author 2026-11-19: no pool first, drops come later).
    solution: steps [line, cell] in play order (line 0 = trunk). step 1..6 from cells and traps (+1 if the pool forces switching branches);
-   difficulty: 1–2 → 1, 3–4 → 2, 5–6 → 3. teach: the hand shows the first N steps (9: the fork, 31: the pool). needs: comes in a letter only after
+   difficulty: 1–2 → 1, 3–4 → 2, 5–6 → 3. Every level forks (author 2026-11-19). teach: the hand shows the first N steps (31: the pool). needs: comes in a letter only after
    that level. covers: ways to cover the board; good: share of steps that keep a cover possible. */
 Postie.addLevels('streams', [
 ${body}
@@ -146,7 +147,7 @@ ${body}
   const k = +(process.argv[2] || 0), nW = +(process.argv[3] || 1); mkdirSync(OUT, { recursive: true });
   P.forEach((slot, i) => {
     if (i % nW !== k) return; const f = new URL('slot-' + (i + 1) + '.json', OUT); if (existsSync(f)) return;
-    let L = null; for (let seed = 1 + i * 10000; !L && seed < i * 10000 + 3000; seed++) { L = make(slot, seed); if (L && slot.hard && L.difficulty !== 3) L = null; }
+    let L = null; for (let seed = 1 + i * 10000; !L && seed < i * 10000 + 6000; seed++) { L = make(slot, seed); if (L && slot.hard && L.difficulty !== 3) L = null; }
     if (!L) { console.log('slot', i + 1, 'FAILED', JSON.stringify(slot)); return; }
     writeFileSync(f, JSON.stringify(L)); console.log('slot', i + 1, slot.w + 'x' + slot.h, 'B', slot.B, 'pool', !!slot.pool, 'step', L.step, 'covers', L.covers, 'good', L.good, 'switch', L.switch);
   });
