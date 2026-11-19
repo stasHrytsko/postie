@@ -14,9 +14,24 @@
 
   Postie.register({
     id: 'streams', name: 'Streams',
-    rules: '<b>Drag the line</b> from the dark dot through the cells. Cover <b>every cell</b> and end on the ring. ' +
-      'Each new cell costs <b>1 move</b>; a <b>+N</b> cell gives N moves back. At the <b>fork</b> the line splits: pull each branch from its numbered arrow ' +
-      'to the ring with the same number. All branches <b>share one pool of moves</b> — switch between them. Drag a line back to get moves back.',
+    rules: '<b>Drag the line</b> from the dark dot through <b>every cell</b> to the ring. At the <b>fork</b> the line splits: lead each branch to the ring with its number. ' +
+      'Later levels have a pool of moves: each cell costs 1, a <b>+N</b> cell gives N back. Drag a line back to undo it.',
+    /* level 0: one line through six cells */
+    tutorial: { w: 3, h: 2, start: 0, fork: null, arrows: [], finish: [3], drops: [], energy: null, solution: [[0, 1], [0, 2], [0, 5], [0, 4], [0, 3]] },
+    demo: [
+      { say: 'Drag the line through <b>every cell</b> to the ring.', level: { w: 3, h: 2, start: 0, fork: null, arrows: [], finish: [3], drops: [], energy: null, solution: [[0, 1], [0, 2], [0, 5], [0, 4], [0, 3]] } },
+      { say: 'At the <b>fork</b> the line splits: lead each branch to its ring.', level: { w: 3, h: 3, start: 0, fork: 4, arrows: [3, 5], finish: [8, 2], drops: [], energy: null, solution: [[0, 1], [0, 4], [1, 3], [1, 6], [1, 7], [1, 8], [2, 5], [2, 2]] } },
+      { say: 'Later: each cell costs a move, <b>+N</b> gives moves back.', level: { w: 3, h: 2, start: 0, fork: null, arrows: [], finish: [3], drops: [[2, 3]], energy: 3, solution: [[0, 1], [0, 2], [0, 5], [0, 4], [0, 3]] } }
+    ],
+    /* a move = [line, cell]; the gesture = drag from the line's tip (its cell before this one in the sample, the start or the fork) */
+    gesture: function (root, m, L) {
+      var sol = L.solution, i = 0;
+      for (; i < sol.length; i++) if (sol[i][0] === m[0] && sol[i][1] === m[1]) break;
+      var tip = m[0] === 0 ? L.start : L.fork;
+      for (var j = 0; j < i; j++) if (sol[j][0] === m[0]) tip = sol[j][1];
+      function mid(cell) { var e = root.querySelector('.st .cell[data-r="' + Math.floor(cell / L.w) + '"][data-c="' + (cell % L.w) + '"]'); if (!e) return null; var b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; }
+      var a = mid(tip), b = mid(m[1]); return a && b ? [a, b] : null;
+    },
     mount: function (root, ctx) {
       css();
       var h = Postie.h, E = ctx.engine, L = ctx.level, s = E.fresh(L), hist = [], grab = -1, blocked = -1, W = L.w, H = L.h;
@@ -26,9 +41,10 @@
       var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'lines'); svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
       wrap.appendChild(grid); wrap.appendChild(svg);
-      var undoBtn = Postie.btn('Undo', function () { if (!hist.length || s.won) return; s = hist.pop(); draw(); }, 'o s');
+      var undoBtn = Postie.btn('Undo', function () { if (!hist.length || s.won) return; s = hist.pop(); draw(); if (ctx.back) ctx.back(); }, 'o s');
+      var pool = s.energy !== null;
       root.appendChild(stat); root.appendChild(wrap); root.appendChild(msg);
-      root.appendChild(h('div', { class: 'row' }, [undoBtn]));
+      if (!ctx.demo) root.appendChild(h('div', { class: 'row' }, [undoBtn]));
 
       function idxAt(ev) {
         var b = grid.getBoundingClientRect();
@@ -41,7 +57,7 @@
       }
       function refuse(cell) {
         var el = grid.children[cell]; Postie.shake(el || wrap);
-        if (s.energy < 1) { msg.className = 'msg bad'; msg.textContent = 'Out of moves — drag a line back to get some.'; }
+        if (pool && s.energy < 1) { msg.className = 'msg bad'; msg.textContent = 'Out of moves — drag a line back to get some.'; }
       }
       Postie.drag(grid, {
         start: function (c) {
@@ -59,9 +75,10 @@
             var prev = E.clone(s), out = E.move(L, s, grab, next);
             if (!out) { blocked = next; refuse(next); break; }
             hist.push(prev); blocked = -1; grab = next; changed = true;
+            if (out.kind === 'step') { if (ctx.moved) ctx.moved([out.line, next]); } else if (ctx.back) ctx.back();
             if (s.won) break;
           }
-          if (changed) { draw(); if (s.won) { grab = -1; ctx.win('All ' + (W * H) + ' cells · ' + s.moves + ' moves (best ' + L.best + ')'); } }
+          if (changed) { draw(); if (s.won) { grab = -1; ctx.win('Done'); } }
         },
         end: function () { grab = -1; },
         cancel: function () { grab = -1; }
@@ -69,9 +86,9 @@
 
       function cx(i) { return i % W + 0.5; } function cy(i) { return Math.floor(i / W) + 0.5; }
       function draw() {
-        stat.innerHTML = Postie.stat([['Moves left', s.energy], ['Cells', E.covered(s) + ' / ' + (W * H)]]);
+        stat.innerHTML = pool ? Postie.stat([['Moves left', s.energy]]) : '';      // no pool — nothing to count
         undoBtn.disabled = !hist.length || s.won;
-        if (s.energy > 0 || s.won) { if (msg.className === 'msg bad') msg.textContent = ''; msg.className = 'msg'; }
+        if (!pool || s.energy > 0 || s.won) { if (msg.className === 'msg bad') msg.textContent = ''; msg.className = 'msg'; }
         else { msg.className = 'msg bad'; msg.textContent = 'Out of moves — drag a line back to get some.'; }
         var taken = {}; s.lines.forEach(function (l) { l.forEach(function (c) { taken[c] = 1; }); });
         grid.innerHTML = '';

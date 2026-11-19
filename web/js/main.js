@@ -165,7 +165,7 @@
     var g0 = game(id);
     if (n !== 0 && g0.tutorial && g0.gesture && !(S.tut || {})[id]) { play(id, 0, function () { if ((S.tut || {})[id]) play(id, n, after, E, all); else if (after) after(); }); return; }
     var g = g0, tut = n === 0, lv = tut ? g.tutorial : g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
-    var guide = (tut || lv.teach) && g.gesture ? (tut ? lv.solution : lv.solution.slice(0, 1)) : null, gi = 0, hd = null, gt = null;
+    var guide = (tut || lv.teach) && g.gesture ? (tut ? lv.solution : lv.solution.slice(0, typeof lv.teach === 'number' ? lv.teach : 1)) : null, gi = 0, hd = null, gt = null;   // teach: true = the first move, N = the first N
     function clean() { if (obs) obs.disconnect(); obs = null; cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
     var o = sheet(g.name, tut ? 'Level 0 · how to play' : 'Level ' + (all ? n : ord(id, n)), { cls: 'play', onclose: function () { clean(); after && after(); },
       right: h('div', { style: 'display:flex' }, [

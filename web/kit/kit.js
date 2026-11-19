@@ -120,7 +120,7 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
       kf.push(at(last, 1, 1, 0.84)); kf.push(at(last, 1, 0, 1));
       return kf;
     }
-    function dur(pts) { return pts.length === 1 ? 1300 : 2100; }
+    function dur(pts) { return pts.length === 1 ? 1300 : 1700; }
     function hide() { gen++; clearTimeout(timer); if (anim) anim.cancel(); anim = null; el.style.opacity = 0; }
     function seq(pts) { return pts && pts.length && Array.isArray(pts[0]) ? pts : [pts]; }
     function show(pts) {

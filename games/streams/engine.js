@@ -1,12 +1,13 @@
 /* Streams — pure rules, no DOM. Port of stazzi apps/casual/rusla/src/engine/rusla.ts (SPEC.md §4–5), same behaviour.
    Lines: [0] = trunk (or the only line) from start; [k] = branch k, from its arrow cell after the fork. Cell i = r * w + c.
    Each new cell costs 1 from one shared pool; a drop gives +X after that. Pool 0 = no step. Retracting gives the move back
-   (and takes the drop back). Win: every cell covered, every branch on its own finish (no fork: the line on the finish). */
+   (and takes the drop back). Win: every cell covered, every branch on its own finish (no fork: the line on the finish).
+   energy: null = no pool at all (author 2026-11-19: the first levels have no moves to count; drops and the pool come later). */
 Postie.engine('streams', (function () {
   function dropAt(L, cell) { for (var i = 0; i < L.drops.length; i++) if (L.drops[i][0] === cell) return L.drops[i][1]; return 0; }
   function fresh(L) {
     var lines = [[L.start]]; for (var i = 0; i < L.arrows.length; i++) lines.push([]);
-    return { lines: lines, forked: false, energy: L.energy, moves: 0, won: false };
+    return { lines: lines, forked: false, energy: L.energy == null ? null : L.energy, moves: 0, won: false };
   }
   function clone(s) { return { lines: s.lines.map(function (l) { return l.slice(); }), forked: s.forked, energy: s.energy, moves: s.moves, won: s.won }; }
   function neighbours(L, cell) {
@@ -51,12 +52,12 @@ Postie.engine('streams', (function () {
   }
   /* step a line forward into cell; mutates s; false if not allowed */
   function step(L, s, line, cell) {
-    if (!isActive(L, s, line) || s.energy < 1) return false;
+    if (!isActive(L, s, line) || (s.energy !== null && s.energy < 1)) return false;
     if (neighbours(L, tipOf(L, s, line)).indexOf(cell) < 0) return false;
     if (visited(s)[cell] || !mayEnter(L, s, line, cell)) return false;
     s.lines[line].push(cell);
     if (L.fork !== null && line === 0 && cell === L.fork) s.forked = true;
-    s.energy = s.energy - 1 + dropAt(L, cell); s.moves++;
+    if (s.energy !== null) s.energy = s.energy - 1 + dropAt(L, cell); s.moves++;
     s.won = isWon(L, s);
     return true;
   }
@@ -71,7 +72,7 @@ Postie.engine('streams', (function () {
     }
     var cell = l.pop();
     if (line === 0 && cell === L.fork) s.forked = false;
-    s.energy = s.energy + 1 - dropAt(L, cell);
+    if (s.energy !== null) s.energy = s.energy + 1 - dropAt(L, cell);
     return true;
   }
   /* finger moves from cell `from` to neighbour `to`: retract if `to` is where the line came from, else step forward.
