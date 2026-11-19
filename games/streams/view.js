@@ -7,6 +7,9 @@
     '.st svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}' +
     '.st .st-lbl{font:700 .34px var(--font);fill:#fff;text-anchor:middle;dominant-baseline:central}' +
     '.st .st-dark{fill:var(--txt)}' +
+    '.st .st-pulse{fill:none;stroke:var(--ink);stroke-width:.06;transform-box:fill-box;transform-origin:center;animation:st-pulse 1.6s ease-out infinite}' +
+    '@keyframes st-pulse{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.1);opacity:0}}' +
+    '@media (prefers-reduced-motion:reduce){.st .st-pulse{animation:none;opacity:.5}}' +
     '.st .st-drop{font:700 .2px var(--font);fill:var(--ink);text-anchor:middle;dominant-baseline:central}' +
     '.st-key{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin:2px 0}';
   function css() { if (document.getElementById('st-css')) return; var e = document.createElement('style'); e.id = 'st-css'; e.textContent = CSS; document.head.appendChild(e); }
@@ -114,6 +117,8 @@
           var pts = line > 0 && l.length ? [L.fork].concat(l) : l;
           if (pts.length > 1) o.push('<polyline points="' + pts.map(function (c) { return cx(c) + ',' + cy(c); }).join(' ') + '" fill="none" stroke="' + colorOf(line) + '" stroke-width=".34" stroke-linecap="round" stroke-linejoin="round"/>');
         });
+        /* where to start (author 2026-11-19): a soft pulse around the start dot until the line leaves it */
+        if (s.lines[0].length === 1 && !s.won) o.push('<circle class="st-pulse" cx="' + cx(L.start) + '" cy="' + cy(L.start) + '" r=".26"/>');
         o.push('<circle cx="' + cx(L.start) + '" cy="' + cy(L.start) + '" r=".24" fill="var(--ink)"/>');
         if (L.fork !== null) {
           /* the fork (designed 2026-11-19): short stubs in the branches' colours, drawn in the same stroke as the lines, start where each
