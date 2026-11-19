@@ -24,11 +24,24 @@
 
   Postie.register({
     id: 'parcels', name: 'Parcels', rules: RULES,
+    /* level 0 (author 2026-11-19): ship the 4 first and watch the 2 fall, then the 2, then the 3 */
+    tutorial: { w: 3, h: 3, rows: ['..2', '3..', '.4.'], solution: [[1, 1, 2, 2], [2, 1, 2, 2], [0, 0, 2, 0]] },
+    /* "?": the hand plays these by itself */
+    demo: [
+      { say: 'Frame <b>one number</b> with exactly that many cubes. Everything above <b>falls</b>.', level: { w: 3, h: 3, rows: ['..2', '3..', '.4.'], solution: [[1, 1, 2, 2], [2, 1, 2, 2], [0, 0, 2, 0]] } },
+      { say: 'Or frame <b>one black and one white dot</b> — any size.', level: { w: 3, h: 3, rows: ['B..', '..W', '3..'], solution: [[2, 0, 2, 2], [1, 0, 2, 2]] } },
+      { say: 'Ship <b>every cube</b>.', level: { w: 4, h: 2, rows: ['W..B', '..4.'], solution: [[1, 0, 1, 3], [1, 0, 1, 3]] } }
+    ],
+    /* a move = a frame [r0, c0, r1, c1]; the gesture = drag from one corner cell to the other */
+    gesture: function (root, f) {
+      function mid(r, c) { var e = root.querySelector('.pc-board .cell[data-r="' + r + '"][data-c="' + c + '"]'); if (!e) return null; var b = e.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2 }; }
+      var a = mid(f[0], f[1]), b = mid(f[2], f[3]); return a && b ? [a, b] : null;
+    },
     mount: function (root, ctx) {
       css();
       var h = Postie.h, E = ctx.engine, L = ctx.level, s = E.fresh(L), busy = false;
       var stat = h('div', { class: 'stat' }), msg = h('div', { class: 'msg' });
-      var gap = 5, cellMax = 58;
+      var gap = 5, cellMax = L.w <= 4 ? 70 : 58;                 // small boards (level 0, the first levels) get bigger cubes
       var grid = h('div', { class: 'grid', style: 'grid-template-columns:repeat(' + L.w + ',1fr);gap:' + gap + 'px' });
       var fr = h('div', { class: 'pc-frame' }), badge = h('span', { class: 'badge' }); fr.appendChild(badge);
       var board = h('div', { class: 'pc-board', style: 'max-width:' + (L.w * cellMax + (L.w - 1) * gap) + 'px' }, [grid, fr]);
@@ -96,6 +109,7 @@
         if (err) { Postie.shake(board); say(why(f, err)); return; }
         var box = h('div', { class: 'pc-box' }); place(box, f); board.appendChild(box);
         var res = E.frame(s, f[0], f[1], f[2], f[3]);
+        if (ctx.moved) ctx.moved(f);
         busy = true;
         var p = pitch(), fallMs = 0;
         draw();

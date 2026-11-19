@@ -194,3 +194,13 @@ html[data-look="night"] .fl .veil{background:rgba(6,9,16,.88)}
 .fl .pan>*,.fl .sh .body>*,.fl .sh.play .stage>*{flex:none}
 .fl .sh.play .body>.stage{flex:1}
 .fl .daycard .dbody{display:block}.fl .daycard .dbody::before,.fl .daycard .dbody::after{display:none}
+
+/* the hand (kit.js Postie.hand): a finger over the board, never catches touches */
+.hand{position:absolute;left:0;top:0;width:46px;height:46px;margin:-6px 0 0 -21px;pointer-events:none;opacity:0;z-index:5;transform-origin:21px 6px;filter:drop-shadow(0 3px 6px rgba(30,42,68,.25))}
+.hand svg{width:100%;height:100%;fill:#FFFCF5;stroke:#1E2A44;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* "?" card: a small live board the hand plays on, one short line under it */
+.fl .demo{position:relative;border-radius:16px;background:var(--card);border:1px solid var(--line);padding:14px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;overflow:hidden}
+.fl .demo .dstage{position:relative;width:100%;max-width:240px;pointer-events:none}
+.fl .demo .dstage .row,.fl .demo .dstage .msg,.fl .demo .dstage .stat{display:none!important}
+.fl .demo .dsay{font-size:15px;line-height:1.4;color:var(--txt);text-align:center;min-height:42px}
+.fl .demo .ddots{display:flex;gap:6px}.fl .demo .ddots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.fl .demo .ddots i.on{background:var(--ink)}

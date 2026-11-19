@@ -98,7 +98,7 @@
     var c = [];
     Postie.games.forEach(function (g) {
       if (only && g.id !== only || !allowed(g.id, d, day)) return;
-      for (var i = 0; i < g.levels.length; i++) if (got(g.id).indexOf(i + 1) < 0 && diff(g.levels[i]) === d) { c.push({ id: g.id, n: i + 1, d: d }); return; }
+      for (var i = 0; i < g.levels.length; i++) if (got(g.id).indexOf(i + 1) < 0 && diff(g.levels[i]) === d && (!g.levels[i].needs || got(g.id).indexOf(g.levels[i].needs) >= 0)) { c.push({ id: g.id, n: i + 1, d: d }); return; }
     });
     if (!c.length) return null;
     var least = Math.min.apply(null, c.map(function (x) { return used[x.id] || 0; }));
@@ -159,19 +159,40 @@
 
   /* ---------- one frame for every game ---------- */
   var NOSCALE = { 'carpet-layers': 1, 'perfect-fit': 1 };
+  /* Level 0 (author 2026-11-19): the first time a game is opened, its teaching level comes first — the hand shows every move —
+     then the level the player asked for. A game takes part when its view has `tutorial` (a level with a solution) and `gesture`. */
   function play(id, n, after, E, all) {                                  // E: today's letter, when the level is played from it; all: from test > All levels
-    var g = game(id), lv = g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
+    var g0 = game(id);
+    if (n !== 0 && g0.tutorial && g0.gesture && !(S.tut || {})[id]) { play(id, 0, function () { if ((S.tut || {})[id]) play(id, n, after, E, all); else if (after) after(); }); return; }
+    var g = g0, tut = n === 0, lv = tut ? g.tutorial : g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
+    var guide = (tut || lv.teach) && g.gesture ? (tut ? lv.solution : lv.solution.slice(0, 1)) : null, gi = 0, hd = null, gt = null;
     function clean() { if (obs) obs.disconnect(); obs = null; cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
-    var o = sheet(g.name, 'Level ' + (all ? n : ord(id, n)), { cls: 'play', onclose: function () { clean(); after && after(); },
+    var o = sheet(g.name, tut ? 'Level 0 · how to play' : 'Level ' + (all ? n : ord(id, n)), { cls: 'play', onclose: function () { clean(); after && after(); },
       right: h('div', { style: 'display:flex' }, [
         h('button', { class: 'ib', 'aria-label': 'Rules', html: Postie.icon('help'), onclick: rules }),
-        h('button', { class: 'ib', 'aria-label': 'Restart', html: Postie.icon('redo'), onclick: function () { mount(); } })]) });
+        h('button', { class: 'ib', 'aria-label': 'Restart', html: Postie.icon('redo'), onclick: function () { remount(); } })]) });
     o.body.appendChild(stage); o.body.appendChild(say);
-    function rules() {                                                   // the same card in every game
-      var card = h('div', { class: 'pop' }, [h('div', { class: 'popbox left' }, [h('b', null, ['How to play']), h('div', { class: 'rtext', html: g.rules || '' }),
-        big('Got it', function () { card.remove(); })])]);
+    function rules() {                                                   // the same card in every game; with a demo — the hand plays it
+      if (hd) hd.hide();
+      var close = function () { stop(); card.remove(); showGuide(); }, stop = function () {};
+      var box = h('div', { class: 'popbox left' }, [h('b', null, ['How to play'])]);
+      if (g.demo && g.gesture) { var d = demoEl(g); stop = d.stop; box.appendChild(d.el); } else box.appendChild(h('div', { class: 'rtext', html: g.rules || '' }));
+      box.appendChild(big('Got it', close));
+      var card = h('div', { class: 'pop' }, [box]);
       o.el.appendChild(card);
     }
+    /* the hand on the board: shows the next move of the sample while the player follows it */
+    function showGuide() {
+      clearTimeout(gt); if (!guide || gi >= guide.length || o.el.querySelector('.pop')) { if (hd) hd.hide(); return; }
+      gt = setTimeout(function () { if (!hd) hd = Postie.hand(o.el); var pts = g.gesture(stage, guide[gi], lv); if (pts) hd.show(pts); }, 350);
+    }
+    function moved(m) {
+      if (!guide) return;
+      if (gi < guide.length && JSON.stringify(m) === JSON.stringify(guide[gi])) gi++; else gi = guide.length;   // off the sample: the hand stops
+      showGuide();
+    }
+    stage.addEventListener('pointerdown', function () { clearTimeout(gt); if (hd) hd.hide(); }, true);
+    stage.addEventListener('pointerup', function () { setTimeout(function () { if (guide && gi < guide.length) showGuide(); }, 400); }, true);
     function mount() {
       say.innerHTML = ''; say.className = 'say';
       /* Fit the board into the screen: if the game is taller than the room it has, give it a narrower column and build it again.
@@ -180,8 +201,8 @@
       for (var pass = 0; pass < 6; pass++) {
         clean(); stage.innerHTML = ''; o.foot.innerHTML = '';
         inner = h('div', { style: 'width:100%;align-self:center' + (width > 0 ? ';max-width:' + width + 'px' : '') }); stage.appendChild(inner);
-        g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); },
-          win: function () { if (all) markAll(id, n); else markDone(id, n); setTimeout(solvedPopup, 500); } });
+        g.mount(inner, { n: n, level: lv, engine: g.engine, cleanup: function (f) { cleanups.push(f); }, moved: moved,
+          win: function () { if (hd) hd.hide(); if (tut) { S.tut = S.tut || {}; S.tut[id] = 1; S.seen[id] = 1; save(); } else if (all) markAll(id, n); else markDone(id, n); setTimeout(solvedPopup, 500); } });
         /* the game's own buttons go to one place — the bottom; its own "retry" and options are not part of the frame */
         Array.prototype.slice.call(inner.querySelectorAll('.row')).forEach(function (row) { o.foot.appendChild(row); });
         var room = stage.clientHeight, tall = stage.scrollHeight, w = inner.clientWidth;
@@ -206,18 +227,22 @@
         say.innerHTML = ''; say.className = 'say';
         if (!m) return;
         say.appendChild(h('span', null, [m.textContent]));
-        if (/bad/.test(m.className)) { say.className = 'say bad'; say.appendChild(h('button', { onclick: function () { mount(); } }, ['Restart'])); }
+        if (/bad/.test(m.className)) { say.className = 'say bad'; say.appendChild(h('button', { onclick: function () { remount(); } }, ['Restart'])); }
       }
       obs = new MutationObserver(sync); obs.observe(inner, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'] });
       obs.observe(o.foot, { subtree: true, childList: true });
       sync();
     }
-    mount();
-    if (!S.seen[id]) { S.seen[id] = 1; save(); rules(); }                // first time in this game
+    function remount() { gi = 0; mount(); showGuide(); }
+    mount(); showGuide();
+    if (!S.seen[id] && !g.tutorial) { S.seen[id] = 1; save(); rules(); } // first time in a game without level 0: the rules card
     /* after every solved puzzle */
     function solvedPopup() {
       var box = h('div', { class: 'popbox' }, [h('i', { class: 'okc', html: Postie.icon('check') }), h('b', null, ['Solved'])]), nxt = null;
-      if (all) {                                                         // test > All levels: every level by its number in levels.js, no stamps, no letter
+      if (tut) {                                                         // level 0 done: on to the level the player opened
+        box.appendChild(h('span', null, ['Now you know how ' + g.name + ' works.']));
+        box.appendChild(big('Play', function () { o.close(); }));
+      } else if (all) {                                                         // test > All levels: every level by its number in levels.js, no stamps, no letter
         nxt = n < g.levels.length ? n + 1 : null;
         box.appendChild(h('span', null, ['Level ' + n + ' of ' + g.levels.length]));
         if (nxt) box.appendChild(big('Next', function () { o.close(); play(id, nxt, after, null, true); }));
@@ -238,6 +263,31 @@
       }
       o.el.appendChild(h('div', { class: 'pop' }, [box]));
     }
+  }
+
+  /* "?" with a demo (author 2026-11-19): a small live board, the hand plays each step's sample by itself, one short line under it;
+     steps loop. A game takes part with `demo: [{ say, level }]` (each level has a solution) and `gesture(root, move, level)`. */
+  function demoEl(g) {
+    var k = 0, alive = true, dots = h('div', { class: 'ddots' }), sayEl = h('div', { class: 'dsay' }), dstage = h('div', { class: 'dstage' });
+    var el = h('div', { class: 'demo' }, [dstage, sayEl, dots]), hd = Postie.hand(el);
+    g.demo.forEach(function () { dots.appendChild(h('i')); });
+    function run() {
+      if (!alive) return;
+      var st = g.demo[k], i = 0;
+      sayEl.innerHTML = st.say;
+      Array.prototype.forEach.call(dots.children, function (d, j) { d.className = j === k ? 'on' : ''; });
+      dstage.innerHTML = ''; var inner = h('div'); dstage.appendChild(inner);
+      g.mount(inner, { n: 0, level: st.level, engine: g.engine, demo: true, cleanup: function () {}, moved: function () {}, win: function () {} });
+      function next() {
+        if (!alive) return;
+        if (i >= st.level.solution.length) { setTimeout(function () { k = (k + 1) % g.demo.length; run(); }, 1400); return; }
+        var pts = g.gesture(dstage, st.level.solution[i++], st.level);
+        hd.play(pts, dstage).then(function () { setTimeout(next, 900); });
+      }
+      setTimeout(next, 800);
+    }
+    setTimeout(run, 60);
+    return { el: el, stop: function () { alive = false; hd.hide(); } };
   }
 
   /* ---------- Today: one thing in the middle, with its state ---------- */
@@ -354,6 +404,7 @@
     function render() {
       o.body.innerHTML = '';
       var grid = h('div', { class: 'lvs' });
+      if (g.tutorial) grid.appendChild(h('button', { class: (S.tut || {})[id] ? 'ok' : '', onclick: function () { play(id, 0, render, null, true); } }, ['0']));
       g.levels.forEach(function (l, i) { grid.appendChild(h('button', { class: isAll(id, i + 1) ? 'ok' : '', onclick: function () { play(id, i + 1, render, null, true); } }, [String(i + 1)])); });
       o.body.appendChild(grid);
     }

@@ -95,6 +95,67 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
       .map(function (p) { return '<span>' + p[0] + ' <b>' + p[1] + '</b></span>'; }).join('');
   };
   P.btn = function (label, onclick, kind) { return P.h('button', { class: 'btn ' + (kind || ''), onclick: onclick }, [label]); };
+
+  /* The hand (author 2026-11-19, as in stazzi): a finger that shows a gesture — on level 0, on the level that brings a new move,
+     and on the "?" card. Points are page coordinates (clientX/Y); 1 point = tap, 2+ = drag along them.
+       var hd = Postie.hand(host)        host: a positioned element the hand is drawn over (pointer-events: none)
+       hd.show(points)                   loop the gesture until hide()
+       hd.play(points, root) -> Promise  do the gesture once and drive real pointer events, so the game makes the move itself
+                                         (root: the board, may be closed to the player's touches — the hand still reaches it)
+       hd.hide()                         */
+  var HAND = '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 30V9.5a3 3 0 016 0V22m0-1.5a3 3 0 016 0V24m0-1a3 3 0 016 0v2.5m0-.5a3 3 0 016 0V35c0 6.6-5 11-11.5 11H28c-3.8 0-6.4-1.6-8.4-4.4l-6.3-9a3.1 3.1 0 014.9-3.8L19 30"/></svg>';
+  var still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  P.hand = function (host) {
+    var el = P.h('div', { class: 'hand', html: HAND, 'aria-hidden': 'true' }), anim = null, timer = null, gen = 0;
+    host.appendChild(el);
+    function rel(pt) { var b = host.getBoundingClientRect(); return { x: pt.x - b.left, y: pt.y - b.top }; }
+    function frames(pts) {
+      var r = pts.map(rel), kf = [], first = r[0], last = r[r.length - 1];
+      var at = function (q, s, o, off) { return { transform: 'translate(' + q.x + 'px,' + q.y + 'px) scale(' + s + ')', opacity: o, offset: off }; };
+      kf.push(at({ x: first.x + 18, y: first.y + 26 }, 1, 0, 0));
+      kf.push(at(first, 1, 1, 0.18)); kf.push(at(first, 0.86, 1, 0.26));
+      if (r.length === 1) kf.push(at(first, 1, 1, 0.38));
+      else r.slice(1).forEach(function (q, i) { kf.push(at(q, 0.86, 1, 0.26 + 0.5 * (i + 1) / (r.length - 1))); });
+      kf.push(at(last, 1, 1, 0.84)); kf.push(at(last, 1, 0, 1));
+      return kf;
+    }
+    function dur(pts) { return pts.length === 1 ? 1300 : 2100; }
+    function hide() { gen++; clearTimeout(timer); if (anim) anim.cancel(); anim = null; el.style.opacity = 0; }
+    function show(pts) {
+      hide(); if (!pts || !pts.length || still || !el.animate) return;
+      var g = gen;
+      (function loop() { if (g !== gen) return; anim = el.animate(frames(pts), { duration: dur(pts), easing: 'ease-in-out' }); anim.onfinish = function () { if (g === gen) timer = setTimeout(loop, 450); }; })();
+    }
+    /* once, and the game feels real pointer events at the hand's fingertip */
+    function play(pts, root) {
+      hide(); var g = gen;
+      return new Promise(function (done) {
+        var d = still || !el.animate ? 400 : dur(pts), t0 = null, phase = 0, id = 77, tgt = null;
+        function ev(type, pt) {
+          var pe = root ? root.style.pointerEvents : null; if (root) root.style.pointerEvents = 'auto';
+          var t = type === 'pointerdown' ? (tgt = document.elementFromPoint(pt.x, pt.y)) : tgt;
+          if (root) root.style.pointerEvents = pe;
+          if (!t) return;
+          t.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: id, isPrimary: true, clientX: pt.x, clientY: pt.y, button: 0, buttons: type === 'pointerup' ? 0 : 1 }));
+          if (type === 'pointerup') t.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: pt.x, clientY: pt.y }));
+        }
+        function pointAt(k) { if (pts.length === 1) return pts[0]; var s = Math.min(pts.length - 1, k * (pts.length - 1)), i = Math.floor(s), f = s - i, a = pts[i], b = pts[Math.min(i + 1, pts.length - 1)]; return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f }; }
+        if (!still && el.animate) anim = el.animate(frames(pts), { duration: d, easing: 'ease-in-out' });
+        function tick(ts) {
+          if (g !== gen) return done(false);
+          if (t0 === null) t0 = ts;
+          var k = (ts - t0) / d;
+          if (phase === 0 && k >= 0.26) { ev('pointerdown', pts[0]); phase = 1; }
+          if (phase === 1 && pts.length > 1) ev('pointermove', pointAt(Math.min(1, (k - 0.26) / 0.5)));
+          if (phase === 1 && k >= 0.78) { ev('pointerup', pts[pts.length - 1]); phase = 2; }
+          if (k >= 1) { el.style.opacity = 0; return done(true); }
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      });
+    }
+    return { show: show, play: play, hide: hide, el: el };
+  };
   return P;
 })();
 if (typeof module !== 'undefined') module.exports = Postie;

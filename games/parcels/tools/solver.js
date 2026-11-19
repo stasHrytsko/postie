@@ -41,7 +41,8 @@ function maker(w, h) {
   }
   return { frames, ship };
 }
-function solve(L) {
+function isPair(b, w, f) { for (let r = f[0]; r <= f[2]; r++) for (let c = f[1]; c <= f[3]; c++) if (b[r * w + c] === 'B') return true; return false; }
+function solve(L, opt) {
   const M = maker(L.w, L.h), memo = new Map(), blank = ' '.repeat(L.w * L.h);
   function go(b) {
     if (b === blank) return [];
@@ -52,6 +53,7 @@ function solve(L) {
     memo.set(b, out); return out;
   }
   const b0 = boardOf(L), first = M.frames(b0);
+  if (opt && opt.pairFirst) first.sort((a, b) => isPair(b0, L.w, b) - isPair(b0, L.w, a));   // a solution that opens with a pair (teaching level)
   let good = 0, solution = null;
   for (const f of first) { const p = go(M.ship(b0, f)); if (p) { good++; if (!solution) solution = [f].concat(p); } }
   return { solvable: !!solution, solution, firstMoves: first.length, goodFirst: good };
