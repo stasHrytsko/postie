@@ -96,40 +96,30 @@
           grid.appendChild(h('div', { class: 'cell' + (x ? (taken[i] ? ' took' : ' c-butter') : ''), 'data-r': Math.floor(i / W), 'data-c': i % W }, [x ? '+' + x : null]));
         }
         var o = [];
-        /* finish rings: dashed ring with the branch number; filled when the branch is home */
+        /* Simple look (author 2026-11-19): no numbers, no arrow chips. A finish is a circle in its branch's colour (a ring until the branch
+           is home, then filled); the fork is a diamond cut into halves — each half in a branch's colour points where that branch goes. */
         L.finish.forEach(function (f, k) {
           var line = L.fork === null ? 0 : k + 1, home = E.finished(L, s, line), col = colorOf(line);
-          o.push('<circle cx="' + cx(f) + '" cy="' + cy(f) + '" r=".3" fill="' + (home ? col : 'var(--card)') + '" stroke="' + col + '" stroke-width=".07"' + (home ? '' : ' stroke-dasharray=".1 .07"') + '/>');
+          o.push('<circle cx="' + cx(f) + '" cy="' + cy(f) + '" r=".26" fill="' + (home ? col : 'none') + '" stroke="' + col + '" stroke-width=".1"/>');
         });
-        /* lines */
         s.lines.forEach(function (l, line) {
           var pts = line > 0 && l.length ? [L.fork].concat(l) : l;
           if (pts.length > 1) o.push('<polyline points="' + pts.map(function (c) { return cx(c) + ',' + cy(c); }).join(' ') + '" fill="none" stroke="' + colorOf(line) + '" stroke-width=".34" stroke-linecap="round" stroke-linejoin="round"/>');
         });
-        /* start dot and fork node */
         o.push('<circle cx="' + cx(L.start) + '" cy="' + cy(L.start) + '" r=".24" fill="var(--ink)"/>');
-        if (L.fork !== null) o.push('<rect x="' + (cx(L.fork) - .22) + '" y="' + (cy(L.fork) - .22) + '" width=".44" height=".44" rx=".08" transform="rotate(45 ' + cx(L.fork) + ' ' + cy(L.fork) + ')" fill="var(--ink)"/>');
-        /* arrows: a numbered chip pointing from the fork into the branch's first cell (until the branch starts) */
-        L.arrows.forEach(function (a, k) {
-          var line = k + 1; if (s.lines[line].length) return;
-          var dx = cx(a) - cx(L.fork), dy = cy(a) - cy(L.fork), ax = cx(a) - dx * .5, ay = cy(a) - dy * .5;
-          var ang = Math.atan2(dy, dx) * 180 / Math.PI;
-          o.push('<g transform="translate(' + ax + ' ' + ay + ') rotate(' + ang + ')"><path d="M.22 0 L-.12 -.2 L-.12 .2Z" fill="' + colorOf(line) + '" stroke="var(--txt)" stroke-width=".03" stroke-linejoin="round"/></g>');
-          o.push('<circle cx="' + cx(a) + '" cy="' + cy(a) + '" r=".2" fill="' + colorOf(line) + '"/><text class="st-lbl" x="' + cx(a) + '" y="' + cy(a) + '">' + line + '</text>');
-        });
-        /* finish numbers (on top of lines) */
-        L.finish.forEach(function (f, k) {
-          if (L.fork === null) return;
-          var home = E.finished(L, s, k + 1);
-          o.push('<text class="st-lbl' + (home ? '' : ' st-dark') + '" x="' + cx(f) + '" y="' + cy(f) + '">' + (k + 1) + '</text>');
-        });
-        /* heads: tip of each started line, numbered for branches */
+        if (L.fork !== null) {
+          var fx = cx(L.fork), fy = cy(L.fork);
+          L.arrows.forEach(function (a, k) {                             // one half per branch: a triangle from the centre towards its first cell
+            var dx = cx(a) - fx, dy = cy(a) - fy, px = -dy, py = dx, T = .46, W = .3;
+            o.push('<path d="M' + (fx + dx * T) + ' ' + (fy + dy * T) + ' L' + (fx + px * W) + ' ' + (fy + py * W) + ' L' + (fx - px * W) + ' ' + (fy - py * W) + 'Z" fill="' + colorOf(k + 1) + '" stroke="var(--ink)" stroke-width=".04" stroke-linejoin="round"/>');
+          });
+        }
+        /* heads: the tip of each line that is still going, in its colour */
         s.lines.forEach(function (l, line) {
           if (!l.length || (line === 0 && l.length === 1) || (line > 0 && E.finished(L, s, line)) || (line === 0 && L.fork === null && E.finished(L, s, 0))) return;
           if (line === 0 && s.forked) return;
           var t = l[l.length - 1];
-          o.push('<circle cx="' + cx(t) + '" cy="' + cy(t) + '" r=".24" fill="' + colorOf(line) + '" stroke="var(--card)" stroke-width=".06"/>');
-          if (line > 0) o.push('<text class="st-lbl" x="' + cx(t) + '" y="' + cy(t) + '">' + line + '</text>');
+          o.push('<circle cx="' + cx(t) + '" cy="' + cy(t) + '" r=".2" fill="' + colorOf(line) + '" stroke="var(--card)" stroke-width=".06"/>');
         });
         svg.innerHTML = o.join('');
       }
