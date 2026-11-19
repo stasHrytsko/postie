@@ -7,6 +7,7 @@
     '.st svg.lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}' +
     '.st .st-lbl{font:700 .34px var(--font);fill:#fff;text-anchor:middle;dominant-baseline:central}' +
     '.st .st-dark{fill:var(--txt)}' +
+    '.st .st-drop{font:700 .2px var(--font);fill:var(--ink);text-anchor:middle;dominant-baseline:central}' +
     '.st-key{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin:2px 0}';
   function css() { if (document.getElementById('st-css')) return; var e = document.createElement('style'); e.id = 'st-css'; e.textContent = CSS; document.head.appendChild(e); }
   /* line colours: trunk ink; branches 1..3 = Postie.PIECES 0..2 (apricot/triangle, blue/circle, sage/square) + their number */
@@ -93,9 +94,16 @@
         grid.innerHTML = '';
         for (var i = 0; i < W * H; i++) {
           var x = E.dropAt(L, i);
-          grid.appendChild(h('div', { class: 'cell' + (x ? (taken[i] ? ' took' : ' c-butter') : ''), 'data-r': Math.floor(i / W), 'data-c': i % W }, [x ? '+' + x : null]));
+          grid.appendChild(h('div', { class: 'cell', 'data-r': Math.floor(i / W), 'data-c': i % W }));
         }
         var o = [];
+        /* drops (designed 2026-11-19): a small water drop outline with +N, not a coloured tile — quiet until you need it; gone once taken */
+        L.drops.forEach(function (d) {
+          var c = d[0], X = cx(c), Y = cy(c) - .04, gone = taken[c]; if (gone) return;   // taken: the line covers it, nothing to show
+          o.push('<g opacity="' + (gone ? .28 : 1) + '"><path d="M' + X + ' ' + (Y - .3) + ' C' + (X + .05) + ' ' + (Y - .2) + ' ' + (X + .22) + ' ' + (Y - .02) + ' ' + (X + .22) + ' ' + (Y + .1) +
+            ' A.22 .22 0 0 1 ' + (X - .22) + ' ' + (Y + .1) + ' C' + (X - .22) + ' ' + (Y - .02) + ' ' + (X - .05) + ' ' + (Y - .2) + ' ' + X + ' ' + (Y - .3) + 'Z" fill="none" stroke="var(--ink)" stroke-width=".05" stroke-linejoin="round"/>' +
+            '<text x="' + X + '" y="' + (Y + .1) + '" class="st-drop">+' + d[1] + '</text></g>');
+        });
         /* Simple look (author 2026-11-19): no numbers, no arrow chips. A finish is a circle in its branch's colour (a ring until the branch
            is home, then filled); the fork is a diamond cut into halves — each half in a branch's colour points where that branch goes. */
         L.finish.forEach(function (f, k) {
@@ -108,11 +116,16 @@
         });
         o.push('<circle cx="' + cx(L.start) + '" cy="' + cy(L.start) + '" r=".24" fill="var(--ink)"/>');
         if (L.fork !== null) {
-          var fx = cx(L.fork), fy = cy(L.fork);
-          L.arrows.forEach(function (a, k) {                             // one half per branch: a triangle from the centre towards its first cell
-            var dx = cx(a) - fx, dy = cy(a) - fy, px = -dy, py = dx, T = .46, W = .3;
-            o.push('<path d="M' + (fx + dx * T) + ' ' + (fy + dy * T) + ' L' + (fx + px * W) + ' ' + (fy + py * W) + ' L' + (fx - px * W) + ' ' + (fy - py * W) + 'Z" fill="' + colorOf(k + 1) + '" stroke="var(--ink)" stroke-width=".04" stroke-linejoin="round"/>');
+          /* the fork (designed 2026-11-19): short stubs in the branches' colours, drawn in the same stroke as the lines, start where each
+             branch will go — the split reads as part of the line, not as a separate sign. Faint until the trunk arrives; a small junction
+             dot on top. A branch that has started grows out of its stub. */
+          var fx = cx(L.fork), fy = cy(L.fork), on = s.forked;
+          L.arrows.forEach(function (a, k) {
+            if (s.lines[k + 1].length) return;
+            var dx = cx(a) - fx, dy = cy(a) - fy;
+            o.push('<line x1="' + fx + '" y1="' + fy + '" x2="' + (fx + dx * .42) + '" y2="' + (fy + dy * .42) + '" stroke="' + colorOf(k + 1) + '" stroke-width=".34" stroke-linecap="round" opacity="' + (on ? 1 : .45) + '"/>');
           });
+          o.push('<circle cx="' + fx + '" cy="' + fy + '" r=".15" fill="var(--card)" stroke="var(--ink)" stroke-width=".07"/>');
         }
         /* heads: the tip of each line that is still going, in its colour */
         s.lines.forEach(function (l, line) {
