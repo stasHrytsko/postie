@@ -13,7 +13,7 @@
 | `tight-shelf/` | Tight Shelf | stazzi `apps/casual/tight-shelf` | 17 |
 | `carpet-layers/` | Carpet Layers | stazzi `apps/casual/carpet-layers` | 20 |
 | `outgrow/` | Outgrow | stazzi `apps/casual/outgrow` | 50 |
-| `parcels/` | Parcels (вместе с Pair Up: кубики с точками) | stazzi `apps/casual/parcels` + `apps/casual/pairs` + генератор | 55 (30 цифры + 10 точки + 15 смешанные) |
+| `parcels/` | Parcels (вместе с Pair Up: кубики с точками) | stazzi `apps/casual/parcels` + `apps/casual/pairs` + генератор | 100 (1–8 цифры, дальше цифры с парами, 91–100 — 7×7) + уровень 0 |
 | `streams/` | Streams | stazzi `apps/casual/rusla` | 15 |
 | `hidden-stones/` | Hidden Stones | stazzi `apps/casual/hidden-stones` | 15 |
 | `nest/` | Nest | stazzi `apps/casual/nested-tangram` | 11 |
