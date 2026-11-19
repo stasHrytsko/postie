@@ -5,7 +5,7 @@
 //   9–30   2 → 3 branches, no pool, 4×4 → 6×5
 //   31     teaches drops and the pool (teach: the hand up to the first drop)
 //   32–80  mix: no pool / pool with drops (2 branches: the pool forces switching), 5×5 → 7×7
-//   81–100 finale, hard: 7×7 with the pool, 8×8 with 3 branches (no pool: on 8×8 it does not cut ways)
+//   81–100 finale, hard: 8×8 with 3 branches (no pool) and 6×6 with drops that force switching (bigger boards: the pool cuts no ways)
 // Built from the answer (stazzi gen-levels.mjs): a random cover of the board by the trunk and branches first, the level is its skeleton.
 // Measures: cells (<=12 → 1, <=16 → 2, <=20 → 3, <=25 → 4, <=30 → 5, more → 6; 49+ cells add 1: a big board takes long to read) and traps along the answer (share of the moves that
 // keep a cover possible, averaged over the moments with a choice); a pool that forces switching adds 1. step = ceil(average).
@@ -79,14 +79,15 @@ export function plan() {
   const early = [[4, 4], [5, 4], [5, 5], [5, 5], [6, 5], [6, 5]];
   for (let i = 9; i <= 30; i++) { const sz = early[Math.min(5, Math.floor((i - 9) / 22 * 6 + (i % 2) * 0.5))]; add(sz[0], sz[1], i >= 15 && sz[0] * sz[1] >= 20 && i % 3 !== 0 ? 3 : 2, false); }
   add(4, 4, 2, true, { teach: 'pool' });
-  const mid = [[5, 5], [6, 5], [6, 6], [6, 6], [7, 7]];
+  const mid = [[5, 5], [6, 5], [6, 6], [6, 6], [7, 7]];   // pool levels stay at 6×6 at most: on 7×7 the pool hardly cuts any way
   for (let i = 32; i <= 80; i++) {
-    const sz = mid[Math.min(4, Math.floor((i - 32) / 49 * 5))], pool = i % 2 === 0, B = sz[0] * sz[1] >= 25 && i % 3 === 0 ? 3 : 2;
+    let sz = mid[Math.min(4, Math.floor((i - 32) / 49 * 5))]; const pool = i % 2 === 0; if (pool && sz[0] > 6) sz = [6, 6];
+    const B = sz[0] * sz[1] >= 25 && i % 3 === 0 ? 3 : 2;
     add(sz[0], sz[1], B, pool, { interleave: pool && B === 2 && i >= 45 });
   }
   for (let i = 81; i <= 100; i++) {
     if (i % 2) add(8, 8, 3, false, { hard: true });
-    else add(7, 7, i % 4 === 0 ? 3 : 2, true, { interleave: i % 4 !== 0, hard: true });
+    else add(6, 6, 2, true, { interleave: true, hard: true });   // finale with drops: 6×6, the pool forces switching
   }
   return P;
 }
