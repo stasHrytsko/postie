@@ -9,7 +9,7 @@
 ## 0. Решения, без которых дальше нельзя
 
 - [x] **1. На чём собирать.** → **Capacitor**: текущий веб-прототип заворачивается в нативные приложения iOS и Android, игры не переписываются (решение автора, 2026-11-17; Unity отменён). `TECH.md`.
-- [x] **2. Какие 12 игр** → смесь, дедукция в ядре: Streams, Parcels + Pair Up, Knock Through, Hidden Stones, Perfect Fit, Outgrow · Arrow Flip, Slide Out, The Gap, Carpet Layers, Shadow Step, Bracket; запасные — Tight Shelf, Nest, One Each, Recruit Ladder, Forward / Back, Add Up, Crown Fit. `CONCEPT.md` §1.
+- [x] **2. Какие 12 игр** → смесь, дедукция в ядре: Streams, Parcels + Pair Up, Knock Through, Hidden Stones, Perfect Fit, Outgrow · Arrow Flip, Slide Out, The Gap, Carpet Layers, Shadow Step, Bracket; запасные — Tight Shelf, Nest, One Each, Recruit Ladder, Square Up, Forward / Back, Add Up, Crown Fit. `CONCEPT.md` §1.
 - [ ] **3. Логика марок** — что значат игра, номер, набор и порядок трёх марок; на ней строятся развилки писем.
 - [ ] **4. Деньги** — бесплатно без рекламы / платная загрузка / подписка / реклама вне решения. Влияет на анкеты сторов и аналитику.
 - [ ] **5. Название** — проверить товарный знак Postie (USPTO, EUIPO, классы 9 и 41), домены, прямой поиск в App Store и Google Play.

@@ -56,7 +56,7 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
   P.shake = function (el) { if (!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); };
   P.pop = function (el) { if (!el) return; el.classList.remove('popin'); void el.offsetWidth; el.classList.add('popin'); };
 
-  /* Gestures — the whole app uses only these three: tap, drag, swipe (one finger). */
+  /* Gestures — the whole app uses only these four: tap, press and hold, drag, swipe (one finger). Hold — author 2026-11-19, for Square Up. */
   /* swipe(el, cb(dir)) : dir = up|down|left|right after >= 22px; a short touch calls onTap if given */
   P.swipe = function (el, cb, onTap) {
     var sx, sy, on = false;
@@ -98,6 +98,7 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
 
   /* The hand (author 2026-11-19, as in stazzi): a finger that shows a gesture — on level 0, on the level that brings a new move,
      and on the "?" card. Points are page coordinates (clientX/Y); 1 point = tap, 2+ = drag along them;
+     1 point with hold: true ({x, y, hold: true}) = press and hold (about a second);
      a list of such gestures ([[p], [q]]) = one after another (tap, then tap).
        var hd = Postie.hand(host)        host: a positioned element the hand is drawn over (pointer-events: none)
        hd.show(points)                   loop the gesture until hide()
@@ -115,12 +116,15 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
       var at = function (q, s, o, off) { return { transform: 'translate(' + q.x + 'px,' + q.y + 'px) scale(' + s + ')', opacity: o, offset: off }; };
       kf.push(at({ x: first.x + 18, y: first.y + 26 }, 1, 0, 0));
       kf.push(at(first, 1, 1, 0.18)); kf.push(at(first, 0.86, 1, 0.26));
-      if (r.length === 1) kf.push(at(first, 1, 1, 0.38));
+      if (r.length === 1 && pts[0].hold) { kf.push(at(first, 0.86, 1, 0.66)); kf.push(at(first, 1, 1, 0.72)); }
+      else if (r.length === 1) kf.push(at(first, 1, 1, 0.38));
       else r.slice(1).forEach(function (q, i) { kf.push(at(q, 0.86, 1, 0.26 + 0.5 * (i + 1) / (r.length - 1))); });
       kf.push(at(last, 1, 1, 0.84)); kf.push(at(last, 1, 0, 1));
       return kf;
     }
-    function dur(pts) { return pts.length === 1 ? 1300 : 1700; }
+    function dur(pts) { return pts.length === 1 ? (pts[0].hold ? 2200 : 1300) : 1700; }
+    /* when the finger goes down and up, as a share of dur: a tap lifts with the drawn finger (0.38), a hold at 0.66, a drag at 0.78 */
+    function upAt(pts) { return pts.length > 1 ? 0.78 : pts[0].hold ? 0.66 : 0.38; }
     function hide() { gen++; clearTimeout(timer); if (anim) anim.cancel(); anim = null; el.style.opacity = 0; }
     function seq(pts) { return pts && pts.length && Array.isArray(pts[0]) ? pts : [pts]; }
     function show(pts) {
@@ -158,7 +162,7 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
           var k = (ts - t0) / d;
           if (phase === 0 && k >= 0.26) { ev('pointerdown', pts[0]); phase = 1; }
           if (phase === 1 && pts.length > 1) ev('pointermove', pointAt(Math.min(1, (k - 0.26) / 0.5)));
-          if (phase === 1 && k >= 0.78) { ev('pointerup', pts[pts.length - 1]); phase = 2; }
+          if (phase === 1 && k >= upAt(pts)) { ev('pointerup', pts[pts.length - 1]); phase = 2; }
           if (k >= 1) { el.style.opacity = 0; return done(true); }
           requestAnimationFrame(tick);
         }
