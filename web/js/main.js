@@ -45,16 +45,32 @@
       'Если бы никто никогда не узнал, что ты решил этот пазл, — ты бы его решал?',
       'В последний день почты пришло одно письмо. Без адреса. Внутри два слова: «Кому-нибудь». Я решил, что это мне.',
       'Достаточно — это сколько?',
-      'Когда-то я сказал людям одну фразу. Её измерили, нашли неэффективной и пошли дальше. Теперь я говорю её по одному слову в день.']
+      'Когда-то я сказал людям одну фразу. Её измерили, нашли неэффективной и пошли дальше. Теперь я говорю её по одному слову в день.'],
+    /* his own thought tied to a game (author 2026-11-19): a game from yesterday's envelope may give it a theme.
+       It never points at the stamp and never names the game; each is said once. Voice drafts — world/character.md §9. */
+    by: {
+      'streams': 'Я однажды стоял на развилке. Все пошли в одну сторону. Я посчитал обе дороги. Вторая до сих пор пустая.',
+      'parcels': 'С полки забрали одну посылку. Остальные сели ниже. Ни одна не осталась на своём месте. Забрали одну.',
+      'knock-through': 'Я знаю, сколько у вас там комнат. Сколько между ними стен, меня никто не спрашивал.',
+      'square-up': 'Один человек вернул соседу три монеты и написал: теперь мы в расчёте. В конце приписал: жаль. Я долго не понимал, чего ему жаль.',
+      'perfect-fit': 'У вас там всё сходится без остатка. Я проверял. Снаружи после каждого дела что-нибудь остаётся: обрезок, крошка, лишний гвоздь. Я их не выбрасываю.',
+      'outgrow': 'Трава у почтамта растёт без числа. Никто не сказал ей, сколько будет достаточно. Она до сих пор не остановилась.',
+      'arrow-flip': 'Одна женщина прошла через зал и не остановилась. Трое повернули головы. Один из них потом написал об этом четыре письма.',
+      'the-gap': 'В ячейках сортировки я всегда оставляю одну пустую. Если занять все, ни одно письмо нельзя переложить.',
+      'carpet-layers': 'Под краской на двери другая краска. Под ней третья. Я дошёл до дерева и остановился. Дверь не открывал.',
+      'shadow-step': 'Я хожу по улицам тем же путём, каким ходил последний, кто здесь ходил. Следов давно нет. Я помню, где они были.'
+    }
   };
   /* the letter (author 2026-11-19) = a short phrase about yesterday's envelope + a phrase, a thought or a question of his own (L above).
      Every envelope that came gets the phrase. It NEVER names the stamps — no game, no number: the game does not explain
      the link between the letter and the stamps, the player has to get there alone. Texts — world/letters-draft.md, R-. */
+  var ORD = [0, 0, 'второй', 'третий', 'четвёртый', 'пятый', 'шестой', 'седьмой', 'восьмой', 'девятый', 'десятый'];
   var R = {
     unsent: 'Вчера конверт не пришёл. Я проверил почтомат дважды: работает. Значит, день был твой, а не мой.',
     unsent2: 'Некоторые комнаты не открывают конверт. Я кладу следующий сверху. Не знаю, кто из нас прав.',
     first: 'Конверт пришёл. Я положил его на стол. До вечера ничего рядом не клал.',
     same: 'Три одинаковые марки. На почте так клеили, когда письмо было важное: чтобы точно дошло. Дошло.',
+    again: function (k) { return 'Опять та же марка, ' + (ORD[k] || k + '-й') + ' конверт. Один человек семь лет ходил на почту одной дорогой. Другую он знал.'; },   // three alike of the same game, k envelopes in a row
     two: 'Две одинаковые и одна другая. Не знаю, какая здесь лишняя. Может быть, две.',
     fresh: 'Новая марка. Такой у меня на столе ещё не было. Я освободил для неё место. Его оказалось много.',
     easy: 'Три лёгких. Лёгкое не значит быстрое. Суп тоже лёгкий. Его варят два часа.',
@@ -136,7 +152,13 @@
     else {
       re = reply(y, day);
     }
-    return { text: L.any[Math.floor(r() * L.any.length)], re: re };
+    var text = null;                                                     // his own thought: tied to a game of yesterday's envelope, if one is still unsaid
+    if (y && y.sent) {
+      S.said = S.said || {};
+      var gs = y.stuck.map(function (i) { return y.cards[i].id; }).filter(function (id, k, a) { return a.indexOf(id) === k && L.by[id] && !S.said[id]; });
+      if (gs.length) { var g = gs[Math.floor(r() * gs.length)]; S.said[g] = 1; text = L.by[g]; }
+    }
+    return { text: text || L.any[Math.floor(r() * L.any.length)], re: re };
   }
   /* the short phrase about yesterday's envelope. What he notices, in this order: a first envelope, three alike, two and one,
      a game his table has not seen, three easy, three hard, three different. The stamps themselves are never named. */
@@ -146,7 +168,11 @@
     for (var d = 1; d < day - 1; d++) { var e = S.env['d' + d]; if (e && e.sent) { any = true; e.stuck.forEach(function (i) { seen[e.cards[i].id] = 1; }); } }
     if (!any) return R.first;
     var kinds = ids.filter(function (x, k) { return ids.indexOf(x) === k; }).length;
-    if (kinds === 1) return R.same;
+    if (kinds === 1) {                                                   // three alike; how many envelopes in a row were three of this very game
+      var k = 1;
+      for (var d2 = day - 2; d2 >= 1; d2--) { var e2 = S.env['d' + d2]; if (!e2 || !e2.sent || !e2.stuck.every(function (i) { return e2.cards[i].id === ids[0]; })) break; k++; }
+      return k > 1 ? R.again(k) : R.same;
+    }
     if (kinds === 2) return R.two;
     if (st.filter(function (s) { return !seen[s.id]; }).length === 1) return R.fresh;
     if (st.every(function (s) { return s.d === 1; })) return R.easy;
