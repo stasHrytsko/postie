@@ -12,7 +12,7 @@
 - [x] **2. Какие 12 игр** → смесь, дедукция в ядре: Streams, Parcels + Pair Up, Knock Through, Hidden Stones, Perfect Fit, Outgrow · Arrow Flip, Slide Out, The Gap, Carpet Layers, Shadow Step, Bracket; запасные — Tight Shelf, Nest, One Each, Recruit Ladder, Square Up, Forward / Back, Add Up, Crown Fit. `CONCEPT.md` §1.
 - [x] **3. Логика марок** → почтальон читает рисунок конверта и отвечает фразой, не называя марки; игра задаёт тему его мысли; номер уровня и порядок марок в MVP ничего не значат; слой для копателей — позже (решение автора, 2026-11-20). `WORLD.md` §0.2.
 - [x] **4. Деньги** → как NYT Games и Puzzmo: письмо, мир и 5 задач дня — бесплатно навсегда, явно для игрока; каталог Games — платный: подписка или разовая покупка навсегда; рекламы и платной загрузки нет (решение автора, 2026-11-20). `CONCEPT.md` §6.
-- [ ] **5. Название** — проверить товарный знак Postie (USPTO, EUIPO, классы 9 и 41), домены, прямой поиск в App Store и Google Play.
+- [~] **5. Название** — проверить товарный знак Postie (USPTO, EUIPO, классы 9 и 41), домены, прямой поиск в App Store и Google Play. **2026-11-20, веб-поиск:** игры-головоломки Postie в сторах не найдено; есть Picture Postie (фото-пазлы на заказ), Postie (трекер посылок, Amazon Appstore), Postie Mate (для курьеров AusPost), Posty Run (раннер); компания Postie — софт для директ-мейл рекламы (getpostie, есть в G2 и Klaviyo); Postie — сеть одежды в Новой Зеландии. Реестры USPTO / EUIPO и домены отсюда не открываются — проверить вручную.
 
 ## 1. Проверить хук до большой стройки
 
