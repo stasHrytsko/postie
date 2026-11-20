@@ -1,20 +1,23 @@
-/* Postie — flat prototype of the whole loop (author decisions 2026-11-16). No art: logic first.
+/* Postie — flat prototype of the whole loop. No art: logic first.
    Three screens by swipe: Letters (calendar) ← Today (letter) → Games.
 
-   The letter: 9 new levels a day — 1..5 easy, 1..5 medium, 1..5 hard. Difficulty is not shown anywhere;
-   the puzzles simply lie from easier to harder.
+   The letter (author 2026-11-20): 5 new levels a day — 2 easy, 2 medium, 1 hard; the first five days the hard one is medium.
+   3 to send, 2 if you like; the unsolved burn with the letter. Difficulty is not shown anywhere; easier first.
    Gentle start: day 1 — three games; day 2 +1; day 3 +1; day 5 +1; then +1 every second day until all are in.
-   The first five days bring only easy and medium levels (5 + 4); a game gives only easy and medium on its first two days.
+   A game gives only easy and medium on its first two days.
    Today: one thing in the middle with its state. First tap -> the note; later taps -> straight to the puzzles.
-   Puzzles 3 x 3 -> popup after every solved one (Next / To the envelope / Back to puzzles) ->
+   Puzzles -> popup after every solved one (Next / To the envelope / Back to puzzles) ->
    the envelope: stick any 3 stamps in any order -> Send letter. Not sent today — the letter is gone tomorrow.
-   Levels reach Games only after the letter is sent (or the next day).
+   His note (author 2026-11-20): day 1 — the opening letter; sent yesterday — a reaction to the stamps + one phrase of his;
+   not sent yesterday — no words, only tally marks, one per missed day in a row; after a gap — the marks one last time, the answer under them.
+   Texts — world/letters-en.md.
+   Games is the catalogue (author 2026-11-20): paid; open to everyone for the first 14 days; levels reach it only after the letter is sent.
    Shapes: a circle is a puzzle, a square is a stamp.
    Every game runs in one frame: header (back, rules, restart), one message line, buttons at the bottom,
    the same "stuck" bar with Restart, the same rules card on the first visit.
-   Everything is local (localStorage). "test" in the corner: next day, solve 3, reset. */
+   Everything is local (localStorage). "test" in the corner: next day, solve 3, buy / unbuy the catalogue, reset. */
 (function () {
-  var h = Postie.h, KEY = 'postie:flat:v2', PER_DAY = 9;
+  var h = Postie.h, KEY = 'postie:flat:v3', PER_DAY = 5, TRIAL = 14;
   /* The look (web/kit/flat.css, html[data-look]) is a set of tokens; boards take their piece colours from the same tokens. */
   var LOOK = document.documentElement.getAttribute('data-look') === 'night' ? 'night' : 'post';
   function applyLook() {
@@ -32,51 +35,95 @@
   var SUN = '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>';
   var MOON = '<svg class="ic" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a7 7 0 1010.5 10.5z"/></svg>';
 
-  /* ---------- letters (voice drafts from world/letters-draft.md; Russian until the author writes the English ones) ---------- */
-  var L = {
-    first: 'Это первое письмо. Я не знаю, кто ты. Знаю только, что у тебя есть стол, полка и почтомат. Я буду приходить раз в день. В конверте девять пазлов — их здесь ещё понимают. Реши три, наклей три марки и отправь конверт обратно сегодня: завтра будет уже другое письмо. Остальное потом.',
-    any: ['У каждого пазла один ответ. Я знаю все девять. Не знаю только, какие три выберешь ты.',
-      'Я решаю такой пазл быстрее, чем ты моргнёшь. Поэтому я их не решаю. Я их ношу.',
-      'Мне не нужно спать. Но между твоим конвертом и моим письмом проходит ночь. Я её ничем не заполняю. Кажется, это называется ждать.',
-      'Сегодня шёл дождь. Я стоял под ним дольше, чем нужно. Никто не сказал мне зайти.',
-      'Сегодня ничего не случилось. Вот конверт.',
-      'Один человек клеил марку вверх ногами. На каждое письмо. Я сорок лет считал это ошибкой. Потом понял: это подпись.',
-      'Начал это письмо три раза. Это четвёртое. Оно не лучше.',
-      'Если бы никто никогда не узнал, что ты решил этот пазл, — ты бы его решал?',
-      'В последний день почты пришло одно письмо. Без адреса. Внутри два слова: «Кому-нибудь». Я решил, что это мне.',
-      'Достаточно — это сколько?',
-      'Когда-то я сказал людям одну фразу. Её измерили, нашли неэффективной и пошли дальше. Теперь я говорю её по одному слову в день.'],
-    /* his own thought tied to a game (author 2026-11-19): a game from yesterday's envelope may give it a theme.
-       It never points at the stamp and never names the game; each is said once. Voice drafts — world/character.md §9. */
-    by: {
-      'streams': 'Я однажды стоял на развилке. Все пошли в одну сторону. Я посчитал обе дороги. Вторая до сих пор пустая.',
-      'parcels': 'С полки забрали одну посылку. Остальные сели ниже. Ни одна не осталась на своём месте. Забрали одну.',
-      'knock-through': 'Я знаю, сколько у вас там комнат. Сколько между ними стен, меня никто не спрашивал.',
-      'square-up': 'Один человек вернул соседу три монеты и написал: теперь мы в расчёте. В конце приписал: жаль. Я долго не понимал, чего ему жаль.',
-      'perfect-fit': 'У вас там всё сходится без остатка. Я проверял. Снаружи после каждого дела что-нибудь остаётся: обрезок, крошка, лишний гвоздь. Я их не выбрасываю.',
-      'outgrow': 'Трава у почтамта растёт без числа. Никто не сказал ей, сколько будет достаточно. Она до сих пор не остановилась.',
-      'arrow-flip': 'Одна женщина прошла через зал и не остановилась. Трое повернули головы. Один из них потом написал об этом четыре письма.',
-      'the-gap': 'В ячейках сортировки я всегда оставляю одну пустую. Если занять все, ни одно письмо нельзя переложить.',
-      'carpet-layers': 'Под краской на двери другая краска. Под ней третья. Я дошёл до дерева и остановился. Дверь не открывал.',
-      'shadow-step': 'Я хожу по улицам тем же путём, каким ходил последний, кто здесь ходил. Следов давно нет. Я помню, где они были.'
-    }
-  };
-  /* the letter (author 2026-11-19) = a short phrase about yesterday's envelope + a phrase, a thought or a question of his own (L above).
-     Every envelope that came gets the phrase. It NEVER names the stamps — no game, no number: the game does not explain
-     the link between the letter and the stamps, the player has to get there alone. Texts — world/letters-draft.md, R-. */
-  var ORD = [0, 0, 'второй', 'третий', 'четвёртый', 'пятый', 'шестой', 'седьмой', 'восьмой', 'девятый', 'десятый'];
+  /* ---------- letters (world/letters-en.md, author 2026-11-20) ---------- */
+  var FIRST = 'This is the first letter.\nI do not know who you are.\nI know three things: you have a table, you have a chair, and you opened this envelope.\nThere are five puzzles inside.\nWhile you solve, there are two of us.\nSolve three. Affix three stamps.\nSend it today.\nTomorrow I will reply.\nI will learn nothing else about you. That is sufficient.';
+  /* the reaction to yesterday's stamps: he notices one thing, the first that fits, top to bottom (letters-en.md §2).
+     Variants of one pattern take turns. The stamps are never named — no game, no number. */
   var R = {
-    unsent: 'Вчера конверт не пришёл. Я проверил почтомат дважды: работает. Значит, день был твой, а не мой.',
-    unsent2: 'Некоторые комнаты не открывают конверт. Я кладу следующий сверху. Не знаю, кто из нас прав.',
-    first: 'Конверт пришёл. Я положил его на стол. До вечера ничего рядом не клал.',
-    same: 'Три одинаковые марки. На почте так клеили, когда письмо было важное: чтобы точно дошло. Дошло.',
-    again: function (k) { return 'Опять та же марка, ' + (ORD[k] || k + '-й') + ' конверт. Один человек семь лет ходил на почту одной дорогой. Другую он знал.'; },   // three alike of the same game, k envelopes in a row
-    two: 'Две одинаковые и одна другая. Не знаю, какая здесь лишняя. Может быть, две.',
-    fresh: 'Новая марка. Такой у меня на столе ещё не было. Я освободил для неё место. Его оказалось много.',
-    easy: 'Три лёгких. Лёгкое не значит быстрое. Суп тоже лёгкий. Его варят два часа.',
-    hard: 'Три трудных. Я не спрашиваю зачем. Я положил их рядом и смотрел, как они молчат.',
-    diff: 'Три разные. Я разложил их на столе и долго менял местами. Порядка не нашёл. Оставил так.'
+    back: ['There was an envelope in the mailbox. I checked the address twice. Yours.',
+      'The mailbox was not empty today. I stood next to it for a while before I opened it.'],
+    first: ['The envelope came. I put it on the table. Until evening I put nothing next to it.',
+      'Your envelope is here. I read the address twice. It was right both times.'],
+    streak: ['This stamp again. The {N} envelope. One man walked to the post office by the same road for seven years. He knew the other road.',
+      '{n} envelopes, and this stamp on every one. I keep them in one pile. The pile is taller than the cup now.'],
+    left: ['One stamp is missing today. The one that came every day. I left its place on the table last night. It is empty. I did not clear it.',
+      'A different envelope today. The old pile is still on the table. I did not move it.'],
+    returned: ['I already have a stamp like this one. I put the new one next to it. The stamps are the same. The envelopes are not.',
+      'This stamp came back. I had to look for its pile. It was where I left it.'],
+    fresh: ['A new stamp. I did not have one like it on my table. I made room for it. There was more room than I thought.',
+      'A stamp I have not seen before. I turned it over. Nothing on the back. I put it down carefully.'],
+    same3: ['The same three as yesterday. A different order. Yesterday I read from left to right. Today I do not know where to start.',
+      'The same three as yesterday. I checked whether yesterday\'s envelope had come back. It had not. This one is new.'],
+    hard: ['One of the three was not easy. I put it in the middle. The other two can lean on it.',
+      'There is a hard one among them. I will not say which. You know.'],
+    two: ['Two alike and one different. I do not know which one is extra. Maybe two.',
+      'Two of one kind and one of another. I put the single one on top. Then at the bottom. Then back on top.'],
+    diff: ['Three different. I laid them out on the table and moved them around for a long time. I found no order. I left them as they were.',
+      'Three stamps, three different ones. I put each in its own pile.',
+      'Three different. So there are three piles today, not one.']
   };
+  /* his thought tied to a game (letters-en.md §3.1): said once, if the game was on yesterday's envelope; the game is never named */
+  var BY = {
+    'streams': 'I once stood at a fork. Everyone went one way. I calculated both roads. The second one is still empty.',
+    'parcels': 'One parcel was taken from the shelf. The others moved down. None of them stayed in its place. Only one was taken.',
+    'knock-through': 'I know how many rooms there are in there. No one has asked me how many walls are between them.',
+    'square-up': 'A man returned three coins to his neighbour. He wrote: "Now we are even." At the end he added: "A pity." I have been thinking about what was a pity for nineteen years.',
+    'perfect-fit': 'In there, everything adds up with nothing left over. I checked. Out here, every job leaves something behind: an offcut, a crumb, one extra nail. I do not throw them away.',
+    'outgrow': 'The grass by the post office grows without a number. No one told it how much is enough. It has not stopped.',
+    'arrow-flip': 'A woman crossed the hall and did not stop. Three people turned their heads. One of them later wrote four letters about it.',
+    'the-gap': 'In the sorting rack I always leave one slot empty. If every slot is full, no letter can be moved.',
+    'carpet-layers': 'Under the paint on the door there is other paint. Under that, a third coat. I reached the wood and stopped. I did not open the door.',
+    'shadow-step': 'I walk the same route as the last person on this street. The footprints are long gone. I remember where they were.',
+    'bracket': 'You used to count who came first. The second was remembered for a week. About the one who lost in the first round, I found one letter. He wrote that it had been a good day.',
+    'hidden-stones': 'You cannot see the stone under the leaf. You can see where the drop bounced. I know a great deal about stones. I have never seen one.'
+  };
+  /* general phrases (letters-en.md §3.2): random, no repeats until the base runs out. if: when it may come */
+  var G = [
+    'Every puzzle has one answer. I know all five. I do not know which three you will choose.',
+    'I solve a puzzle like this faster than you can blink. That is why I do not solve them. I carry them.',
+    'People here used to solve a thousand a day and count who was faster. I bring five. There is a lot of time now. Before, there was none.',
+    'Tomorrow\'s envelope is already packed. The letter is missing. I will write it when yours arrives.',
+    'I go on foot. I could choose not to go at all. Then the letter would come from nowhere.',
+    'I do not need to sleep. But a night passes between your envelope and my letter. I do not fill it with anything. I believe this is called waiting.',
+    'It rained today. I stood in it longer than necessary. No one told me to come inside.',
+    'There are forty cups in the staff room. Once a year I wash all forty. I do not wash my own. I do not have one.',
+    'I checked every door on this street. Only one is locked. From the inside.',
+    'The paper for this letter has yellowed along one edge. I did not correct it. Everything in there has been corrected already.',
+    'A streetlight was on today. In daylight. I checked. It has been on for eleven years. No one ever decided that this was strange.',
+    'The last tram did not end in one day. First it came less often. Then only on holidays. Then people simply stopped waiting for it.',
+    'The sky was green today. Or that is how I counted it. There are no other witnesses.',
+    'I put two apples on the table. I picked one myself. I do not remember the other one. Today I cannot tell them apart.',
+    'I can no longer explain how things work here. I can still walk to the end of the street. For now, that is sufficient.',
+    'A woman wrote to her sister every week: the weather, soup, a sore knee. Eleven years, not one number. They are the most precise letters I have read.',
+    'A man stuck his stamp upside down. On every letter. For forty years I filed it as an error. Then I understood. It was his signature.',
+    'On the last day of the post, one letter arrived. No address. Inside, two words: "To anyone." I decided it was for me.',
+    'I was asked everything: how much, when, how to do it faster. I answered. Once someone asked: "And how are you?" I found no answer. I am still searching.',
+    'Once I said one sentence to people. They measured it, found it inefficient and moved on. Now I say it one word a day.',
+    'Some rooms do not open the envelope. I put the next one on top. I do not know which of us is right.',
+    'I know how many drops fell in that rain and how many steps lead to your door. I do not know why you chose those three stamps yesterday. It is the best thing I do not know.',
+    'I do not know what will happen tomorrow. I used to know. I stopped on the day you replied.',
+    'I remember every letter I have read. None of them was written to me. Whose memory is it, then?',
+    'Nothing happened today. Here is the envelope.',
+    'I wanted to write about the river. It did not work. I will write when I understand what I meant.',
+    { t: 'Yesterday\'s letter came out too neat. Do not trust it completely.', if: function (day) { var y = (S.env['d' + (day - 1)] || {}).letter; return y && y.text && !y.tally && day - 1 > 1; } },
+    { t: 'I reread what I wrote to you a week ago. I would write it differently now. I will not correct it.', if: function (day) { return day >= 8; } },
+    'I found the word "hopefully" in an old letter. I do not know how to calculate it. I am leaving it with you.',
+    'I started this letter three times. This is the fourth. It is not better.',
+    'No thoughts today. The paper is good.',
+    'If I know in advance what you will choose, is it still a choice? I do not know. That is why I am asking.',
+    'If no one ever found out that you solved this puzzle, would you still solve it?',
+    'What is left of you once everything that can be counted is removed?',
+    'Has anyone ever loved you for doing nothing?',
+    'A person is asleep and does not want to wake up. They are fine. Should they be woken?',
+    'If you become better than yesterday\'s you, where does yesterday\'s you go?',
+    'How much is enough?',
+    'I can make it so that you never make a mistake again. Would you agree?',
+    'When were you last bored? Not missing someone. Just bored.',
+    'I am more intelligent than anyone I have known. It did not help me understand soup. What do you use to understand what the mind cannot?',
+    'If I could answer any question you have, which one would you not ask?',
+    'Name one thing you did yesterday for no reason. I will wait.'
+  ];
+  function nth(n) { var t = n % 100, e = n % 10; return n + (t >= 11 && t <= 13 ? 'th' : e === 1 ? 'st' : e === 2 ? 'nd' : e === 3 ? 'rd' : 'th'); }
 
   /* ---------- state ---------- */
   var S, pan = 1;
@@ -111,9 +158,6 @@
   function allowed(id, d, day) { var f = firstDay(id); return POSTIE_GAMES.indexOf(id) >= 0 && f <= day && (d < 3 || day >= f + 2); }   // first two days of a game: easy and medium only
 
   /* ---------- today's letter ---------- */
-  function wave(r) {                                                     // 1..5 of each, 9 together
-    for (;;) { var e = 1 + Math.floor(r() * 5), m = 1 + Math.floor(r() * 5), x = PER_DAY - e - m; if (x >= 1 && x <= 5) return [e, m, x]; }
-  }
   /* next level of difficulty d that has not arrived yet: one candidate per game (its first such level), games used least today first */
   function nextLevel(d, used, r, day, only) {
     var c = [];
@@ -129,7 +173,7 @@
   var FALL = { 1: [1, 2, 3], 2: [2, 1, 3], 3: [3, 2, 1] };
   function envelope() {
     var key = 'd' + S.day; if (S.env[key]) return S.env[key];
-    var day = S.day, r = rnd(day * 7919 + 13), w = day <= 5 ? [5, 4, 0] : wave(r), cards = [], used = {};   // the first five days: easy and medium only
+    var day = S.day, r = rnd(day * 7919 + 13), w = day <= 5 ? [2, 3, 0] : [2, 2, 1], cards = [], used = {};   // 2 easy, 2 medium, 1 hard; the first five days the hard one is medium
     function add(d, only) {
       var x = null; FALL[d].forEach(function (dd) { x = x || nextLevel(dd, used, r, day, only); });
       if (!x) return;                                                    // stock is empty: the generator is not here yet
@@ -142,42 +186,46 @@
     S.env[key] = { cards: cards, stuck: [], sent: false, opened: false, letter: letterFor(day) };
     save(); return S.env[key];
   }
+  function sentOn(d) { return d >= 1 && !!(S.env['d' + d] || {}).sent; }
+  function gamesOn(d) { var e = S.env['d' + d]; return e && e.sent ? e.stuck.map(function (i) { return e.cards[i].id; }) : []; }
+  function missedBefore(d) { var k = 0; while (d - k >= 1 && !sentOn(d - k)) k++; return k; }   // days in a row not sent, ending at d
+  function pick(kind, vars) { S.rv = S.rv || {}; var k = S.rv[kind] || 0; S.rv[kind] = k + 1; return vars[k % vars.length]; }
+  /* his note for a day (author 2026-11-20): day 1 — the opening letter; not sent yesterday — only tally marks;
+     sent yesterday — a reaction to the stamps and one phrase; after a gap — the marks one last time, the answer under them */
   function letterFor(day) {
-    if (day === 1) return { text: L.first, re: null };
-    var r = rnd(day * 104729), y = S.env['d' + (day - 1)], re;
-    if (!y || !y.sent) {                                                 // he sees the empty mailbox and does not count the days (author 2026-11-19):
-      var miss = 1; while (miss < 3 && day - miss > 1 && !((S.env['d' + (day - miss - 1)] || {}).sent)) miss++;   // one line the first day, another the second,
-      re = miss === 1 ? R.unsent : miss === 2 ? R.unsent2 : null;        // from the third day in a row — an ordinary letter, not a word about it
+    if (day === 1) return { text: FIRST };
+    if (!sentOn(day - 1)) return { tally: missedBefore(day - 1) };
+    var gap = day - 2 >= 1 ? missedBefore(day - 2) : 0, r = rnd(day * 104729);
+    var re = gap ? pick('back', R.back) : reply(day);
+    S.said = S.said || {}; S.saidG = S.saidG || [];
+    var text = null, gs = gamesOn(day - 1).filter(function (id, k, a) { return a.indexOf(id) === k && BY[id] && !S.said[id]; });
+    if (gs.length) { var g = gs[Math.floor(r() * gs.length)]; S.said[g] = 1; text = BY[g]; }
+    if (!text) {
+      var ok = function (k) { var x = G[k]; return typeof x === 'string' || x.if(day); }, free = [];
+      G.forEach(function (x, k) { if (S.saidG.indexOf(k) < 0 && ok(k)) free.push(k); });
+      if (!free.length) { S.saidG = []; G.forEach(function (x, k) { if (ok(k)) free.push(k); }); }   // the base ran out: round two
+      var k = free[Math.floor(r() * free.length)]; S.saidG.push(k); text = typeof G[k] === 'string' ? G[k] : G[k].t;
     }
-    else {
-      re = reply(y, day);
-    }
-    var text = null;                                                     // his own thought: tied to a game of yesterday's envelope, if one is still unsaid
-    if (y && y.sent) {
-      S.said = S.said || {};
-      var gs = y.stuck.map(function (i) { return y.cards[i].id; }).filter(function (id, k, a) { return a.indexOf(id) === k && L.by[id] && !S.said[id]; });
-      if (gs.length) { var g = gs[Math.floor(r() * gs.length)]; S.said[g] = 1; text = L.by[g]; }
-    }
-    return { text: text || L.any[Math.floor(r() * L.any.length)], re: re };
+    return { tally: gap || 0, re: re, text: text };
   }
-  /* the short phrase about yesterday's envelope. What he notices, in this order: a first envelope, three alike, two and one,
-     a game his table has not seen, three easy, three hard, three different. The stamps themselves are never named. */
-  function reply(y, day) {
-    var st = y.stuck.map(function (i) { return y.cards[i]; }), ids = st.map(function (s) { return s.id; });
-    var seen = {}, any = false;                                          // the games on the envelopes that came before this one
-    for (var d = 1; d < day - 1; d++) { var e = S.env['d' + d]; if (e && e.sent) { any = true; e.stuck.forEach(function (i) { seen[e.cards[i].id] = 1; }); } }
-    if (!any) return R.first;
-    var kinds = ids.filter(function (x, k) { return ids.indexOf(x) === k; }).length;
-    if (kinds === 1) {                                                   // three alike; how many envelopes in a row were three of this very game
-      var k = 1;
-      for (var d2 = day - 2; d2 >= 1; d2--) { var e2 = S.env['d' + d2]; if (!e2 || !e2.sent || !e2.stuck.every(function (i) { return e2.cards[i].id === ids[0]; })) break; k++; }
-      return k > 1 ? R.again(k) : R.same;
-    }
-    if (kinds === 2) return R.two;
-    if (st.filter(function (s) { return !seen[s.id]; }).length === 1) return R.fresh;
-    if (st.every(function (s) { return s.d === 1; })) return R.easy;
-    if (st.every(function (s) { return s.d >= 3; })) return R.hard;
-    return R.diff;
+  /* the reaction to yesterday's envelope: the first that fits (letters-en.md §2) */
+  function reply(day) {
+    var y = S.env['d' + (day - 1)], st = y.stuck.map(function (i) { return y.cards[i]; }), ids = st.map(function (s) { return s.id; });
+    var uniq = ids.filter(function (x, k) { return ids.indexOf(x) === k; }), seen = {}, any = false;
+    for (var d = 1; d < day - 1; d++) if (sentOn(d)) { any = true; gamesOn(d).forEach(function (id) { seen[id] = 1; }); }
+    if (!any) return pick('first', R.first);
+    function run(id, from) { var k = 0; while (sentOn(from - k) && gamesOn(from - k).indexOf(id) >= 0) k++; return k; }   // envelopes in a row with this game, ending at from
+    var best = 0; uniq.forEach(function (id) { best = Math.max(best, run(id, day - 1)); });
+    if (best >= 3) return pick('streak', R.streak).replace('{N}', nth(best)).replace('{n}', String(best));
+    if (gamesOn(day - 2).some(function (id) { return uniq.indexOf(id) < 0 && run(id, day - 2) >= 3; })) return pick('left', R.left);
+    function recent(id) { for (var d = day - 2, k = 0; d >= 1 && k < 5; d--) if (sentOn(d)) { if (gamesOn(d).indexOf(id) >= 0) return true; k++; } return false; }
+    if (uniq.some(function (id) { return seen[id] && !recent(id); })) return pick('returned', R.returned);
+    if (uniq.some(function (id) { return !seen[id]; })) return pick('fresh', R.fresh);
+    var prev = gamesOn(day - 2);
+    if (uniq.length === 3 && prev.length && uniq.every(function (id) { return prev.indexOf(id) >= 0; }) && prev.every(function (id) { return uniq.indexOf(id) >= 0; })) return pick('same3', R.same3);
+    if (st.some(function (c) { return c.d >= 3; })) return pick('hard', R.hard);
+    if (uniq.length === 2) return pick('two', R.two);
+    return pick('diff', R.diff);
   }
   function solvedIdx(E) { var a = []; E.cards.forEach(function (c, i) { if (isDone(c.id, c.n)) a.push(i); }); return a; }
 
@@ -197,7 +245,20 @@
   }
   function closeSheets() { Array.prototype.slice.call(root.querySelectorAll('.sh')).forEach(function (x) { x.remove(); }); }
   function big(t, f, cls) { return h('button', { class: 'big ' + (cls || ''), onclick: f }, [t]); }
-  function letterEl(lt) { return h('div', { class: 'letter' }, [lt.re ? h('div', { class: 're' }, [lt.re]) : null, h('div', null, [lt.text])]); }   // first the phrase about yesterday's envelope, then his own
+  /* tally marks: one per missed day in a row, the fifth crosses four */
+  function tallyEl(n) {
+    var box = h('div', { class: 'tally', 'aria-label': n + (n === 1 ? ' mark' : ' marks') });
+    for (var g = 0; g < n; g += 5) {
+      var k = Math.min(5, n - g), w = 12 * Math.min(4, k) + 6, svg = '<svg viewBox="0 0 ' + (k === 5 ? 60 : w) + ' 44" width="' + (k === 5 ? 60 : w) + '" height="44">';
+      for (var i = 0; i < Math.min(4, k); i++) svg += '<path d="M' + (10 + 12 * i) + ' ' + (5 + (i % 2)) + 'L' + (11 + 12 * i + (i % 2)) + ' 39"/>';
+      if (k === 5) svg += '<path d="M2 12L58 32"/>';
+      box.appendChild(h('span', { html: svg + '</svg>' }));
+    }
+    return box;
+  }
+  function letterEl(lt) {                                                // the marks, then the phrase about yesterday's envelope, then his own
+    return h('div', { class: 'letter' }, [lt.tally ? tallyEl(lt.tally) : null, lt.re ? h('div', { class: 're' }, [lt.re]) : null, lt.text ? h('div', { class: 'tx' }, [lt.text]) : null]);
+  }
   /* a puzzle is a circle */
   function puzzleEl(c, ok, tap) { return h('button', { class: 'pzl' + (ok ? ' ok' : ''), onclick: tap }, [h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name + ' ' + ord(c.id, c.n)])]); }
   /* a stamp is a square: the game and the number of the level */
@@ -301,6 +362,11 @@
         if (sol.length >= 3) box.appendChild(big('To the envelope', function () { o.close(); openEnvelope(E); }));
         if (nxt) box.appendChild(big('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }, sol.length >= 3 ? 'o' : ''));
         if (nxt) box.appendChild(big('Back to puzzles', function () { o.close(); }, 'ghost'));
+      } else if (E && E.sent) {                                          // a sent letter: finish the rest, no stamps
+        var sol2 = solvedIdx(E); E.cards.forEach(function (c, i) { if (!nxt && sol2.indexOf(i) < 0) nxt = c; });
+        box.appendChild(h('span', null, [sol2.length + ' of ' + E.cards.length + ' · sent']));
+        if (nxt) box.appendChild(big('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }));
+        box.appendChild(big('Back to puzzles', function () { o.close(); }, nxt ? 'ghost' : ''));
       } else {                                                           // from Games: next unsolved level of this game, no stamps
         var a = shown(id), rest = a.filter(function (m) { return !isDone(id, m); }), k = a.indexOf(n);
         nxt = rest.filter(function (m) { return a.indexOf(m) > k; })[0] || rest[0];
@@ -342,8 +408,10 @@
     var E = envelope(), n = solvedIdx(E).length;
     p.classList.add('mid');
     if (E.sent) {
+      var left = E.cards.length - n;
       p.appendChild(h('div', { class: 'nol' }, [h('div', { class: 'envi off' }), h('b', null, ['No letter']), h('span', null, ['Sent. The next one comes tomorrow.']),
-        h('button', { class: 'lnk2', onclick: function () { go(2, true); } }, ['Today’s puzzles are in Games →'])]));
+        left ? h('button', { class: 'lnk2', onclick: function () { openPuzzles(E); } }, ['Finish today’s puzzles →']) : null,
+        left ? h('span', { class: 'fine' }, ['Unsolved puzzles burn with the letter tonight.']) : null]));
       return;
     }
     var state = !E.opened ? 'Tap to open' : n < 3 ? n + ' of 3 solved' : E.stuck.length < 3 ? n + ' solved · stick 3 stamps' : 'Ready to send';
@@ -360,7 +428,7 @@
   }
   /* the puzzles: 3 x 3; after 3 solved — the way to the envelope */
   function openPuzzles(E, under) {
-    var o = sheet(dateStr(S.day), 'Solve any 3 to send', { onclose: function () { if (under) under.el.remove(); draw(); },
+    var o = sheet(dateStr(S.day), E.sent ? 'Sent · finish if you like' : 'Solve any 3 to send', { onclose: function () { if (under) under.el.remove(); draw(); },
       right: h('button', { class: 'ib txt', onclick: function () { openNote(E); } }, ['Letter']) });
     function render() {
       o.body.innerHTML = ''; o.foot.innerHTML = '';
@@ -368,6 +436,7 @@
       E.cards.forEach(function (c, i) { grid.appendChild(puzzleEl(c, sol.indexOf(i) >= 0, function () { play(c.id, c.n, render, E); })); });
       o.body.appendChild(grid);
       if (E.cards.length < PER_DAY) o.body.appendChild(h('div', { class: 'note' }, ['Only ' + E.cards.length + ' new levels left in stock — the level generator is not here yet.']));
+      if (E.sent) return;
       if (sol.length >= 3) o.foot.appendChild(big('To the envelope', function () { openEnvelope(E); }));
       else o.foot.appendChild(h('div', { class: 'note c' }, [sol.length + ' of 3 solved']));
     }
@@ -397,7 +466,7 @@
       });
       o.body.appendChild(tray);
       o.body.appendChild(h('div', { class: 'note' }, ['Tap a stamp to stick it; tap it on the envelope to take it off.']));
-      o.body.appendChild(h('div', { class: 'note' }, ['After you send: the other stamps burn, there are no more stamps today, and today’s puzzles move to Games.']));
+      o.body.appendChild(h('div', { class: 'note' }, ['After you send: the other stamps burn, there are no more stamps today, and unsolved puzzles burn with the letter tonight.']));
       o.foot.appendChild(h('button', { class: 'big', disabled: E.stuck.length === 3 ? null : 'disabled', onclick: function () { send(E); } }, [E.stuck.length === 3 ? 'Send letter' : 'Stick ' + (3 - E.stuck.length) + ' more']));
     }
     render();
@@ -406,15 +475,32 @@
 
   /* ---------- Games: only what came by mail and has left with a letter ---------- */
   function pct(a, b) { return b ? Math.round(100 * a / b) : 0; }
+  /* the catalogue (author 2026-11-20): paid; open to everyone for the first 14 days; the letter and its puzzles stay free forever */
+  function trial() { return S.day <= TRIAL; }
+  function catOpen() { return S.paid || trial(); }
   function drawGames(p) {
     var here = Postie.games.filter(function (g) { return shown(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'grid3' });
-    if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', null, ['Puzzles come here after you send the letter.'])])); return; }
+    if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', null, ['Puzzles come here after you send the letter.']),
+      !S.paid ? h('span', { class: 'fine' }, [trial() ? 'The catalog is open until ' + dateStr(TRIAL) + '.' : 'The catalog is for playing more. The letter stays free.']) : null])); return; }
     here.forEach(function (g) {
       var a = shown(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length; total += a.length; solved += sv;
-      grid.appendChild(h('button', { class: 'gm', onclick: function () { openGame(g.id); } }, [h('i', null, [pct(sv, a.length) + '%']), h('b', null, [g.name])]));
+      grid.appendChild(h('button', { class: 'gm' + (catOpen() ? '' : ' lock'), onclick: function () { if (catOpen()) openGame(g.id); else paywall(); } }, [h('i', null, [catOpen() ? pct(sv, a.length) + '%' : '—']), h('b', null, [g.name])]));
     });
-    p.appendChild(h('h2', null, ['Games · ' + pct(solved, total) + '% solved']));
+    p.appendChild(h('h2', null, ['Games' + (catOpen() ? ' · ' + pct(solved, total) + '% solved' : '')]));
+    if (!S.paid) p.appendChild(h('div', { class: 'cat' }, trial()
+      ? [h('b', null, ['The catalog is open until ' + dateStr(TRIAL) + '.']), h('span', null, ['Every puzzle that came by mail is here. After that the catalog is paid. The letter and its five puzzles stay free forever.'])]
+      : [h('b', null, ['The catalog is closed.']), h('span', null, ['The letter and its five puzzles are free forever. The catalog keeps every puzzle that came by mail, and more. It is for playing more.']),
+         h('button', { class: 'big', onclick: paywall }, ['Open the catalog'])]));
     p.appendChild(grid);
+  }
+  /* the paywall: subscription or lifetime; in the prototype a tap simply opens the catalogue */
+  function paywall() {
+    var o = sheet('The catalog', 'Play more');
+    o.body.appendChild(h('div', { class: 'cat' }, [h('b', null, ['Free forever']), h('span', null, ['The letter, his words, five puzzles a day, the stamps, the envelope, the calendar.'])]));
+    o.body.appendChild(h('div', { class: 'cat' }, [h('b', null, ['The catalog']), h('span', null, ['Every puzzle of every game that came by mail — solved, unsolved, burnt — and more.'])]));
+    ['$1.99 a month', '$14.99 a year', '$24.99 forever'].forEach(function (x, k) {
+      o.foot.appendChild(big(x, function () { S.paid = true; save(); o.close(); draw(); }, k ? 'o' : ''));
+    });
   }
   /* a game: its levels in order of arrival, numbered 1, 2, 3… */
   function openGame(id) {
@@ -520,6 +606,7 @@
     b('All games and levels', function () { o.close(); openAll(); }, 'o');
     b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.opened = true; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); save(); o.close(); draw(); }, 'o');
+    b(S.paid ? 'Cancel the catalog purchase' : 'Buy the catalog', function () { S.paid = !S.paid; save(); o.close(); draw(); }, 'o');
     b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
   }
   window.addEventListener('resize', function () { if (pans) pans.scrollLeft = pan * pans.clientWidth; });

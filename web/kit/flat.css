@@ -204,3 +204,12 @@ html[data-look="night"] .fl .veil{background:rgba(6,9,16,.88)}
 .fl .demo .dstage .row,.fl .demo .dstage .msg,.fl .demo .dstage .stat{display:none!important}
 .fl .demo .dsay{font-size:15px;line-height:1.4;color:var(--txt);text-align:center;min-height:42px}
 .fl .demo .ddots{display:flex;gap:6px}.fl .demo .ddots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.fl .demo .ddots i.on{background:var(--ink)}
+/* the letter (author 2026-11-20): line breaks are his; tally marks for the days with no envelope */
+.fl .letter .tx{white-space:pre-line}
+.fl .letter .tally{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px}
+.fl .letter .tally svg{display:block;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;fill:none}
+/* the catalogue: paid, open for the first 14 days */
+.fl .cat{display:flex;flex-direction:column;gap:4px;margin:10px 0 4px;font-size:14px;color:var(--mut)}
+.fl .cat b{color:var(--txt);font-weight:600}
+.fl .cat .big{margin-top:10px}
+.fl .gm.lock{opacity:.45}
