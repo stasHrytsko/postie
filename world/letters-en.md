@@ -116,4 +116,25 @@ I will learn nothing else about you. That is sufficient.
 
 ## 3. Его фразы
 
-Дальше: 11 мыслей по играм + не меньше 25 общих (мысли, вопросы, неровные дни) — из `letters-draft.md` и прототипа, по-английски.
+### 3.1 Мысли по играм
+
+Идёт в письмо, если игра была на вчерашнем конверте и её мысль ещё не сказана; одна мысль — один раз. Игру он не называет. Пробы — `world/character.md` §9; вещи не из канона (монеты, краска на двери, ковры) — поставить в канон.
+
+| Игра | RU | EN |
+|---|---|---|
+| Streams | Однажды я стоял на развилке. Все пошли в одну сторону. Я посчитал обе дороги. Вторая до сих пор пустая. | I once stood at a fork. Everyone went one way. I calculated both roads. The second one is still empty. |
+| Parcels | С полки забрали одну посылку. Остальные опустились ниже. Ни одна не осталась на своём месте. Забрали только одну. | One parcel was taken from the shelf. The others moved down. None of them stayed in its place. Only one was taken. |
+| Knock Through | Я знаю, сколько у вас там комнат. Сколько между ними стен, меня никто не спрашивал. | I know how many rooms there are in there. No one has asked me how many walls are between them. |
+| Square Up | Один человек вернул соседу три монеты и написал: «Теперь мы в расчёте». В конце приписал: «Жаль». Я девятнадцать лет думаю, чего ему было жаль. | A man returned three coins to his neighbour. He wrote: "Now we are even." At the end he added: "A pity." I have been thinking about what was a pity for nineteen years. |
+| Perfect Fit | У вас там всё сходится без остатка. Я проверял. Снаружи после любого дела что-нибудь остаётся: обрезок, крошка, лишний гвоздь. Я их не выбрасываю. | In there, everything adds up with nothing left over. I checked. Out here, every job leaves something behind: an offcut, a crumb, one extra nail. I do not throw them away. |
+| Outgrow | Трава у почтамта растёт без числа. Никто не сказал ей, сколько будет достаточно. Она до сих пор не остановилась. | The grass by the post office grows without a number. No one told it how much is enough. It has not stopped. |
+| Arrow Flip | Одна женщина прошла через зал и не остановилась. Трое повернули головы. Один из них потом написал об этом четыре письма. | A woman crossed the hall and did not stop. Three people turned their heads. One of them later wrote four letters about it. |
+| The Gap | В ячейках сортировки я всегда оставляю одну пустую. Если занять все, ни одно письмо нельзя переложить. | In the sorting rack I always leave one slot empty. If every slot is full, no letter can be moved. |
+| Carpet Layers | Под краской на двери другая краска. Под ней третья. Я дошёл до дерева и остановился. Дверь я не открывал. | Under the paint on the door there is other paint. Under that, a third coat. I reached the wood and stopped. I did not open the door. |
+| Shadow Step | Я хожу тем же путём, каким шёл последний человек на этой улице. Следов давно нет. Я помню, где они были. | I walk the same route as the last person on this street. The footprints are long gone. I remember where they were. |
+| Bracket *(ещё в stazzi)* | Раньше у вас считали, кто первый. Второго помнили неделю. О том, кто выбыл в первом круге, я нашёл одно письмо. Он писал, что день был хороший. | You used to count who came first. The second was remembered for a week. About the one who lost in the first round, I found one letter. He wrote that it had been a good day. |
+| Hidden Stones *(запасная)* | Камня под листом не видно. Видно, куда отскочила капля. Я знаю о камнях много. Ни одного не видел. | You cannot see the stone under the leaf. You can see where the drop bounced. I know a great deal about stones. I have never seen one. |
+
+### 3.2 Общие фразы
+
+Дальше: не меньше 25 — мысли, вопросы, неровные дни (`letters-draft.md`, прототип).
