@@ -6,11 +6,31 @@
 
 ---
 
-## 1. Вступительное письмо (день 1)
+## 1. Вступительное письмо (день 1) **[принято автором, 2026-11-20]**
 
-**EN.** This is the first letter. I do not know who you are. I know only that you have a table, a shelf and a mailbox. I will come once a day. There are five puzzles in the envelope. They are still understood here. Solve three, stick three stamps and send the envelope back today. Tomorrow there will be another letter. The rest can wait.
+Каждое предложение — с новой строки.
 
-**RU.** Это первое письмо. Я не знаю, кто ты. Знаю только, что у тебя есть стол, полка и почтомат. Я буду приходить раз в день. В конверте пять пазлов. Их здесь ещё понимают. Реши три, наклей три марки и отправь конверт обратно сегодня. Завтра будет другое письмо. Остальное подождёт.
+**RU.**
+Это первое письмо.
+Я не знаю, кто ты.
+Знаю только, что у тебя есть стол, стул и что ты открыл этот конверт.
+Там пять пазлов.
+Пока решаешь, нас двое.
+Реши три. Наклей три марки.
+Отправь сегодня.
+Завтра я отвечу.
+Больше я о тебе ничего не узнаю. Мне этого хватит.
+
+**EN** (живой и правильный английский, но с лёгким привкусом машины: перечисление со счётом, служебное *affix*, *sufficient*, без сокращений — по просьбе автора):
+This is the first letter.
+I do not know who you are.
+I know three things: you have a table, you have a chair, and you opened this envelope.
+There are five puzzles inside.
+While you solve, there are two of us.
+Solve three. Affix three stamps.
+Send it today.
+Tomorrow I will reply.
+I will learn nothing else about you. That is sufficient.
 
 ---
 
