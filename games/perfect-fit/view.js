@@ -88,7 +88,7 @@
             var t = up ? 0 : G / 2, b = dn ? 0 : G / 2, l = lf ? 0 : G / 2, rr = rt ? 0 : G / 2, R = 7;
             var rad = [!up && !lf ? R : 0, !up && !rt ? R : 0, !dn && !rt ? R : 0, !dn && !lf ? R : 0].join('px ') + 'px';
             board.appendChild(h('div', { class: 'pf-p', style: 'left:' + (c * S + l) + 'px;top:' + (r * S + t) + 'px;width:' + (S - l - rr) + 'px;height:' + (S - t - b) + 'px;background:' + col + ';border-radius:' + rad +
-              (size === 3 ? ';color:var(--txt)' : '') }, [p === first ? String(size) : '']));
+              (size !== 2 ? ';color:var(--txt)' : '') }, [p === first ? String(size) : '']));   // the number is ink on every tone; white only on the ink piece
           });
         });
         (L.seams || []).forEach(function (q) {
@@ -122,7 +122,7 @@
           var on = isOn(+el.dataset.r, +el.dataset.c);
           el.style.background = on ? col.c : ''; el.style.borderColor = on ? col.c : '';
           el.innerHTML = on ? Postie.shape(col.s, 'none') : '';
-          var sv = el.querySelector('svg'); if (sv) { sv.style.stroke = '#fff'; sv.style.strokeWidth = 2.2; }
+          var sv = el.querySelector('svg'); if (sv) { sv.style.stroke = col.k === 'ink' ? '#fff' : 'var(--txt)'; sv.style.strokeWidth = 2.2; }
         });
         nums.innerHTML = '';
         s.nums.forEach(function (v, i) {

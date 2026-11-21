@@ -7,6 +7,7 @@
            sand, line and the muted text are navy laid thin over ivory.
            The pieces inside the games keep their own softer tones (author 2026-11-21: the palette red and blue were harsh on the boards). */
   --milk:#F8EBD8; --card:#FFFFFF; --sand:#E7DCCE; --line:#D2CAC1;
+  --line2:#808390; --dim:#9D9CA1;   /* navy over ivory, heavier: an outline that carries a meaning (a day not sent, a place for a stamp) reads at 3:1; dim — a date that is not in play */
   --ink:#091C47; --txt:#091C47; --mut:#5D647A; --on:#FFFFFF; --bad:#BF271F; --accent:#BF271F;
   --apr:#D4573F; --sage:#5F9A78; --blue:#4E7BAB; --butter:#E2A534; --stone:#B5AB96;   /* pieces */
   --post-red:#BF271F; --post-blue:#2C6ABD;   /* the airmail edge of the envelope */
@@ -19,7 +20,7 @@ html[lang="ru"]{--title:'Literata',Georgia,'Times New Roman',serif}
 html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;background:var(--milk);color:var(--txt)}
 .fl button{font:inherit;color:inherit}
-.fl .top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;min-height:52px;flex:none}
+.fl .top{display:flex;align-items:center;justify-content:space-between;padding:calc(10px + env(safe-area-inset-top)) 16px 6px;min-height:52px;flex:none}
 .fl .top b{font:600 18px var(--title);letter-spacing:.01em}
 .fl .top button,.fl .tabs button{border:0;background:none;cursor:pointer}
 .fl .top .tst{color:var(--mut);font-size:13px;min-height:44px;min-width:44px;padding:0 4px}
@@ -37,7 +38,7 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .big{width:100%;min-height:52px;border-radius:var(--r-btn);border:0;background:var(--ink);color:var(--on);font-size:16px;font-weight:600;cursor:pointer}
 .fl .big[disabled]{background:var(--sand);color:var(--mut);cursor:default}
 .fl .big.o{background:var(--sand);color:var(--txt)}
-.fl .big.ghost{background:none;color:var(--mut);font-weight:500;min-height:44px}
+.fl .big.ghost{background:none;color:var(--mut);font-weight:500;min-height:44px;opacity:1}   /* the kit's .ghost halves the opacity: a quiet button is still a button to read (5:1) */
 
 /* Today: one thing in the middle */
 .fl .pan.mid{display:flex;align-items:center;justify-content:center}
@@ -52,7 +53,7 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 
 /* full-screen sheet */
 .fl .sh{position:absolute;inset:0;background:var(--milk);z-index:5;display:flex;flex-direction:column}
-.fl .sh .bar2{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 2px;flex:none;min-height:56px}
+.fl .sh .bar2{display:flex;align-items:center;justify-content:space-between;padding:calc(6px + env(safe-area-inset-top)) 6px 2px;flex:none;min-height:56px}
 .fl .sh .bar2 .t{flex:1;text-align:center;font:600 18px var(--title);min-width:0}
 .fl .sh .bar2 .t small{display:block;font:400 13px var(--font);color:var(--mut)}
 .fl .sh .bar2 .ib{color:var(--txt)}
@@ -63,6 +64,9 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 
 /* three in a row: puzzles, stamps, games */
 .fl .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 10px;margin-top:18px}
+/* the five puzzles of a letter: three and two, both rows in the middle */
+.fl .grid3.pz{display:flex;flex-wrap:wrap;justify-content:center;gap:22px 0}
+.fl .grid3.pz .pzl{flex:0 0 33.333%}
 /* a puzzle — a circle */
 .fl .pzl{border:0;background:none;padding:4px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
 .fl .pzl i{width:64px;height:64px;border-radius:50%;border:2.5px solid var(--ink);background:var(--card);display:grid;place-items:center;color:var(--on)}
@@ -76,7 +80,7 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .stamp small{font-size:15px;font-variant-numeric:tabular-nums}
 .fl .stamp.on{background:var(--ink);color:var(--on)}
 .fl .stamp.used{opacity:.25}
-.fl .stamp.empty{border-style:dashed;border-color:var(--line);background:none}
+.fl .stamp.empty{border-style:dashed;border-color:var(--line2);background:none}
 .fl .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .fl .envbig{border:2px solid var(--ink);border-radius:10px;background:var(--card);padding:14px 14px 18px;margin-top:10px}
 .fl .envbig .slots{margin:0 0 30px}
@@ -100,17 +104,17 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .days.wk span{text-align:center;font-size:12px;color:var(--mut)}
 .fl .dd{aspect-ratio:1;border-radius:50%;border:1.5px solid transparent;background:none;font-size:14px;cursor:pointer;color:var(--txt);padding:0;min-height:36px;font-variant-numeric:tabular-nums}
 .fl .dd.s{background:var(--ink);border-color:var(--ink);color:var(--on)}
-.fl .dd.miss{border-color:var(--line);color:var(--mut);cursor:default}
-.fl .dd.no{color:var(--line);cursor:default}
+.fl .dd.miss{border-color:var(--line2);color:var(--mut);cursor:default}
+.fl .dd.no{color:var(--dim);cursor:default}
 .fl .dd.t{box-shadow:0 0 0 2px var(--milk),0 0 0 4px var(--accent)}
 .fl .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--mut)}
 .fl .legend span{display:flex;align-items:center;gap:6px}
-.fl .legend i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line)}
+.fl .legend i{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--line2)}
 .fl .legend i.s{background:var(--ink);border-color:var(--ink)}
 .fl .legend i.t{border-color:transparent;box-shadow:0 0 0 1.5px var(--milk),0 0 0 3px var(--accent);width:9px;height:9px;margin:0 3px}
 
 /* toast: top of the screen, never over the buttons */
-.fl .toast{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:var(--ink);color:var(--on);padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;white-space:nowrap}
+.fl .toast{position:absolute;left:50%;top:calc(60px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:var(--on);padding:10px 16px;border-radius:20px;font-size:14px;z-index:9;white-space:nowrap}
 
 /* ---------- one frame for every game ---------- */
 .fl .sh.play .body{padding:0 12px 8px;display:flex;flex-direction:column}
@@ -143,7 +147,7 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
   border-image:repeating-linear-gradient(-45deg,var(--post-red) 0 9px,var(--card) 9px 18px,var(--post-blue) 18px 27px,var(--card) 27px 36px) 7;
   box-shadow:0 1px 0 var(--line),0 10px 24px -12px rgba(9,28,71,.35)}
 .fl .envi::before{border-width:1.5px;border-color:var(--line);top:-86px}
-.fl .envi.off{border:2px dashed var(--line);border-image:none;box-shadow:none}
+.fl .envi.off{border:2px dashed var(--dim);border-image:none;box-shadow:none}
 /* a stamp: perforated edge, a printed frame inside */
 .fl .stamp:not(.empty){
   width:round(down,100%,12px);justify-self:center;border:0;border-radius:0;padding:12px 8px;color:#091C47;position:relative;
@@ -157,17 +161,35 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .slots .stamp.on:nth-child(2){transform:rotate(1.2deg)}
 .fl .slots .stamp.on:nth-child(3){transform:rotate(-.8deg)}
 .fl .stamp.empty{border-radius:0;border-width:1.5px}
+/* an earned stamp is the game's own stamp from the album, small: the field in its colour, the emblem, the level number as its value */
+.fl .stamp.es{padding:0;background:#F8EBD8;container-type:size;display:block}
+.fl .stamp.es::after{display:none}
+.fl .stamp.es .sp{position:absolute;inset:8px;background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.2px var(--frame),inset 0 0 0 3.2px var(--bg),inset 0 0 0 4px var(--frame);
+  display:flex;flex-direction:column;align-items:flex-start;padding:8px 8px 6px;text-align:left;overflow:hidden}
+.fl .stamp.es .sp b{font:italic 600 11px/1.05 var(--title);text-transform:uppercase;letter-spacing:.03em}
+.fl .stamp.es .sp .emb{flex:1;min-height:0;width:100%;display:flex;padding:5px 22% 2px 0}
+.fl .stamp.es .sp svg.em{width:100%;height:100%;display:block}
+.fl .stamp.es .sp small{position:absolute;right:8px;bottom:6px;font:600 17px/1 var(--title);font-variant-numeric:tabular-nums}
+.fl .stamp.es.used{opacity:.28}
 /* the letter */
 .fl .letter{font-size:19px}
 /* the primary button and "today" carry the accent sparingly */
 .fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(9,28,71,.25)}
 /* boards: softer cells on paper */
 .fl .sh.play .cell{border-color:var(--line)}
+/* A sign on a piece is ink on every tone — one rule (measured 2026-11-21): white on butter was 2.2:1, on stone 2.3, on sage 3.3;
+   ink is 7.6, 7.3 and 5.0, and 4.1 on apricot, 3.7 on blue. The ink piece keeps its white sign. The fifth tone is stone, not the hairline grey.
+   Butter and stone get a darker edge of their own hue: against a white cell the fill alone is about 2:1. */
+.fl .c-sand{background:var(--stone);border-color:#8E8672}
+.fl .c-butter{border-color:#B98313}
+.fl .sh :is(.c-apr,.c-blue,.c-sage,.c-butter,.c-sand) :is(svg.pc,svg.ic),.fl .sh :is(svg.pc,svg.ic):is(.c-apr,.c-blue,.c-sage,.c-butter,.c-sand){stroke:var(--ink)}
+.fl .sh :is(.c-apr,.c-blue,.c-sage,.c-butter,.c-sand).on-color,.fl .sh :is(.c-apr,.c-blue,.c-sage,.c-butter,.c-sand) .on-color{color:var(--ink)}
+.fl .sh .af-badge:not(.empty) svg.ic{stroke:var(--ink)}   /* Arrow Flip: the small mark in the corner of a block */
 
 /* the letter is its own thing everywhere: a sheet of paper with the postman's words */
 .fl .letter{background:#FFFFFF;color:#091C47;padding:24px 22px 28px;margin-top:8px;border-radius:2px;box-shadow:0 1px 0 var(--line),0 14px 30px -18px rgba(9,28,71,.45)}
 /* a sent day: two things lying over the calendar — the letter and the envelope */
-.fl .veil{position:absolute;inset:0;z-index:7;background:color-mix(in srgb,#091C47 80%,transparent);display:flex;align-items:center;justify-content:center;padding:14px 20px}
+.fl .veil{position:absolute;inset:0;z-index:7;background:color-mix(in srgb,#091C47 94%,transparent);display:flex;align-items:center;justify-content:center;padding:calc(14px + env(safe-area-inset-top)) 20px calc(14px + env(safe-area-inset-bottom))}
 .fl .daycard{width:100%;max-height:100%;display:flex;flex-direction:column}
 .fl .daycard .dhead{flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 0 4px 2px;color:#FFFFFF}
 .fl .daycard .dhead b{font:600 18px var(--title)}
@@ -197,10 +219,16 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .demo .dsay{font-size:15px;line-height:1.4;color:var(--txt);text-align:center;min-height:42px}
 .fl .demo .ddots{display:flex;gap:6px}.fl .demo .ddots i{width:6px;height:6px;border-radius:50%;background:var(--line)}.fl .demo .ddots i.on{background:var(--ink)}
 /* the letter (author 2026-11-20): line breaks are his; tally marks for the days with no envelope */
-.fl .letter .tx{white-space:pre-line}
+.fl .letter .tx{white-space:pre-line;text-wrap:pretty}
+.fl .letter .re{text-wrap:pretty}
+.fl .letter .tx.verse{white-space:normal}
+.fl .letter .tx.verse .ln{padding-left:1.1em;text-indent:-1.1em}   /* his own lines: the part that wraps hangs */
 .fl .letter .tally{display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:14px}
 .fl .letter .tally svg{display:block;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;fill:none}
 /* the catalogue: paid, open for the first 14 days */
+.fl .sh .foot .big+.big{margin-top:10px}
+.fl .legal{font-size:12px;line-height:1.4;color:var(--mut);text-align:center;margin-top:4px}
+.fl .legal u{text-underline-offset:2px}
 .fl .cat{display:flex;flex-direction:column;gap:4px;margin:10px 0 4px;font-size:14px;color:var(--mut)}
 .fl .cat b{color:var(--txt);font-weight:600}
 .fl .cat .big{margin-top:10px}
@@ -231,3 +259,13 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 }
 /* stamps are ivory, like the page: a soft shadow lifts them off it (on the masked stamp itself a shadow would be cut away) */
 .fl .tray,.fl .envbig .slots{filter:drop-shadow(0 1px 1px rgba(9,28,71,.3)) drop-shadow(0 4px 8px rgba(9,28,71,.12))}
+
+/* ---------- small phones (measured 2026-11-21 at 375x667 and 360x640) ---------- */
+@media (max-height:700px){
+  .fl .sent{margin:8px 0 2px}.fl .legend{margin-top:12px}                 /* the calendar fits without a few pixels of scroll */
+  .fl .envbig .slots{margin-bottom:16px}.fl .note{margin:6px 0}          /* the envelope and its stamps fit */
+  .fl .daycard .envbig{margin-top:12px}
+}
+@media (max-width:370px){
+  .fl .sh.play .body{padding:0 8px 8px}                                  /* Perfect Fit is 342px wide: it was cut by 6px at 360 */
+}

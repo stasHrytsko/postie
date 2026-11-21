@@ -182,14 +182,23 @@
     }
     return box;
   }
+  /* a short sentence at the end of his line is not torn in two: "That is sufficient." goes to the next line whole */
+  function keep(l) { return l.replace(/([.!?])\s+((?:\S+\s+){0,2}\S+[.!?])$/, function (m, p, tail) { return p + ' ' + tail.replace(/\s+/g, '\u00A0'); }); }
   function letterEl(lt) {                                                // the marks, then the phrase about yesterday's envelope, then his own
     var re = reText(lt.re), tx = phrase(lt);
-    return h('div', { class: 'letter' }, [lt.tally ? tallyEl(lt.tally) : null, re ? h('div', { class: 're' }, [re]) : null, tx ? h('div', { class: 'tx' }, [tx]) : null]);
+    var lines = tx && tx.indexOf('\n') >= 0 ? tx.split('\n') : null;       // his own line breaks: set like verse — a line that wraps hangs, so it does not read as a new line
+    return h('div', { class: 'letter' }, [lt.tally ? tallyEl(lt.tally) : null, re ? h('div', { class: 're' }, [re]) : null,
+      tx ? h('div', { class: 'tx' + (lines ? ' verse' : '') }, lines ? lines.map(function (l) { return h('div', { class: 'ln' }, [keep(l)]); }) : [tx]) : null]);
   }
   /* a puzzle is a circle */
   function puzzleEl(c, ok, tap) { return h('button', { class: 'pzl' + (ok ? ' ok' : ''), onclick: tap }, [h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [gname(game(c.id)) + ' ' + ord(c.id, c.n)])]); }
   /* a stamp is a square: the game and the number of the level */
-  function stampEl(c, cls, tap) { return h(tap ? 'button' : 'div', { class: 'stamp ' + (cls || ''), onclick: tap }, [h('b', null, [gname(game(c.id))]), h('small', null, [String(ord(c.id, c.n))])]); }
+  function stampEl(c, cls, tap) {                                        // the game's own stamp from the album (web/js/stamps.js): its colour and emblem; the level number is its value
+    var g = game(c.id), st = POSTIE_STAMPS[c.id] || POSTIE_STAMPS.bracket;
+    return h(tap ? 'button' : 'div', { class: 'stamp es ' + (cls || ''), 'aria-label': gname(g) + ' ' + ord(c.id, c.n), onclick: tap }, [
+      h('div', { class: 'sp', style: '--bg:' + st.bg + ';--ink:' + st.ink + ';--frame:' + st.frame }, [
+        h('b', null, [gname(g)]), h('span', { class: 'emb', html: st.svg }), h('small', null, [String(ord(c.id, c.n))])])]);
+  }
 
   /* ---------- one frame for every game ---------- */
   var NOSCALE = { 'carpet-layers': 1, 'perfect-fit': 1 };
@@ -359,7 +368,7 @@
       right: h('button', { class: 'ib txt', onclick: function () { openNote(E); } }, ['Letter']) });
     function render() {
       o.body.innerHTML = ''; o.foot.innerHTML = '';
-      var sol = solvedIdx(E), grid = h('div', { class: 'grid3' });
+      var sol = solvedIdx(E), grid = h('div', { class: 'grid3 pz' });
       E.cards.forEach(function (c, i) { grid.appendChild(puzzleEl(c, sol.indexOf(i) >= 0, function () { play(c.id, c.n, render, E); })); });
       o.body.appendChild(grid);
       if (E.cards.length < PER_DAY) o.body.appendChild(h('div', { class: 'note' }, [T('Only {n} new levels left in stock — the level generator is not here yet.', { n: E.cards.length })]));
@@ -438,6 +447,9 @@
     ['$1.99 a month', '$14.99 a year', '$24.99 forever'].forEach(function (x, k) {
       o.foot.appendChild(big(x, function () { S.paid = true; save(); o.close(); draw(); }, k ? 'o' : ''));
     });
+    /* a store review asks this of every screen that sells a subscription: a way to restore, the terms and the privacy policy (placeholders in the prototype) */
+    o.foot.appendChild(big('Restore purchases', function () { toast('Nothing to restore in the prototype'); }, 'ghost'));
+    o.foot.appendChild(h('div', { class: 'legal' }, ['Subscriptions renew until cancelled. ', h('u', null, ['Terms of use']), ' · ', h('u', null, ['Privacy policy'])]));
   }
   /* a game: its levels in order of arrival, numbered 1, 2, 3… */
   function openGame(id) {

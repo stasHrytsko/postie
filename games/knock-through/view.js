@@ -10,7 +10,7 @@
     '--kt-room:#E4D9C3;--kt-wall:#091C47}' +
     '.kt-cell{aspect-ratio:1;background:var(--kt-room);box-sizing:border-box;border:0 solid var(--kt-wall);display:grid;place-items:center;font:700 20px var(--font);color:var(--ink)}' +
     '.kt-cell.big{color:var(--bad)}' +
-    '.kt-cell.sel{background:var(--sage);color:#fff}';
+    '.kt-cell.sel{background:var(--sage);color:var(--ink)}';
   function css() { if (document.getElementById('kt-css')) return; var s = document.createElement('style'); s.id = 'kt-css'; s.textContent = CSS; document.head.appendChild(s); }
   Postie.tr({
     '<b>Tap a room, then a room next to it</b>: the wall goes, they become one and their numbers add up. Make the rooms match the <b>order</b> on top exactly.':

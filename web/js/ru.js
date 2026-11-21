@@ -5,6 +5,8 @@ Postie.tr({
   /* home */
   'Letters': 'Письма', 'Today': 'Сегодня', 'Games': 'Игры', 'test': 'тест',
   'Back': 'Назад', 'Rules': 'Правила', 'Restart': 'Заново', 'Close': 'Закрыть',
+  'Restore purchases': 'Восстановить покупки', 'Nothing to restore in the prototype': 'В прототипе восстанавливать нечего',
+  'Subscriptions renew until cancelled. ': 'Подписка продлевается, пока её не отменят. ', 'Terms of use': 'Условия', 'Privacy policy': 'Конфиденциальность',
 
   /* Today */
   'New letter': 'Новое письмо', 'Letter': 'Письмо', 'Tap to open': 'Нажми, чтобы открыть',
