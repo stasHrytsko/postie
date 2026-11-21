@@ -7,7 +7,7 @@
     '.kt-chip{min-width:38px;height:38px;padding:0 8px;border-radius:19px;border:2px solid var(--ink);display:grid;place-items:center;font:700 18px var(--font);color:var(--ink)}' +
     '.kt-chip.ok{background:var(--ink);color:var(--on)}' +
     '.kt-board{display:grid;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--line);' +
-    '--kt-room:#E4D9C3;--kt-wall:#1E2A44}' +
+    '--kt-room:#DBD2C7;--kt-wall:#091C47}' +
     '.kt-cell{aspect-ratio:1;background:var(--kt-room);box-sizing:border-box;border:0 solid var(--kt-wall);display:grid;place-items:center;font:700 20px var(--font);color:var(--ink)}' +
     '.kt-cell.big{color:var(--bad)}' +
     '.kt-cell.sel{background:var(--sage);color:#fff}';

@@ -3,12 +3,13 @@
    Serif is the postman's voice (letter, dates, numbers on stamps); sans is the interface.
    Shapes carry the meaning: a circle is a puzzle (or a level), a square is a stamp. Difficulty is not shown.
    Colour lives inside the game boards only; the shell has one accent. */
-:root{
-  --milk:#F5F0E6; --card:#FFFCF5; --sand:#EAE3D3; --line:#D6CDB9;
-  --ink:#1E2A44; --txt:#1E2A44; --mut:#6B6658; --on:#FFFCF5; --bad:#C8442F; --accent:#C8442F;
-  --apr:#D4573F; --sage:#5F9A78; --blue:#4E7BAB; --butter:#E2A534; --stone:#B5AB96;
+:root{   /* the palette (author 2026-11-21): white #FFFFFF · ivory #F8EBD8 · navy #091C47 · red #BF271F · blue #2C6ABD · green #41754F;
+           sand, line and the muted text are navy laid thin over ivory; yellow and stone stay for the boards that need more colours */
+  --milk:#F8EBD8; --card:#FFFFFF; --sand:#E7DCCE; --line:#D2CAC1;
+  --ink:#091C47; --txt:#091C47; --mut:#5D647A; --on:#FFFFFF; --bad:#BF271F; --accent:#BF271F;
+  --apr:#BF271F; --sage:#41754F; --blue:#2C6ABD; --butter:#E2A534; --stone:#B5AB96;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
-  --stampbg:#EDE4D0; --r-btn:26px;
+  --stampbg:#F8EBD8; --r-btn:26px;
 }
 /* Russian (author 2026-11-21): Newsreader has no Cyrillic — the postman's serif is Literata, a book serif of the same kind */
 html[lang="ru"]{--title:'Literata',Georgia,'Times New Roman',serif}
@@ -138,18 +139,18 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .envbig{
   border:7px solid;border-radius:0;
   border-image:repeating-linear-gradient(-45deg,var(--apr) 0 9px,var(--card) 9px 18px,var(--blue) 18px 27px,var(--card) 27px 36px) 7;
-  box-shadow:0 1px 0 var(--line),0 10px 24px -12px rgba(30,42,68,.35)}
+  box-shadow:0 1px 0 var(--line),0 10px 24px -12px rgba(9,28,71,.35)}
 .fl .envi::before{border-width:1.5px;border-color:var(--line);top:-86px}
 .fl .envi.off{border:2px dashed var(--line);border-image:none;box-shadow:none}
 /* a stamp: perforated edge, a printed frame inside */
 .fl .stamp:not(.empty){
-  width:round(down,100%,12px);justify-self:center;border:0;border-radius:0;padding:12px 8px;color:#1E2A44;position:relative;
+  width:round(down,100%,12px);justify-self:center;border:0;border-radius:0;padding:12px 8px;color:#091C47;position:relative;
   -webkit-mask:linear-gradient(#000 0 0) center/calc(100% - 10px) calc(100% - 10px) no-repeat,radial-gradient(circle,transparent 3.4px,#000 3.9px) -6px -6px/12px 12px;
           mask:linear-gradient(#000 0 0) center/calc(100% - 10px) calc(100% - 10px) no-repeat,radial-gradient(circle,transparent 3.4px,#000 3.9px) -6px -6px/12px 12px}
 .fl .stamp:not(.empty)::after{content:"";position:absolute;inset:8px;border:1.5px solid currentColor;opacity:.55;pointer-events:none}
 .fl .stamp b{font:600 13px/1.1 var(--font)}
 .fl .stamp small{font:600 20px/1 var(--title)}
-.fl .stamp.on{background:var(--stampbg);color:#1E2A44}
+.fl .stamp.on{background:var(--stampbg);color:#091C47}
 .fl .slots .stamp.on:nth-child(1){transform:rotate(-2deg)}
 .fl .slots .stamp.on:nth-child(2){transform:rotate(1.2deg)}
 .fl .slots .stamp.on:nth-child(3){transform:rotate(-.8deg)}
@@ -157,18 +158,18 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 /* the letter */
 .fl .letter{font-size:19px}
 /* the primary button and "today" carry the accent sparingly */
-.fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(30,42,68,.25)}
+.fl .sh .foot .big:not(.o):not(.ghost):not([disabled]){box-shadow:0 2px 0 rgba(9,28,71,.25)}
 /* boards: softer cells on paper */
 .fl .sh.play .cell{border-color:var(--line)}
 
 /* the letter is its own thing everywhere: a sheet of paper with the postman's words */
-.fl .letter{background:#FFFCF5;color:#1E2A44;padding:24px 22px 28px;margin-top:8px;border-radius:2px;box-shadow:0 1px 0 var(--line),0 14px 30px -18px rgba(30,42,68,.45)}
+.fl .letter{background:#FFFFFF;color:#091C47;padding:24px 22px 28px;margin-top:8px;border-radius:2px;box-shadow:0 1px 0 var(--line),0 14px 30px -18px rgba(9,28,71,.45)}
 /* a sent day: two things lying over the calendar — the letter and the envelope */
-.fl .veil{position:absolute;inset:0;z-index:7;background:color-mix(in srgb,#1E2A44 80%,transparent);display:flex;align-items:center;justify-content:center;padding:14px 20px}
+.fl .veil{position:absolute;inset:0;z-index:7;background:color-mix(in srgb,#091C47 80%,transparent);display:flex;align-items:center;justify-content:center;padding:14px 20px}
 .fl .daycard{width:100%;max-height:100%;display:flex;flex-direction:column}
-.fl .daycard .dhead{flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 0 4px 2px;color:#FFFCF5}
+.fl .daycard .dhead{flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 0 4px 2px;color:#FFFFFF}
 .fl .daycard .dhead b{font:600 18px var(--title)}
-.fl .daycard .dhead .ib{color:#FFFCF5;margin-right:-10px}
+.fl .daycard .dhead .ib{color:#FFFFFF;margin-right:-10px}
 .fl .daycard .dbody{overflow-y:auto;padding:0 2px 16px;margin:0 -2px}
 .fl .daycard .letter{margin-top:0;transform:rotate(-.6deg)}
 .fl .daycard .envbig{margin:18px 0 0;transform:rotate(.5deg)}
@@ -185,8 +186,8 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .daycard .dbody{display:block}.fl .daycard .dbody::before,.fl .daycard .dbody::after{display:none}
 
 /* the hand (kit.js Postie.hand): a finger over the board, never catches touches */
-.hand{position:absolute;left:0;top:0;width:46px;height:46px;margin:-6px 0 0 -21px;pointer-events:none;opacity:0;z-index:5;transform-origin:21px 6px;filter:drop-shadow(0 3px 6px rgba(30,42,68,.25))}
-.hand svg{width:100%;height:100%;fill:#FFFCF5;stroke:#1E2A44;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hand{position:absolute;left:0;top:0;width:46px;height:46px;margin:-6px 0 0 -21px;pointer-events:none;opacity:0;z-index:5;transform-origin:21px 6px;filter:drop-shadow(0 3px 6px rgba(9,28,71,.25))}
+.hand svg{width:100%;height:100%;fill:#FFFFFF;stroke:#091C47;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 /* "?" card: a small live board the hand plays on, one short line under it */
 .fl .demo{position:relative;border-radius:16px;background:var(--card);border:1px solid var(--line);padding:14px 10px 10px;display:flex;flex-direction:column;align-items:center;gap:8px;overflow:hidden}
 .fl .demo .dstage{position:relative;width:100%;max-width:240px;pointer-events:none}
@@ -205,12 +206,12 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 /* the album of games (author 2026-11-21, by the author's mock-up): stamps of different sizes on a grid of 13 square cells across.
    A stamp: paper with a perforated edge (its sides rounded down to the 12px step of the edge), inside — its field with a thin frame,
    the name in italic capitals, a rule, the emblem, the share solved at the bottom right. Colours and emblems — web/js/stamps.js. */
-.fl .albw{container-type:inline-size;margin:18px 0 8px}   /* the album's width, so that a row is as tall as a column is wide */
+.fl .albw{container-type:inline-size;margin:18px -20px -24px;padding:20px 16px 28px;background:#091C47}   /* the album page, navy (author 2026-11-21); its width makes a row as tall as a column is wide */
 .fl .album{display:grid;grid-template-columns:repeat(13,1fr);grid-auto-rows:calc(100cqw / 13)}
 .fl .album .slot{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;
   filter:drop-shadow(0 1px 1px rgba(20,25,40,.3)) drop-shadow(0 6px 9px rgba(20,25,40,.14))}
 .fl .album .slot.lock{filter:grayscale(1) opacity(.5)}
-.fl .album .stamp.gs{width:round(down,100%,12px);height:round(down,100%,12px);aspect-ratio:auto;padding:0;display:block;position:relative;background:#F1E6CF;container-type:size;cursor:pointer}
+.fl .album .stamp.gs{width:round(down,100%,12px);height:round(down,100%,12px);aspect-ratio:auto;padding:0;display:block;position:relative;background:#F8EBD8;container-type:size;cursor:pointer}
 .fl .album .stamp.gs::after{display:none}
 .fl .album .sp{position:absolute;inset:9px;background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--frame),inset 0 0 0 4px var(--bg),inset 0 0 0 4.8px var(--frame);
   display:flex;flex-direction:column;align-items:flex-start;padding:max(9px,7cqmin) max(9px,7cqmin) max(7px,5cqmin);text-align:left;overflow:hidden}
@@ -219,10 +220,12 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .album .sp .emb{flex:1;min-height:0;width:100%;display:flex;padding:max(6px,6cqmin) 4% max(16px,15cqmin)}
 .fl .album .sp svg.em{width:100%;height:100%;display:block}
 .fl .album .sp small{position:absolute;right:max(9px,7cqmin);bottom:max(7px,5cqmin);font:600 max(12px,min(12cqmin,28px))/1 var(--title);font-variant-numeric:tabular-nums;border-top:1.5px solid;padding-top:3px;min-width:40%;text-align:right}
-.fl .album .slot .stamp.empty{width:100%;height:100%;border-width:1.5px;padding:0;aspect-ratio:auto}
+.fl .album .slot .stamp.empty{width:100%;height:100%;border-width:1.5px;padding:0;aspect-ratio:auto;border-color:rgba(248,235,216,.25)}
 .fl .album .slot:has(.empty){filter:none}
 /* a wide stamp (Outgrow): the drawing runs along the bottom, the share sits to its right */
 @container (min-aspect-ratio: 2/1) {
   .fl .album .sp .emb{padding:max(4px,3cqh) 30% 0 0}
   .fl .album .sp small{font-size:max(16px,min(20cqh,26px))}
 }
+/* stamps are ivory, like the page: a soft shadow lifts them off it (on the masked stamp itself a shadow would be cut away) */
+.fl .tray,.fl .envbig .slots{filter:drop-shadow(0 1px 1px rgba(9,28,71,.3)) drop-shadow(0 4px 8px rgba(9,28,71,.12))}

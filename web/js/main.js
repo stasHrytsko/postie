@@ -383,7 +383,7 @@
       })(k);
       o.body.appendChild(h('div', { class: 'envbig' }, [slots, h('div', { class: 'to' }, ['To: the postman'])]));
       o.body.appendChild(h('h2', null, ['Your stamps']));
-      var tray = h('div', { class: 'grid3' });
+      var tray = h('div', { class: 'grid3 tray' });
       sol.forEach(function (i) {
         var on = E.stuck.indexOf(i) >= 0;
         tray.appendChild(stampEl(E.cards[i], on ? 'used' : '', function () {

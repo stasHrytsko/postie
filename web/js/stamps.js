@@ -3,7 +3,7 @@
    Emblems are line drawings in the spirit of an engraving, drawn with currentColor (the ink); viewBox 0 0 100 100
    (Outgrow, the wide one — 0 0 300 100). The illustrated stamps will replace them later. */
 var POSTIE_STAMPS = (function () {
-  var PAPER = '#F1E6CF', RED = '#9A302A', GREEN = '#2E5A2E';
+  var PAPER = '#F8EBD8', NAVY = '#091C47', RED = '#BF271F', BLUE = '#2C6ABD', GREEN = '#41754F', LIGHT = 'rgba(248,235,216,.8)';   // the palette, author 2026-11-21
   function lines(n, f) { var s = ''; for (var i = 0; i < n; i++) s += f(i - (n - 1) / 2); return s; }
   var E = {
     streams: '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">' +
@@ -45,13 +45,13 @@ var POSTIE_STAMPS = (function () {
     bracket: '<g fill="none" stroke="currentColor" stroke-width="3"><path d="M8 18H30V42H8M30 30H50V70H30M8 58H30V82H8M50 50H72"/></g>'
   };
   function S(bg, ink, frame) { return { bg: bg, ink: ink, frame: frame || ink }; }
-  var C = {
-    streams: S('#1F4A8C', PAPER, 'rgba(241,230,207,.8)'), parcels: S(PAPER, RED), 'knock-through': S('#A8781F', PAPER, 'rgba(241,230,207,.8)'),
-    'square-up': S('#24503A', PAPER, 'rgba(241,230,207,.8)'), outgrow: S(PAPER, GREEN), nest: S(PAPER, RED),
-    'perfect-fit': S('#1F4A8C', PAPER, 'rgba(241,230,207,.8)'), 'arrow-flip': S(PAPER, RED), 'the-gap': S('#1E5A50', PAPER, 'rgba(241,230,207,.8)'),
-    'carpet-layers': S('#8E2A26', PAPER, 'rgba(241,230,207,.8)'), 'shadow-step': S('#4A2F5E', PAPER, 'rgba(241,230,207,.8)'),
-    'tight-shelf': S('#A57A1E', PAPER, 'rgba(241,230,207,.8)'), bracket: S(PAPER, '#1F4A8C')
+  var C = {   // only the palette: a field of blue, red, green or navy with ivory ink, or ivory paper with coloured ink
+    streams: S(BLUE, PAPER, LIGHT), parcels: S(PAPER, RED), 'knock-through': S(RED, PAPER, LIGHT), 'square-up': S(GREEN, PAPER, LIGHT),
+    outgrow: S(PAPER, GREEN), nest: S(PAPER, RED), 'perfect-fit': S(BLUE, PAPER, LIGHT), 'arrow-flip': S(PAPER, RED),
+    'the-gap': S(GREEN, PAPER, LIGHT), 'carpet-layers': S(RED, PAPER, LIGHT), 'shadow-step': S(NAVY, PAPER, LIGHT), 'tight-shelf': S(PAPER, BLUE),
+    bracket: S(PAPER, NAVY)
   };
+
   /* each drawing's own frame, tight around it, so it fills the stamp */
   var V = { streams: '4 4 92 96', parcels: '10 26 82 66', 'knock-through': '0 40 98 50', 'square-up': '8 12 84 76', outgrow: '25 14 270 80',
     nest: '6 12 88 78', 'perfect-fit': '4 28 92 52', 'arrow-flip': '8 8 84 84', 'the-gap': '4 16 92 62', 'carpet-layers': '4 18 94 74',
