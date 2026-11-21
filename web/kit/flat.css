@@ -215,12 +215,27 @@ html[data-look="night"] .fl .veil{background:rgba(6,9,16,.88)}
 .fl .cat b{color:var(--txt);font-weight:600}
 .fl .cat .big{margin-top:10px}
 .fl .gm.lock{opacity:.45}
-/* the album of games (author 2026-11-21): stamps of different sizes on a grid of 7 square cells, by the author's sketch.
-   A stamp keeps its perforation: its sides are rounded down to the 12px step of the edge. */
-.fl .album{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:calc(100cqw / 7);container-type:inline-size;margin:18px 0 8px}
-.fl .album .stamp{aspect-ratio:auto;width:round(down,100%,12px);height:round(down,100%,12px);align-self:center;justify-self:center;
-  container-type:size;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;padding:16px 15px 14px}
-.fl .album .stamp b{font:600 max(14px,min(11cqw,22px))/1.12 var(--title);letter-spacing:.01em}
-.fl .album .stamp small{font:600 max(17px,min(16cqmin,34px))/1 var(--title);font-variant-numeric:tabular-nums}
-.fl .album .stamp.empty{width:100%;height:100%;border-width:1.5px;padding:0}
-.fl .album .stamp.lock{opacity:.5}
+/* the album of games (author 2026-11-21, by the author's mock-up): stamps of different sizes on a grid of 13 square cells across.
+   A stamp: paper with a perforated edge (its sides rounded down to the 12px step of the edge), inside — its field with a thin frame,
+   the name in italic capitals, a rule, the emblem, the share solved at the bottom right. Colours and emblems — web/js/stamps.js. */
+.fl .albw{container-type:inline-size;margin:18px 0 8px}   /* the album's width, so that a row is as tall as a column is wide */
+.fl .album{display:grid;grid-template-columns:repeat(13,1fr);grid-auto-rows:calc(100cqw / 13)}
+.fl .album .slot{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;
+  filter:drop-shadow(0 1px 1px rgba(20,25,40,.3)) drop-shadow(0 6px 9px rgba(20,25,40,.14))}
+.fl .album .slot.lock{filter:grayscale(1) opacity(.5)}
+.fl .album .stamp.gs{width:round(down,100%,12px);height:round(down,100%,12px);aspect-ratio:auto;padding:0;display:block;position:relative;background:#F1E6CF;container-type:size;cursor:pointer}
+.fl .album .stamp.gs::after{display:none}
+.fl .album .sp{position:absolute;inset:9px;background:var(--bg);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--frame),inset 0 0 0 4px var(--bg),inset 0 0 0 4.8px var(--frame);
+  display:flex;flex-direction:column;align-items:flex-start;padding:max(9px,7cqmin) max(9px,7cqmin) max(7px,5cqmin);text-align:left;overflow:hidden}
+.fl .album .sp b{font:italic 600 max(11px,min(9.5cqw,22px))/1.02 var(--title);text-transform:uppercase;letter-spacing:.035em}
+.fl .album .sp .rl{display:block;width:42%;height:1.5px;background:currentColor;opacity:.75;margin-top:max(4px,2cqmin)}
+.fl .album .sp .emb{flex:1;min-height:0;width:100%;display:flex;padding:max(6px,6cqmin) 4% max(16px,15cqmin)}
+.fl .album .sp svg.em{width:100%;height:100%;display:block}
+.fl .album .sp small{position:absolute;right:max(9px,7cqmin);bottom:max(7px,5cqmin);font:600 max(12px,min(12cqmin,28px))/1 var(--title);font-variant-numeric:tabular-nums;border-top:1.5px solid;padding-top:3px;min-width:40%;text-align:right}
+.fl .album .slot .stamp.empty{width:100%;height:100%;border-width:1.5px;padding:0;aspect-ratio:auto}
+.fl .album .slot:has(.empty){filter:none}
+/* a wide stamp (Outgrow): the drawing runs along the bottom, the share sits to its right */
+@container (min-aspect-ratio: 2/1) {
+  .fl .album .sp .emb{padding:max(4px,3cqh) 30% 0 0}
+  .fl .album .sp small{font-size:max(16px,min(20cqh,26px))}
+}
