@@ -1,12 +1,7 @@
-/* Russian words of the shell (web/js/main.js) and the names of the games. Author 2026-11-21: the prototype speaks Russian
+/* Russian words of the shell (web/js/main.js). Game names stay in English (author 2026-11-21). Author 2026-11-21: the prototype speaks Russian
    until the polish is done; English stays (test > English). Keys are the English strings of the code — Postie.t in web/kit/kit.js.
    The words inside each game are in its own view.js; the letters — web/js/letters.js. */
 Postie.tr({
-  /* games */
-  'Streams': 'Ручьи', 'Parcels': 'Посылки', 'Knock Through': 'Сквозь стены', 'Square Up': 'В расчёте', 'Outgrow': 'Поросль',
-  'Perfect Fit': 'Впритык', 'Arrow Flip': 'Стрелки', 'The Gap': 'Зазор', 'Carpet Layers': 'Ковры', 'Shadow Step': 'След в след',
-  'Tight Shelf': 'Тесная полка', 'Nest': 'Гнездо', 'One Each': 'По одному', 'Recruit Ladder': 'Лестница', 'Hidden Stones': 'Скрытые камни', 'Slide Out': 'Наружу',
-
   /* home */
   'Letters': 'Письма', 'Today': 'Сегодня', 'Games': 'Игры', 'test': 'тест',
   'Back': 'Назад', 'Rules': 'Правила', 'Restart': 'Заново', 'Close': 'Закрыть',

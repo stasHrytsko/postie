@@ -10,7 +10,7 @@
     'Ship <b>every cube</b>.': 'Отправь <b>все кубики</b>.',
     'Undo': 'Отменить',
     'Retry': 'Заново',
-    'Parcels': 'Посылки',
+    'Parcels|counter': 'Посылки',
     'Only cubes: a parcel has no empty cells.': 'Только кубики: в посылке не бывает пустых клеток.',
     'A number and dots never share a parcel.': 'Число и точки не бывают в одной посылке.',
     'A parcel needs one number, or one black and one white dot.': 'В посылке должно быть одно число или одна чёрная и одна белая точка.',
@@ -160,7 +160,7 @@
       }
 
       function draw() {
-        stat.innerHTML = Postie.stat([['Parcels', s.shipped + ' / ' + s.total]]);
+        stat.innerHTML = Postie.stat([['Parcels|counter', s.shipped + ' / ' + s.total]]);
         undoB.disabled = !hist.length || s.status === 'won';
         grid.innerHTML = '';
         for (var r = 0; r < L.h; r++) for (var c = 0; c < L.w; c++) {

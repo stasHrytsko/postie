@@ -13,12 +13,13 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
      Every string is written in English in the code and is its own key: Postie.t('Undo') -> 'Отменить' when the language is ru.
      A game adds its words with Postie.tr({ 'English': 'Русский', ... }) at the top of its view.js.
      Text children, html and aria-label passed to Postie.h, stat labels and buttons are translated by the kit itself;
-     a string built from pieces goes through Postie.t('That frame holds {a} cubes', { a: n }). */
+     a string built from pieces goes through Postie.t('That frame holds {a} cubes', { a: n }).
+     Game names stay in English in both languages (author 2026-11-21). */
   P.lang = 'en'; P.RU = {};
   P.tr = function (d) { for (var k in d) P.RU[k] = d[k]; };
   P.t = function (s, v) {
     if (typeof s !== 'string') return s;
-    var r = P.lang === 'ru' && Object.prototype.hasOwnProperty.call(P.RU, s) ? P.RU[s] : s;
+    var r = P.lang === 'ru' && Object.prototype.hasOwnProperty.call(P.RU, s) ? P.RU[s] : s.split('|')[0];   // 'Parcels|counter': a context after | when one English word means two things
     if (v) r = r.replace(/\{(\w+)\}/g, function (m, k) { return v[k] != null ? v[k] : m; });
     return r;
   };
