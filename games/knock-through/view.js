@@ -8,7 +8,6 @@
     '.kt-chip.ok{background:var(--ink);color:var(--on)}' +
     '.kt-board{display:grid;margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;background:var(--line);' +
     '--kt-room:#E4D9C3;--kt-wall:#1E2A44}' +
-    'html[data-look=night] .kt-board{--kt-room:#3A4764;--kt-wall:#ECE5D5}' +
     '.kt-cell{aspect-ratio:1;background:var(--kt-room);box-sizing:border-box;border:0 solid var(--kt-wall);display:grid;place-items:center;font:700 20px var(--font);color:var(--ink)}' +
     '.kt-cell.big{color:var(--bad)}' +
     '.kt-cell.sel{background:var(--sage);color:#fff}';

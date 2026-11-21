@@ -2,12 +2,10 @@
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <title>Postie</title>
-<script>/* light or dark is set before anything is drawn: the saved choice, else the phone's own setting. Toggle — the corner of the home screen. */
-(function () { var l = null; try { l = localStorage.getItem('postie:look'); } catch (e) {}
-  if (l !== 'post' && l !== 'night') l = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'post';
-  document.documentElement.setAttribute('data-look', l);
-  var g = null; try { g = localStorage.getItem('postie:lang'); } catch (e) {} document.documentElement.lang = g === 'en' ? 'en' : 'ru';
-  var m = document.createElement('meta'); m.name = 'theme-color'; m.content = l === 'night' ? '#131926' : '#F5F0E6'; document.head.appendChild(m); })();</script>
+<script>/* one look, light (author 2026-11-21); the language: Russian until the polish is done, English in test */
+(function () { document.documentElement.setAttribute('data-look', 'post');
+  var g = null; try { g = localStorage.getItem('postie:lang'); } catch (e) {} document.documentElement.lang = g === 'en' ? 'en' : 'ru'; })();</script>
+<meta name="theme-color" content="#F5F0E6">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,600&display=swap">
 <link rel="stylesheet" href="kit/kit.css">

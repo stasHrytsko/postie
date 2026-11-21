@@ -28,7 +28,6 @@
   /* own colours (author 2026-11-19: no mustard): plain cube — light kraft, number — blue, dots — ink and paper in both looks */
   var CSS = '' +
     '.pc-board{--pc-cube:#E4D9C3;--pc-edge:#D3C6AB;--pc-num:#4E7BAB;--pc-numtx:#FFFCF5;--pc-blk:#1E2A44;--pc-wht:#FFFCF5}' +
-    'html[data-look=night] .pc-board{--pc-cube:#3A4764;--pc-edge:#4A5878;--pc-num:#7AA7E0;--pc-numtx:#131926;--pc-blk:#0E1420;--pc-wht:#ECE5D5}' +
     '.pc-board .cell.cube{background:var(--pc-cube);border-color:var(--pc-edge)}' +
     '.pc-board .cell.cube.num{background:var(--pc-num);border-color:var(--pc-num);color:var(--pc-numtx)}' +
     '.pc-board{position:relative;margin:12px auto;touch-action:none;user-select:none;-webkit-user-select:none}' +

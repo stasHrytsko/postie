@@ -23,22 +23,14 @@
   function applyLang() { Postie.lang = LANG; document.documentElement.lang = LANG; }
   applyLang();
   function gname(g) { return T(g.name); }
-  /* The look (web/kit/flat.css, html[data-look]) is a set of tokens; boards take their piece colours from the same tokens. */
-  var LOOK = document.documentElement.getAttribute('data-look') === 'night' ? 'night' : 'post';
-  function applyLook() {
-    document.documentElement.setAttribute('data-look', LOOK);
-    var m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = LOOK === 'night' ? '#131926' : '#F5F0E6';
+  /* The look (web/kit/flat.css) is a set of tokens; boards take their piece colours from the same tokens. One look, light (author 2026-11-21). */
+  (function () {
     var css = getComputedStyle(document.documentElement), tok = function (n) { return css.getPropertyValue('--' + n).trim(); };
     var F = { apr: tok('apr'), blue: tok('blue'), sage: tok('sage'), butter: tok('butter'), sand: tok('stone'), ink: tok('ink') };
     Postie.PIECES.forEach(function (p) { p.c = F[p.k] || p.c; });
     ['milk', 'card', 'ink', 'txt', 'line', 'sand', 'bad', 'mut'].forEach(function (k) { Postie.C[k] = tok(k); });
     Postie.C.apr = F.apr; Postie.C.blue = F.blue; Postie.C.sage = F.sage; Postie.C.butter = F.butter;
-  }
-  applyLook();
-  /* light / dark: the button in the corner of the home screen; the choice is remembered, before it — the phone's own setting */
-  function toggleLook() { LOOK = LOOK === 'night' ? 'post' : 'night'; try { localStorage.setItem('postie:look', LOOK); } catch (e) {} applyLook(); draw(); }
-  var SUN = '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>';
-  var MOON = '<svg class="ic" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a7 7 0 1010.5 10.5z"/></svg>';
+  })();
 
   /* ---------- letters: web/js/letters.js (world/letters-en.md) — both languages, stored by index ---------- */
   var L = POSTIE_LETTERS;
@@ -535,7 +527,7 @@
     drawLetters(ps[0]); drawToday(ps[1]); drawGames(ps[2]);
     pans = h('div', { class: 'pans' }, ps);
     tabs = h('div', { class: 'tabs' }, ['Letters', 'Today', 'Games'].map(function (t, k) { return h('button', { class: k === pan ? 'on' : '', onclick: function () { go(k, true); } }, [t]); }));
-    var top = h('div', { class: 'top' }, [h('button', { class: 'ib lk', 'aria-label': LOOK === 'night' ? 'Light look' : 'Dark look', html: LOOK === 'night' ? SUN : MOON, onclick: toggleLook }), h('b', null, [dateStr(S.day)]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
+    var top = h('div', { class: 'top' }, [h('span', { style: 'width:44px' }), h('b', null, [dateStr(S.day)]), h('button', { class: 'tst', onclick: testMenu }, ['test'])]);
     root.insertBefore(tabs, root.firstChild); root.insertBefore(pans, tabs); root.insertBefore(top, pans);
     pans.scrollLeft = pan * pans.clientWidth;
     ps.forEach(function (p, i) { p.scrollTop = scrollY[i]; });

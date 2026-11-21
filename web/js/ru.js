@@ -5,7 +5,6 @@ Postie.tr({
   /* home */
   'Letters': 'Письма', 'Today': 'Сегодня', 'Games': 'Игры', 'test': 'тест',
   'Back': 'Назад', 'Rules': 'Правила', 'Restart': 'Заново', 'Close': 'Закрыть',
-  'Light look': 'Светлая тема', 'Dark look': 'Тёмная тема',
 
   /* Today */
   'New letter': 'Новое письмо', 'Letter': 'Письмо', 'Tap to open': 'Нажми, чтобы открыть',
