@@ -215,3 +215,12 @@ html[data-look="night"] .fl .veil{background:rgba(6,9,16,.88)}
 .fl .cat b{color:var(--txt);font-weight:600}
 .fl .cat .big{margin-top:10px}
 .fl .gm.lock{opacity:.45}
+/* the album of games (author 2026-11-21): stamps of different sizes on a grid of 7 square cells, by the author's sketch.
+   A stamp keeps its perforation: its sides are rounded down to the 12px step of the edge. */
+.fl .album{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:calc(100cqw / 7);container-type:inline-size;margin:18px 0 8px}
+.fl .album .stamp{aspect-ratio:auto;width:round(down,100%,12px);height:round(down,100%,12px);align-self:center;justify-self:center;
+  container-type:size;flex-direction:column;align-items:flex-start;justify-content:space-between;text-align:left;padding:16px 15px 14px}
+.fl .album .stamp b{font:600 max(14px,min(11cqw,22px))/1.12 var(--title);letter-spacing:.01em}
+.fl .album .stamp small{font:600 max(17px,min(16cqmin,34px))/1 var(--title);font-variant-numeric:tabular-nums}
+.fl .album .stamp.empty{width:100%;height:100%;border-width:1.5px;padding:0}
+.fl .album .stamp.lock{opacity:.5}

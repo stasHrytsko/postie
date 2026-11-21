@@ -413,20 +413,27 @@
   /* the catalogue (author 2026-11-20): paid; open to everyone for the first 14 days; the letter and its puzzles stay free forever */
   function trial() { return S.day <= TRIAL; }
   function catOpen() { return S.paid || trial(); }
+  /* The album (author 2026-11-21): the games lie as stamps of different sizes on a grid of 7 columns, by the author's sketch.
+     [column, row, width, height] in grid cells, 0-based; slot k is the k-th game of web/games.js (the order they arrive in).
+     A game that has not come yet — an empty place, no name. Slots 11 and 12: Bracket and the free place of the MVP. */
+  var ALBUM = [[0, 0, 3, 4], [4, 0, 3, 3], [0, 5, 3, 3], [4, 4, 3, 4], [0, 9, 7, 2], [0, 12, 2, 4],
+    [3, 12, 4, 3], [0, 17, 3, 3], [4, 16, 3, 3], [0, 21, 4, 4], [5, 20, 2, 2], [5, 23, 2, 2]];
   function drawGames(p) {
-    var here = Postie.games.filter(function (g) { return shown(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'grid3' });
-    if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', null, ['Puzzles come here after you send the letter.']),
-      !S.paid ? h('span', { class: 'fine' }, [trial() ? T('The catalog is open until {d}.', { d: dateStr(TRIAL) }) : 'The catalog is for playing more. The letter stays free.']) : null])); return; }
-    here.forEach(function (g) {
-      var a = shown(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length; total += a.length; solved += sv;
-      grid.appendChild(h('button', { class: 'gm' + (catOpen() ? '' : ' lock'), onclick: function () { if (catOpen()) openGame(g.id); else paywall(); } }, [h('i', null, [catOpen() ? pct(sv, a.length) + '%' : '—']), h('b', null, [gname(g)])]));
+    var total = 0, solved = 0, any = false, open = catOpen(), album = h('div', { class: 'album' });
+    ALBUM.forEach(function (sl, k) {
+      var g = game(POSTIE_GAMES[k]), a = g ? shown(g.id) : [], at = 'grid-area:' + (sl[1] + 1) + ' / ' + (sl[0] + 1) + ' / span ' + sl[3] + ' / span ' + sl[2];
+      if (!a.length) { album.appendChild(h('div', { class: 'stamp empty', style: at })); return; }
+      var sv = a.filter(function (n) { return isDone(g.id, n); }).length; total += a.length; solved += sv; any = true;
+      album.appendChild(h('button', { class: 'stamp' + (open ? '' : ' lock'), style: at, onclick: function () { if (open) openGame(g.id); else paywall(); } },
+        [h('b', null, [gname(g)]), h('small', null, [open ? pct(sv, a.length) + '%' : '—'])]));
     });
-    p.appendChild(h('h2', null, [T('Games') + (catOpen() ? ' · ' + T('{p}% solved', { p: pct(solved, total) }) : '')]));
+    p.appendChild(h('h2', null, [T('Games') + (open && any ? ' · ' + T('{p}% solved', { p: pct(solved, total) }) : '')]));
+    if (!any) p.appendChild(h('div', { class: 'cat' }, [h('b', null, ['Empty for now']), h('span', null, ['Puzzles come here after you send the letter.'])]));
     if (!S.paid) p.appendChild(h('div', { class: 'cat' }, trial()
       ? [h('b', null, [T('The catalog is open until {d}.', { d: dateStr(TRIAL) })]), h('span', null, ['Every puzzle that came by mail is here. After that the catalog is paid. The letter and its five puzzles stay free forever.'])]
       : [h('b', null, ['The catalog is closed.']), h('span', null, ['The letter and its five puzzles are free forever. The catalog keeps every puzzle that came by mail, and more. It is for playing more.']),
          h('button', { class: 'big', onclick: paywall }, ['Open the catalog'])]));
-    p.appendChild(grid);
+    p.appendChild(album);
   }
   /* the paywall: subscription or lifetime; in the prototype a tap simply opens the catalogue */
   function paywall() {
