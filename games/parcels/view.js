@@ -27,7 +27,7 @@
   });
   /* own colours (author 2026-11-19: no mustard): plain cube — light kraft, number — blue, dots — ink and paper in both looks */
   var CSS = '' +
-    '.pc-board{--pc-cube:#DBD2C7;--pc-edge:#C8C2BB;--pc-num:#2C6ABD;--pc-numtx:#FFFFFF;--pc-blk:#091C47;--pc-wht:#FFFFFF}' +
+    '.pc-board{--pc-cube:#E4D9C3;--pc-edge:#D3C6AB;--pc-num:#4E7BAB;--pc-numtx:#FFFFFF;--pc-blk:#091C47;--pc-wht:#FFFFFF}' +
     '.pc-board .cell.cube{background:var(--pc-cube);border-color:var(--pc-edge)}' +
     '.pc-board .cell.cube.num{background:var(--pc-num);border-color:var(--pc-num);color:var(--pc-numtx)}' +
     '.pc-board{position:relative;margin:12px auto;touch-action:none;user-select:none;-webkit-user-select:none}' +

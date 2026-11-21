@@ -4,10 +4,12 @@
    Shapes carry the meaning: a circle is a puzzle (or a level), a square is a stamp. Difficulty is not shown.
    Colour lives inside the game boards only; the shell has one accent. */
 :root{   /* the palette (author 2026-11-21): white #FFFFFF · ivory #F8EBD8 · navy #091C47 · red #BF271F · blue #2C6ABD · green #41754F;
-           sand, line and the muted text are navy laid thin over ivory; yellow and stone stay for the boards that need more colours */
+           sand, line and the muted text are navy laid thin over ivory.
+           The pieces inside the games keep their own softer tones (author 2026-11-21: the palette red and blue were harsh on the boards). */
   --milk:#F8EBD8; --card:#FFFFFF; --sand:#E7DCCE; --line:#D2CAC1;
   --ink:#091C47; --txt:#091C47; --mut:#5D647A; --on:#FFFFFF; --bad:#BF271F; --accent:#BF271F;
-  --apr:#BF271F; --sage:#41754F; --blue:#2C6ABD; --butter:#E2A534; --stone:#B5AB96;
+  --apr:#D4573F; --sage:#5F9A78; --blue:#4E7BAB; --butter:#E2A534; --stone:#B5AB96;   /* pieces */
+  --post-red:#BF271F; --post-blue:#2C6ABD;   /* the airmail edge of the envelope */
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
   --stampbg:#F8EBD8; --r-btn:26px;
 }
@@ -138,7 +140,7 @@ html,body{height:100%;background:var(--milk);overflow:hidden}
 .fl .envi,
 .fl .envbig{
   border:7px solid;border-radius:0;
-  border-image:repeating-linear-gradient(-45deg,var(--apr) 0 9px,var(--card) 9px 18px,var(--blue) 18px 27px,var(--card) 27px 36px) 7;
+  border-image:repeating-linear-gradient(-45deg,var(--post-red) 0 9px,var(--card) 9px 18px,var(--post-blue) 18px 27px,var(--card) 27px 36px) 7;
   box-shadow:0 1px 0 var(--line),0 10px 24px -12px rgba(9,28,71,.35)}
 .fl .envi::before{border-width:1.5px;border-color:var(--line);top:-86px}
 .fl .envi.off{border:2px dashed var(--line);border-image:none;box-shadow:none}
