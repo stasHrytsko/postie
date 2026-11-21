@@ -11,6 +11,8 @@
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --title:'Newsreader',Georgia,'Times New Roman',serif; --voice:var(--title);
   --stampbg:#EDE4D0; --r-btn:26px;
 }
+/* Russian (author 2026-11-21): Newsreader has no Cyrillic — the postman's serif is Literata, a book serif of the same kind */
+html[lang="ru"]{--title:'Literata',Georgia,'Times New Roman',serif}
 html[data-look="night"]{
   --milk:#131926; --card:#1B2333; --sand:#232D40; --line:#3A4764;
   --ink:#ECE5D5; --txt:#ECE5D5; --mut:#97A0B2; --on:#131926; --bad:#F0705A; --accent:#F2C14E;

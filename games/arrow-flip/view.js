@@ -2,6 +2,19 @@
    Tiles are absolutely placed over the board so a tap can animate: the mover slides along its path (and fades off the edge),
    every block it brushes turns its whole tile 90° clockwise as it passes (stazzi decision 2026-11-10). */
 (function () {
+  Postie.tr({
+    '<b>Tap a block</b>: it slides where its arrow points, until the next block or off the board. <b>Every block it brushes past turns 90° clockwise.</b> Send every block off the board.':
+      '<b>Нажми на блок</b>: он поедет туда, куда смотрит стрелка, — до следующего блока или за край поля. <b>Каждый блок, мимо которого он проедет, повернётся на 90° по часовой стрелке.</b> Выведи все блоки за край поля.',
+    'Undo': 'Отменить',
+    'Blocks left': 'Осталось блоков',
+    'Stone: never moves': 'Камень: никогда не сдвигается',
+    'Turns a block passing over it': 'Поворачивает проезжающий блок',
+    'A block here never turns': 'Блок здесь не поворачивается',
+    'Blocked: that block has nowhere to go.': 'Этому блоку некуда ехать.',
+    'No block can move. Undo or restart.': 'Ни один блок не может сдвинуться. Отмени ход или начни заново.',
+    'Cleared in {n} taps (best {b})': 'Поле чистое. Ходов: {n} (лучший результат: {b})',
+    'up block': 'блок вверх', 'right block': 'блок вправо', 'down block': 'блок вниз', 'left block': 'блок влево'
+  });
   var COLOR = { '^': 'apr', '<': 'blue', '>': 'sage', 'v': 'butter' }; /* as in the UI kit sheet, "Game elements" */
   var ANGLE = { '^': 0, '>': 90, 'v': 180, '<': 270 };
   var ANCHOR = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.2V20M8 10.5h8M5 13.5a7 7 0 0014 0"/></svg>';
@@ -51,7 +64,7 @@
       }
       function place(el, r, c) { el.style.width = el.style.height = pct + '%'; el.style.transform = 'translate(' + (c * 100) + '%,' + (r * 100) + '%)'; }
       function tileXf(r, c, a) { return 'translate(' + (c * 100) + '%,' + (r * 100) + '%) rotate(' + a + 'deg)'; }
-      function paint(t, d) { var i = t.firstChild; i.className = 'c-' + COLOR[d]; i.style.background = 'var(--' + COLOR[d] + ')'; i.style.borderColor = 'var(--' + COLOR[d] + ')'; t.setAttribute('aria-label', { '^': 'up', '>': 'right', 'v': 'down', '<': 'left' }[d] + ' block'); }
+      function paint(t, d) { var i = t.firstChild; i.className = 'c-' + COLOR[d]; i.style.background = 'var(--' + COLOR[d] + ')'; i.style.borderColor = 'var(--' + COLOR[d] + ')'; t.setAttribute('aria-label', Postie.t({ '^': 'up block', '>': 'right block', 'v': 'down block', '<': 'left block' }[d])); }
       function build() {
         layer.innerHTML = ''; tiles = {}; angle = {};
         s.blocks.forEach(function (b) {
@@ -89,7 +102,7 @@
         var b = E.blockAt(s, r, c); if (!b) return;
         var prev = E.clone(s), p = E.plan(s, b.id), t = tiles[b.id];
         if (!p) {
-          Postie.shake(t); msg.className = 'msg'; msg.textContent = 'Blocked: that block has nowhere to go.';
+          Postie.shake(t); msg.className = 'msg'; msg.textContent = Postie.t('Blocked: that block has nowhere to go.');
           var d = { '^': [-1, 0], '>': [0, 1], 'v': [1, 0], '<': [0, -1] }[b.d], nb = E.blockAt(s, r + d[0], c + d[1]);
           if (nb && tiles[nb.id]) { tiles[nb.id].classList.add('lit'); setTimeout(function () { if (tiles[nb.id]) tiles[nb.id].classList.remove('lit'); }, 300); }
           return;
@@ -132,8 +145,8 @@
           layer.querySelectorAll('.af-tile').forEach(function (o) { o.style.transition = ''; });
           if (dead) return;
           busy = false; drawMarks(); drawStat();
-          if (E.won(s)) ctx.win('Cleared in ' + s.moves + ' taps (best ' + L.best + ')');
-          else if (E.stuck(s)) { msg.className = 'msg bad'; msg.textContent = 'No block can move. Undo or restart.'; }
+          if (E.won(s)) ctx.win(Postie.t('Cleared in {n} taps (best {b})', { n: s.moves, b: L.best }));
+          else if (E.stuck(s)) { msg.className = 'msg bad'; msg.textContent = Postie.t('No block can move. Undo or restart.'); }
           else if (pending) { var q = pending; pending = null; tapCell(q[0], q[1]); }
         }, (reduce ? 0 : travel + 340));
         drawStat();

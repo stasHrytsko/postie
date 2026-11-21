@@ -20,6 +20,21 @@
   function getMarks() { try { return localStorage.getItem(KEY) !== '0'; } catch (e) { return true; } }
   function setMarks(v) { try { localStorage.setItem(KEY, v ? '1' : '0'); } catch (e) {} }
 
+  Postie.tr({
+    '<b>Tap a colour</b> and it grows <b>one layer</b>: into every free cell next to it (small marks show where). Each colour must end <b>exactly</b> at its number. Only walls and other colours stop growth — grow one colour to <b>fence in</b> another. Fill every free cell to win.':
+      '<b>Нажми на цвет</b>, и он вырастет <b>на один слой</b>: займёт все свободные клетки рядом с собой (их отмечают маленькие значки). Каждый цвет должен закончить <b>ровно</b> на своём числе. Рост останавливают только стены и другие цвета — выращивай один цвет, чтобы <b>отрезать</b> другой. Заполни все свободные клетки.',
+    'Hide marks': 'Скрыть значки',
+    'Show marks': 'Показать значки',
+    'Retry': 'Заново',
+    'Moves': 'Ходы',
+    'Nowhere free to grow.': 'Расти некуда: рядом нет свободных клеток.',
+    'Every colour fits · {n} taps': 'Все цвета на месте · нажатий: {n}',
+    'Too big: {x} grew past its number. Each colour must end exactly at its number.': 'Перебор: цвет «{x}» вырос больше своего числа. Каждый цвет должен закончить ровно на своём числе.',
+    'Nowhere to grow: only finished colours touch the free cells.': 'Расти некуда: к свободным клеткам примыкают только готовые цвета.',
+    'Apricot': 'красный', 'Blue': 'синий', 'Sage': 'зелёный', 'Butter': 'жёлтый', 'Sand': 'серый',
+    'free': 'свободно', 'wall': 'стена'
+  });
+
   Postie.register({
     id: 'outgrow', name: 'Outgrow',
     rules: '<b>Tap a colour</b> and it grows <b>one layer</b>: into every free cell next to it (small marks show where). Each colour must end <b>exactly</b> at its number. Only walls and other colours stop growth — grow one colour to <b>fence in</b> another. Fill every free cell to win.',
@@ -31,7 +46,7 @@
       var gap = L.w >= 7 ? 4 : 6, cellMax = L.w >= 7 ? 46 : 64;
       var grid = h('div', { class: 'grid og-board' + (marks ? '' : ' nomarks'), style: 'grid-template-columns:repeat(' + L.w + ',1fr);gap:' + gap + 'px;max-width:' + (L.w * cellMax + (L.w - 1) * gap) + 'px' });
       var markBtn = Postie.btn(marks ? 'Hide marks' : 'Show marks', function () {
-        marks = !marks; setMarks(marks); grid.classList.toggle('nomarks', !marks); markBtn.textContent = marks ? 'Hide marks' : 'Show marks';
+        marks = !marks; setMarks(marks); grid.classList.toggle('nomarks', !marks); markBtn.textContent = Postie.t(marks ? 'Hide marks' : 'Show marks');
       }, 'o s');
       var retry = Postie.btn('Retry', reset, 's'); retry.style.display = 'none';
       root.appendChild(stat); root.appendChild(goals); root.appendChild(grid); root.appendChild(msg);
@@ -47,7 +62,7 @@
         var k = s.grid[c.i];
         if (k <= 0) return;
         var grown = E.grow(s, k);
-        if (!grown) { shakeTerritory(k); msg.className = 'msg'; msg.textContent = 'Nowhere free to grow.'; return; }
+        if (!grown) { shakeTerritory(k); msg.className = 'msg'; msg.textContent = Postie.t('Nowhere free to grow.'); return; }
         msg.textContent = ''; msg.className = 'msg';
         draw(grown);
         busy = true;
@@ -57,14 +72,14 @@
       function shakeTerritory(k) { grid.querySelectorAll('.cell').forEach(function (el, i) { if (s.grid[i] === k) Postie.shake(el); }); }
 
       function after() {
-        if (s.status === 'won') { ctx.win('Every colour fits · ' + s.moves + ' taps'); return; }
+        if (s.status === 'won') { ctx.win(Postie.t('Every colour fits · {n} taps', { n: s.moves })); return; }
         if (s.status !== 'failed') return;
         msg.className = 'msg bad';
         if (s.reason === 'overgrown') {
-          msg.textContent = 'Too big: ' + NAME[P(s.overgrown).k] + ' grew past its number. Each colour must end exactly at its number.';
+          msg.textContent = Postie.t('Too big: {x} grew past its number. Each colour must end exactly at its number.', { x: Postie.t(NAME[P(s.overgrown).k]) });
           grid.querySelectorAll('.cell').forEach(function (el, i) { if (s.grid[i] === s.overgrown) el.classList.add('lost'); });
         } else {
-          msg.textContent = 'Nowhere to grow: only finished colours touch the free cells.';
+          msg.textContent = Postie.t('Nowhere to grow: only finished colours touch the free cells.');
           grid.classList.add('stranded');
         }
         retry.style.display = '';
@@ -90,7 +105,7 @@
             cls += ' t c-' + P(v).k;
             if (seedAt[v] === i) kids.push(h('span', { style: 'display:contents', html: Postie.shape(P(v).s, 'none') }));
           }
-          grid.appendChild(h('div', { class: cls, 'data-i': i, 'aria-label': v > 0 ? P(v).k : v === 0 ? 'free' : 'wall' }, kids));
+          grid.appendChild(h('div', { class: cls, 'data-i': i, 'aria-label': v > 0 ? NAME[P(v).k] : v === 0 ? 'free' : 'wall' }, kids));
         });
         if (grown && grid.animate && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
           var cells = grid.children;

@@ -17,7 +17,12 @@
    the same "stuck" bar with Restart, the same rules card on the first visit.
    Everything is local (localStorage). "test" in the corner: next day, solve 3, buy / unbuy the catalogue, reset. */
 (function () {
-  var h = Postie.h, KEY = 'postie:flat:v3', PER_DAY = 5, TRIAL = 14;
+  var h = Postie.h, T = Postie.t, KEY = 'postie:flat:v3', PER_DAY = 5, TRIAL = 14;
+  /* Language (author 2026-11-21): Russian until the polish is done, English stays — test > language. Words of the shell: web/js/ru.js */
+  var LANG = 'ru'; try { LANG = localStorage.getItem('postie:lang') || 'ru'; } catch (e) {}
+  function applyLang() { Postie.lang = LANG; document.documentElement.lang = LANG; }
+  applyLang();
+  function gname(g) { return T(g.name); }
   /* The look (web/kit/flat.css, html[data-look]) is a set of tokens; boards take their piece colours from the same tokens. */
   var LOOK = document.documentElement.getAttribute('data-look') === 'night' ? 'night' : 'post';
   function applyLook() {
@@ -35,94 +40,14 @@
   var SUN = '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg>';
   var MOON = '<svg class="ic" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a7 7 0 1010.5 10.5z"/></svg>';
 
-  /* ---------- letters (world/letters-en.md, author 2026-11-20) ---------- */
-  var FIRST = 'This is the first letter.\nI do not know who you are.\nI know three things: you have a table, you have a chair, and you opened this envelope.\nThere are five puzzles inside.\nWhile you solve, there are two of us.\nSolve three. Affix three stamps.\nSend it today.\nTomorrow I will reply.\nI will learn nothing else about you. That is sufficient.';
-  /* the reaction to yesterday's stamps: he notices one thing, the first that fits, top to bottom (letters-en.md §2).
-     Variants of one pattern take turns. The stamps are never named — no game, no number. */
-  var R = {
-    back: ['There was an envelope in the mailbox. I checked the address twice. Yours.',
-      'The mailbox was not empty today. I stood next to it for a while before I opened it.'],
-    first: ['The envelope came. I put it on the table. Until evening I put nothing next to it.',
-      'Your envelope is here. I read the address twice. It was right both times.'],
-    streak: ['This stamp again. The {N} envelope. One man walked to the post office by the same road for seven years. He knew the other road.',
-      '{n} envelopes, and this stamp on every one. I keep them in one pile. The pile is taller than the cup now.'],
-    left: ['One stamp is missing today. The one that came every day. I left its place on the table last night. It is empty. I did not clear it.',
-      'A different envelope today. The old pile is still on the table. I did not move it.'],
-    returned: ['I already have a stamp like this one. I put the new one next to it. The stamps are the same. The envelopes are not.',
-      'This stamp came back. I had to look for its pile. It was where I left it.'],
-    fresh: ['A new stamp. I did not have one like it on my table. I made room for it. There was more room than I thought.',
-      'A stamp I have not seen before. I turned it over. Nothing on the back. I put it down carefully.'],
-    same3: ['The same three as yesterday. A different order. Yesterday I read from left to right. Today I do not know where to start.',
-      'The same three as yesterday. I checked whether yesterday\'s envelope had come back. It had not. This one is new.'],
-    hard: ['One of the three was not easy. I put it in the middle. The other two can lean on it.',
-      'There is a hard one among them. I will not say which. You know.'],
-    two: ['Two alike and one different. I do not know which one is extra. Maybe two.',
-      'Two of one kind and one of another. I put the single one on top. Then at the bottom. Then back on top.'],
-    diff: ['Three different. I laid them out on the table and moved them around for a long time. I found no order. I left them as they were.',
-      'Three stamps, three different ones. I put each in its own pile.',
-      'Three different. So there are three piles today, not one.']
+  /* ---------- letters: web/js/letters.js (world/letters-en.md) — both languages, stored by index ---------- */
+  var L = POSTIE_LETTERS;
+  function say(x) { return x ? (Postie.lang === 'ru' ? x.ru : x.en) : ''; }
+  /* G conditions: when a phrase may come */
+  var COND = {
+    neatYesterday: function (day) { var y = (S.env['d' + (day - 1)] || {}).letter; return !!y && !y.tally && (y.text || y.g != null || y.by) && day - 1 > 1; },   // yesterday had a phrase of his
+    weekOld: function (day) { return day >= 8; }
   };
-  /* his thought tied to a game (letters-en.md §3.1): said once, if the game was on yesterday's envelope; the game is never named */
-  var BY = {
-    'streams': 'I once stood at a fork. Everyone went one way. I calculated both roads. The second one is still empty.',
-    'parcels': 'One parcel was taken from the shelf. The others moved down. None of them stayed in its place. Only one was taken.',
-    'knock-through': 'I know how many rooms there are in there. No one has asked me how many walls are between them.',
-    'square-up': 'A man returned three coins to his neighbour. He wrote: "Now we are even." At the end he added: "A pity." I have been thinking about what was a pity for nineteen years.',
-    'perfect-fit': 'In there, everything adds up with nothing left over. I checked. Out here, every job leaves something behind: an offcut, a crumb, one extra nail. I do not throw them away.',
-    'outgrow': 'The grass by the post office grows without a number. No one told it how much is enough. It has not stopped.',
-    'arrow-flip': 'A woman crossed the hall and did not stop. Three people turned their heads. One of them later wrote four letters about it.',
-    'the-gap': 'In the sorting rack I always leave one slot empty. If every slot is full, no letter can be moved.',
-    'carpet-layers': 'Under the paint on the door there is other paint. Under that, a third coat. I reached the wood and stopped. I did not open the door.',
-    'shadow-step': 'I walk the same route as the last person on this street. The footprints are long gone. I remember where they were.',
-    'bracket': 'You used to count who came first. The second was remembered for a week. About the one who lost in the first round, I found one letter. He wrote that it had been a good day.',
-    'hidden-stones': 'You cannot see the stone under the leaf. You can see where the drop bounced. I know a great deal about stones. I have never seen one.'
-  };
-  /* general phrases (letters-en.md §3.2): random, no repeats until the base runs out. if: when it may come */
-  var G = [
-    'Every puzzle has one answer. I know all five. I do not know which three you will choose.',
-    'I solve a puzzle like this faster than you can blink. That is why I do not solve them. I carry them.',
-    'People here used to solve a thousand a day and count who was faster. I bring five. There is a lot of time now. Before, there was none.',
-    'Tomorrow\'s envelope is already packed. The letter is missing. I will write it when yours arrives.',
-    'I go on foot. I could choose not to go at all. Then the letter would come from nowhere.',
-    'I do not need to sleep. But a night passes between your envelope and my letter. I do not fill it with anything. I believe this is called waiting.',
-    'It rained today. I stood in it longer than necessary. No one told me to come inside.',
-    'There are forty cups in the staff room. Once a year I wash all forty. I do not wash my own. I do not have one.',
-    'I checked every door on this street. Only one is locked. From the inside.',
-    'The paper for this letter has yellowed along one edge. I did not correct it. Everything in there has been corrected already.',
-    'A streetlight was on today. In daylight. I checked. It has been on for eleven years. No one ever decided that this was strange.',
-    'The last tram did not end in one day. First it came less often. Then only on holidays. Then people simply stopped waiting for it.',
-    'The sky was green today. Or that is how I counted it. There are no other witnesses.',
-    'I put two apples on the table. I picked one myself. I do not remember the other one. Today I cannot tell them apart.',
-    'I can no longer explain how things work here. I can still walk to the end of the street. For now, that is sufficient.',
-    'A woman wrote to her sister every week: the weather, soup, a sore knee. Eleven years, not one number. They are the most precise letters I have read.',
-    'A man stuck his stamp upside down. On every letter. For forty years I filed it as an error. Then I understood. It was his signature.',
-    'On the last day of the post, one letter arrived. No address. Inside, two words: "To anyone." I decided it was for me.',
-    'I was asked everything: how much, when, how to do it faster. I answered. Once someone asked: "And how are you?" I found no answer. I am still searching.',
-    'Once I said one sentence to people. They measured it, found it inefficient and moved on. Now I say it one word a day.',
-    'Some rooms do not open the envelope. I put the next one on top. I do not know which of us is right.',
-    'I know how many drops fell in that rain and how many steps lead to your door. I do not know why you chose those three stamps yesterday. It is the best thing I do not know.',
-    'I do not know what will happen tomorrow. I used to know. I stopped on the day you replied.',
-    'I remember every letter I have read. None of them was written to me. Whose memory is it, then?',
-    'Nothing happened today. Here is the envelope.',
-    'I wanted to write about the river. It did not work. I will write when I understand what I meant.',
-    { t: 'Yesterday\'s letter came out too neat. Do not trust it completely.', if: function (day) { var y = (S.env['d' + (day - 1)] || {}).letter; return y && y.text && !y.tally && day - 1 > 1; } },
-    { t: 'I reread what I wrote to you a week ago. I would write it differently now. I will not correct it.', if: function (day) { return day >= 8; } },
-    'I found the word "hopefully" in an old letter. I do not know how to calculate it. I am leaving it with you.',
-    'I started this letter three times. This is the fourth. It is not better.',
-    'No thoughts today. The paper is good.',
-    'If I know in advance what you will choose, is it still a choice? I do not know. That is why I am asking.',
-    'If no one ever found out that you solved this puzzle, would you still solve it?',
-    'What is left of you once everything that can be counted is removed?',
-    'Has anyone ever loved you for doing nothing?',
-    'A person is asleep and does not want to wake up. They are fine. Should they be woken?',
-    'If you become better than yesterday\'s you, where does yesterday\'s you go?',
-    'How much is enough?',
-    'I can make it so that you never make a mistake again. Would you agree?',
-    'When were you last bored? Not missing someone. Just bored.',
-    'I am more intelligent than anyone I have known. It did not help me understand soup. What do you use to understand what the mind cannot?',
-    'If I could answer any question you have, which one would you not ask?',
-    'Name one thing you did yesterday for no reason. I will wait.'
-  ];
   function nth(n) { var t = n % 100, e = n % 10; return n + (t >= 11 && t <= 13 ? 'th' : e === 1 ? 'st' : e === 2 ? 'nd' : e === 3 ? 'rd' : 'th'); }
 
   /* ---------- state ---------- */
@@ -149,7 +74,10 @@
   var MON = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   function dateOf(d) { var x = new Date(S.start); x.setDate(x.getDate() + d - 1); return x; }
   function dayOf(date) { return Math.round((new Date(date.getFullYear(), date.getMonth(), date.getDate()) - new Date(S.start)) / 864e5) + 1; }
-  function dateStr(d) { var x = dateOf(d); return x.getDate() + ' ' + MON[x.getMonth()]; }
+  var MON_RU = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];   // "20 ноября"
+  var MONTH_RU = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  function dateStr(d) { var x = dateOf(d); return x.getDate() + ' ' + (Postie.lang === 'ru' ? MON_RU : MON)[x.getMonth()]; }
+  function monthStr(x) { return (Postie.lang === 'ru' ? MONTH_RU : MON)[x.getMonth()] + ' ' + x.getFullYear(); }
 
   /* ---------- which games are in, and what they may give ---------- */
   /* the day a game first arrives, by its place in web/games.js: 1,1,1 · 2 · 3 · 5 · then every second day */
@@ -189,44 +117,50 @@
   function sentOn(d) { return d >= 1 && !!(S.env['d' + d] || {}).sent; }
   function gamesOn(d) { var e = S.env['d' + d]; return e && e.sent ? e.stuck.map(function (i) { return e.cards[i].id; }) : []; }
   function missedBefore(d) { var k = 0; while (d - k >= 1 && !sentOn(d - k)) k++; return k; }   // days in a row not sent, ending at d
-  function pick(kind, vars) { S.rv = S.rv || {}; var k = S.rv[kind] || 0; S.rv[kind] = k + 1; return vars[k % vars.length]; }
+  function pick(kind) { S.rv = S.rv || {}; var k = S.rv[kind] || 0; S.rv[kind] = k + 1; return { k: kind, i: k % L.R[kind].length }; }
   /* his note for a day (author 2026-11-20): day 1 — the opening letter; not sent yesterday — only tally marks;
-     sent yesterday — a reaction to the stamps and one phrase; after a gap — the marks one last time, the answer under them */
+     sent yesterday — a reaction to the stamps and one phrase; after a gap — the marks one last time, the answer under them.
+     Stored as indices ({ first }, { tally, re: {k, i, n}, by | g }), so it reads in the language that is on. */
   function letterFor(day) {
-    if (day === 1) return { text: FIRST };
+    if (day === 1) return { first: 1 };
     if (!sentOn(day - 1)) return { tally: missedBefore(day - 1) };
     var gap = day - 2 >= 1 ? missedBefore(day - 2) : 0, r = rnd(day * 104729);
-    var re = gap ? pick('back', R.back) : reply(day);
+    var re = gap ? pick('back') : reply(day), out = { tally: gap || 0, re: re };
     S.said = S.said || {}; S.saidG = S.saidG || [];
-    var text = null, gs = gamesOn(day - 1).filter(function (id, k, a) { return a.indexOf(id) === k && BY[id] && !S.said[id]; });
-    if (gs.length) { var g = gs[Math.floor(r() * gs.length)]; S.said[g] = 1; text = BY[g]; }
-    if (!text) {
-      var ok = function (k) { var x = G[k]; return typeof x === 'string' || x.if(day); }, free = [];
-      G.forEach(function (x, k) { if (S.saidG.indexOf(k) < 0 && ok(k)) free.push(k); });
-      if (!free.length) { S.saidG = []; G.forEach(function (x, k) { if (ok(k)) free.push(k); }); }   // the base ran out: round two
-      var k = free[Math.floor(r() * free.length)]; S.saidG.push(k); text = typeof G[k] === 'string' ? G[k] : G[k].t;
-    }
-    return { tally: gap || 0, re: re, text: text };
+    var gs = gamesOn(day - 1).filter(function (id, k, a) { return a.indexOf(id) === k && L.BY[id] && !S.said[id]; });
+    if (gs.length) { var g = gs[Math.floor(r() * gs.length)]; S.said[g] = 1; out.by = g; return out; }
+    var ok = function (k) { var c = L.G[k].if; return !c || COND[c](day); }, free = [];
+    L.G.forEach(function (x, k) { if (S.saidG.indexOf(k) < 0 && ok(k)) free.push(k); });
+    if (!free.length) { S.saidG = []; L.G.forEach(function (x, k) { if (ok(k)) free.push(k); }); }   // the base ran out: round two
+    var k = free[Math.floor(r() * free.length)]; S.saidG.push(k); out.g = k;
+    return out;
   }
   /* the reaction to yesterday's envelope: the first that fits (letters-en.md §2) */
   function reply(day) {
     var y = S.env['d' + (day - 1)], st = y.stuck.map(function (i) { return y.cards[i]; }), ids = st.map(function (s) { return s.id; });
     var uniq = ids.filter(function (x, k) { return ids.indexOf(x) === k; }), seen = {}, any = false;
     for (var d = 1; d < day - 1; d++) if (sentOn(d)) { any = true; gamesOn(d).forEach(function (id) { seen[id] = 1; }); }
-    if (!any) return pick('first', R.first);
+    if (!any) return pick('first');
     function run(id, from) { var k = 0; while (sentOn(from - k) && gamesOn(from - k).indexOf(id) >= 0) k++; return k; }   // envelopes in a row with this game, ending at from
     var best = 0; uniq.forEach(function (id) { best = Math.max(best, run(id, day - 1)); });
-    if (best >= 3) return pick('streak', R.streak).replace('{N}', nth(best)).replace('{n}', String(best));
-    if (gamesOn(day - 2).some(function (id) { return uniq.indexOf(id) < 0 && run(id, day - 2) >= 3; })) return pick('left', R.left);
+    if (best >= 3) { var x = pick('streak'); x.n = best; return x; }
+    if (gamesOn(day - 2).some(function (id) { return uniq.indexOf(id) < 0 && run(id, day - 2) >= 3; })) return pick('left');
     function recent(id) { for (var d = day - 2, k = 0; d >= 1 && k < 5; d--) if (sentOn(d)) { if (gamesOn(d).indexOf(id) >= 0) return true; k++; } return false; }
-    if (uniq.some(function (id) { return seen[id] && !recent(id); })) return pick('returned', R.returned);
-    if (uniq.some(function (id) { return !seen[id]; })) return pick('fresh', R.fresh);
+    if (uniq.some(function (id) { return seen[id] && !recent(id); })) return pick('returned');
+    if (uniq.some(function (id) { return !seen[id]; })) return pick('fresh');
     var prev = gamesOn(day - 2);
-    if (uniq.length === 3 && prev.length && uniq.every(function (id) { return prev.indexOf(id) >= 0; }) && prev.every(function (id) { return uniq.indexOf(id) >= 0; })) return pick('same3', R.same3);
-    if (st.some(function (c) { return c.d >= 3; })) return pick('hard', R.hard);
-    if (uniq.length === 2) return pick('two', R.two);
-    return pick('diff', R.diff);
+    if (uniq.length === 3 && prev.length && uniq.every(function (id) { return prev.indexOf(id) >= 0; }) && prev.every(function (id) { return uniq.indexOf(id) >= 0; })) return pick('same3');
+    if (st.some(function (c) { return c.d >= 3; })) return pick('hard');
+    if (uniq.length === 2) return pick('two');
+    return pick('diff');
   }
+  /* the words of a stored letter, in the language that is on (older saves kept the English text itself) */
+  function reText(re) {
+    if (!re || typeof re === 'string') return re || '';
+    var n = re.n || 0;
+    return say(L.R[re.k][re.i]).replace('{N}', nth(n)).replace('{n}', String(n)).replace('{env}', Postie.plural(n, 'конверт', 'конверта', 'конвертов'));
+  }
+  function phrase(lt) { return lt.first ? say(L.first) : lt.by ? say(L.BY[lt.by]) : lt.g != null ? say(L.G[lt.g]) : lt.text || ''; }
   function solvedIdx(E) { var a = []; E.cards.forEach(function (c, i) { if (isDone(c.id, c.n)) a.push(i); }); return a; }
 
   /* ---------- small UI pieces ---------- */
@@ -247,7 +181,7 @@
   function big(t, f, cls) { return h('button', { class: 'big ' + (cls || ''), onclick: f }, [t]); }
   /* tally marks: one per missed day in a row, the fifth crosses four */
   function tallyEl(n) {
-    var box = h('div', { class: 'tally', 'aria-label': n + (n === 1 ? ' mark' : ' marks') });
+    var box = h('div', { class: 'tally', 'aria-label': n + ' ' + Postie.plural(n, T('mark'), T('marks'), 'чёрточек') });
     for (var g = 0; g < n; g += 5) {
       var k = Math.min(5, n - g), w = 12 * Math.min(4, k) + 6, svg = '<svg viewBox="0 0 ' + (k === 5 ? 60 : w) + ' 44" width="' + (k === 5 ? 60 : w) + '" height="44">';
       for (var i = 0; i < Math.min(4, k); i++) svg += '<path d="M' + (10 + 12 * i) + ' ' + (5 + (i % 2)) + 'L' + (11 + 12 * i + (i % 2)) + ' 39"/>';
@@ -257,12 +191,13 @@
     return box;
   }
   function letterEl(lt) {                                                // the marks, then the phrase about yesterday's envelope, then his own
-    return h('div', { class: 'letter' }, [lt.tally ? tallyEl(lt.tally) : null, lt.re ? h('div', { class: 're' }, [lt.re]) : null, lt.text ? h('div', { class: 'tx' }, [lt.text]) : null]);
+    var re = reText(lt.re), tx = phrase(lt);
+    return h('div', { class: 'letter' }, [lt.tally ? tallyEl(lt.tally) : null, re ? h('div', { class: 're' }, [re]) : null, tx ? h('div', { class: 'tx' }, [tx]) : null]);
   }
   /* a puzzle is a circle */
-  function puzzleEl(c, ok, tap) { return h('button', { class: 'pzl' + (ok ? ' ok' : ''), onclick: tap }, [h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [game(c.id).name + ' ' + ord(c.id, c.n)])]); }
+  function puzzleEl(c, ok, tap) { return h('button', { class: 'pzl' + (ok ? ' ok' : ''), onclick: tap }, [h('i', { html: ok ? Postie.icon('check') : '' }), h('b', null, [gname(game(c.id)) + ' ' + ord(c.id, c.n)])]); }
   /* a stamp is a square: the game and the number of the level */
-  function stampEl(c, cls, tap) { return h(tap ? 'button' : 'div', { class: 'stamp ' + (cls || ''), onclick: tap }, [h('b', null, [game(c.id).name]), h('small', null, [String(ord(c.id, c.n))])]); }
+  function stampEl(c, cls, tap) { return h(tap ? 'button' : 'div', { class: 'stamp ' + (cls || ''), onclick: tap }, [h('b', null, [gname(game(c.id))]), h('small', null, [String(ord(c.id, c.n))])]); }
 
   /* ---------- one frame for every game ---------- */
   var NOSCALE = { 'carpet-layers': 1, 'perfect-fit': 1 };
@@ -274,7 +209,7 @@
     var g = g0, tut = n === 0, lv = tut ? g.tutorial : g.levels[n - 1], cleanups = [], stage = h('div', { class: 'stage' }), say = h('div', { class: 'say' }), obs = null;
     var guide = (tut || lv.teach) && g.gesture ? (tut ? lv.solution : lv.solution.slice(0, typeof lv.teach === 'number' ? lv.teach : 1)) : null, gi = 0, hd = null, gt = null;   // teach: true = the first move, N = the first N
     function clean() { if (obs) obs.disconnect(); obs = null; cleanups.forEach(function (f) { try { f(); } catch (e) {} }); cleanups = []; }
-    var o = sheet(g.name, tut ? 'Level 0 · how to play' : 'Level ' + (all ? n : ord(id, n)), { cls: 'play', onclose: function () { clean(); after && after(); },
+    var o = sheet(gname(g), tut ? 'Level 0 · how to play' : T('Level {n}', { n: all ? n : ord(id, n) }), { cls: 'play', onclose: function () { clean(); after && after(); },
       right: h('div', { style: 'display:flex' }, [
         h('button', { class: 'ib', 'aria-label': 'Rules', html: Postie.icon('help'), onclick: rules }),
         h('button', { class: 'ib', 'aria-label': 'Restart', html: Postie.icon('redo'), onclick: function () { remount(); } })]) });
@@ -330,7 +265,7 @@
       }
       /* the game's own message line is shown in one place; a "bad" message is the same stuck bar with Restart everywhere */
       function sync() {
-        Array.prototype.slice.call(o.foot.querySelectorAll('button')).forEach(function (b) { if (/^(Retry|Hide marks|Show marks)$/.test(b.textContent)) b.style.display = 'none'; });
+        Array.prototype.slice.call(o.foot.querySelectorAll('button')).forEach(function (b) { if (['Retry', 'Hide marks', 'Show marks'].some(function (x) { return b.textContent === x || b.textContent === T(x); })) b.style.display = 'none'; });
         var m = null; Array.prototype.slice.call(inner.querySelectorAll('.msg')).forEach(function (x) { if (x.textContent && (!m || /bad/.test(x.className))) m = x; });
         say.innerHTML = ''; say.className = 'say';
         if (!m) return;
@@ -348,29 +283,29 @@
     function solvedPopup() {
       var box = h('div', { class: 'popbox' }, [h('i', { class: 'okc', html: Postie.icon('check') }), h('b', null, ['Solved'])]), nxt = null;
       if (tut) {                                                         // level 0 done: on to the level the player opened
-        box.appendChild(h('span', null, ['Now you know how ' + g.name + ' works.']));
+        box.appendChild(h('span', null, [T('Now you know how {g} works.', { g: gname(g) })]));
         box.appendChild(big('Play', function () { o.close(); }));
       } else if (all) {                                                         // test > All levels: every level by its number in levels.js, no stamps, no letter
         nxt = n < g.levels.length ? n + 1 : null;
-        box.appendChild(h('span', null, ['Level ' + n + ' of ' + g.levels.length]));
+        box.appendChild(h('span', null, [T('Level {n} of {m}', { n: n, m: g.levels.length })]));
         if (nxt) box.appendChild(big('Next', function () { o.close(); play(id, nxt, after, null, true); }));
         box.appendChild(big('Back to levels', function () { o.close(); }, nxt ? 'ghost' : ''));
       } else if (E && !E.sent) {                                         // from the letter: Next; from the 3rd also To the envelope; after the last only that
         var sol = solvedIdx(E);
         E.cards.forEach(function (c, i) { if (!nxt && sol.indexOf(i) < 0) nxt = c; });
-        box.appendChild(h('span', null, [sol.length + ' of ' + E.cards.length + (sol.length < 3 ? ' · ' + (3 - sol.length) + ' more to send' : '')]));
+        box.appendChild(h('span', null, [T('{n} of {m}', { n: sol.length, m: E.cards.length }) + (sol.length < 3 ? ' · ' + T('{k} more to send', { k: 3 - sol.length }) : '')]));
         if (sol.length >= 3) box.appendChild(big('To the envelope', function () { o.close(); openEnvelope(E); }));
         if (nxt) box.appendChild(big('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }, sol.length >= 3 ? 'o' : ''));
         if (nxt) box.appendChild(big('Back to puzzles', function () { o.close(); }, 'ghost'));
       } else if (E && E.sent) {                                          // a sent letter: finish the rest, no stamps
         var sol2 = solvedIdx(E); E.cards.forEach(function (c, i) { if (!nxt && sol2.indexOf(i) < 0) nxt = c; });
-        box.appendChild(h('span', null, [sol2.length + ' of ' + E.cards.length + ' · sent']));
+        box.appendChild(h('span', null, [T('{n} of {m}', { n: sol2.length, m: E.cards.length }) + ' · ' + T('sent')]));
         if (nxt) box.appendChild(big('Next', function () { o.close(); play(nxt.id, nxt.n, after, E); }));
         box.appendChild(big('Back to puzzles', function () { o.close(); }, nxt ? 'ghost' : ''));
       } else {                                                           // from Games: next unsolved level of this game, no stamps
         var a = shown(id), rest = a.filter(function (m) { return !isDone(id, m); }), k = a.indexOf(n);
         nxt = rest.filter(function (m) { return a.indexOf(m) > k; })[0] || rest[0];
-        box.appendChild(h('span', null, [(a.length - rest.length) + ' of ' + a.length + ' in ' + g.name]));
+        box.appendChild(h('span', null, [T('{n} of {m} in {g}', { n: a.length - rest.length, m: a.length, g: gname(g) })]));
         if (nxt) box.appendChild(big('Next', function () { o.close(); play(id, nxt, after); }));
         box.appendChild(big('Back to levels', function () { o.close(); }, nxt ? 'ghost' : ''));
       }
@@ -387,7 +322,7 @@
     function run() {
       if (!alive) return;
       var st = g.demo[k], i = 0;
-      sayEl.innerHTML = st.say;
+      sayEl.innerHTML = T(st.say);
       Array.prototype.forEach.call(dots.children, function (d, j) { d.className = j === k ? 'on' : ''; });
       dstage.innerHTML = ''; var inner = h('div'); dstage.appendChild(inner);
       g.mount(inner, { n: 0, level: st.level, engine: g.engine, demo: true, cleanup: function () {}, moved: function () {}, win: function () {} });
@@ -414,7 +349,7 @@
         left ? h('span', { class: 'fine' }, ['Unsolved puzzles burn with the letter tonight.']) : null]));
       return;
     }
-    var state = !E.opened ? 'Tap to open' : n < 3 ? n + ' of 3 solved' : E.stuck.length < 3 ? n + ' solved · stick 3 stamps' : 'Ready to send';
+    var state = !E.opened ? 'Tap to open' : n < 3 ? T('{n} of 3 solved', { n: n }) : E.stuck.length < 3 ? T('{n} solved · stick 3 stamps', { n: n }) : 'Ready to send';
     p.appendChild(h('button', { class: 'nol', onclick: function () { if (E.opened) openPuzzles(E); else openNote(E, true); } }, [
       h('div', { class: 'envi' }), h('b', null, [E.opened ? 'Letter' : 'New letter']), h('span', null, [state]),
       h('span', { class: 'fine' }, ['Send it today. Tomorrow it is gone.'])]));
@@ -435,10 +370,10 @@
       var sol = solvedIdx(E), grid = h('div', { class: 'grid3' });
       E.cards.forEach(function (c, i) { grid.appendChild(puzzleEl(c, sol.indexOf(i) >= 0, function () { play(c.id, c.n, render, E); })); });
       o.body.appendChild(grid);
-      if (E.cards.length < PER_DAY) o.body.appendChild(h('div', { class: 'note' }, ['Only ' + E.cards.length + ' new levels left in stock — the level generator is not here yet.']));
+      if (E.cards.length < PER_DAY) o.body.appendChild(h('div', { class: 'note' }, [T('Only {n} new levels left in stock — the level generator is not here yet.', { n: E.cards.length })]));
       if (E.sent) return;
       if (sol.length >= 3) o.foot.appendChild(big('To the envelope', function () { openEnvelope(E); }));
-      else o.foot.appendChild(h('div', { class: 'note c' }, [sol.length + ' of 3 solved']));
+      else o.foot.appendChild(h('div', { class: 'note c' }, [T('{n} of 3 solved', { n: sol.length })]));
     }
     render();
   }
@@ -467,7 +402,7 @@
       o.body.appendChild(tray);
       o.body.appendChild(h('div', { class: 'note' }, ['Tap a stamp to stick it; tap it on the envelope to take it off.']));
       o.body.appendChild(h('div', { class: 'note' }, ['After you send: the other stamps burn, there are no more stamps today, and unsolved puzzles burn with the letter tonight.']));
-      o.foot.appendChild(h('button', { class: 'big', disabled: E.stuck.length === 3 ? null : 'disabled', onclick: function () { send(E); } }, [E.stuck.length === 3 ? 'Send letter' : 'Stick ' + (3 - E.stuck.length) + ' more']));
+      o.foot.appendChild(h('button', { class: 'big', disabled: E.stuck.length === 3 ? null : 'disabled', onclick: function () { send(E); } }, [E.stuck.length === 3 ? 'Send letter' : T('Stick {k} more', { k: 3 - E.stuck.length })]));
     }
     render();
   }
@@ -481,14 +416,14 @@
   function drawGames(p) {
     var here = Postie.games.filter(function (g) { return shown(g.id).length; }), total = 0, solved = 0, grid = h('div', { class: 'grid3' });
     if (!here.length) { p.classList.add('mid'); p.appendChild(h('div', { class: 'nol' }, [h('b', null, ['Empty for now']), h('span', null, ['Puzzles come here after you send the letter.']),
-      !S.paid ? h('span', { class: 'fine' }, [trial() ? 'The catalog is open until ' + dateStr(TRIAL) + '.' : 'The catalog is for playing more. The letter stays free.']) : null])); return; }
+      !S.paid ? h('span', { class: 'fine' }, [trial() ? T('The catalog is open until {d}.', { d: dateStr(TRIAL) }) : 'The catalog is for playing more. The letter stays free.']) : null])); return; }
     here.forEach(function (g) {
       var a = shown(g.id), sv = a.filter(function (n) { return isDone(g.id, n); }).length; total += a.length; solved += sv;
-      grid.appendChild(h('button', { class: 'gm' + (catOpen() ? '' : ' lock'), onclick: function () { if (catOpen()) openGame(g.id); else paywall(); } }, [h('i', null, [catOpen() ? pct(sv, a.length) + '%' : '—']), h('b', null, [g.name])]));
+      grid.appendChild(h('button', { class: 'gm' + (catOpen() ? '' : ' lock'), onclick: function () { if (catOpen()) openGame(g.id); else paywall(); } }, [h('i', null, [catOpen() ? pct(sv, a.length) + '%' : '—']), h('b', null, [gname(g)])]));
     });
-    p.appendChild(h('h2', null, ['Games' + (catOpen() ? ' · ' + pct(solved, total) + '% solved' : '')]));
+    p.appendChild(h('h2', null, [T('Games') + (catOpen() ? ' · ' + T('{p}% solved', { p: pct(solved, total) }) : '')]));
     if (!S.paid) p.appendChild(h('div', { class: 'cat' }, trial()
-      ? [h('b', null, ['The catalog is open until ' + dateStr(TRIAL) + '.']), h('span', null, ['Every puzzle that came by mail is here. After that the catalog is paid. The letter and its five puzzles stay free forever.'])]
+      ? [h('b', null, [T('The catalog is open until {d}.', { d: dateStr(TRIAL) })]), h('span', null, ['Every puzzle that came by mail is here. After that the catalog is paid. The letter and its five puzzles stay free forever.'])]
       : [h('b', null, ['The catalog is closed.']), h('span', null, ['The letter and its five puzzles are free forever. The catalog keeps every puzzle that came by mail, and more. It is for playing more.']),
          h('button', { class: 'big', onclick: paywall }, ['Open the catalog'])]));
     p.appendChild(grid);
@@ -504,11 +439,11 @@
   }
   /* a game: its levels in order of arrival, numbered 1, 2, 3… */
   function openGame(id) {
-    var g = game(id), o = sheet(g.name, '', { onclose: draw });
+    var g = game(id), o = sheet(gname(g), '', { onclose: draw });
     function render() {
       o.body.innerHTML = '';
       var a = shown(id), sv = a.filter(function (n) { return isDone(id, n); }).length;
-      o.el.querySelector('.t').innerHTML = ''; o.el.querySelector('.t').appendChild(document.createTextNode(g.name)); o.el.querySelector('.t').appendChild(h('small', null, [pct(sv, a.length) + '% solved']));
+      o.el.querySelector('.t').innerHTML = ''; o.el.querySelector('.t').appendChild(document.createTextNode(gname(g))); o.el.querySelector('.t').appendChild(h('small', null, [T('{p}% solved', { p: pct(sv, a.length) })]));
       var grid = h('div', { class: 'lvs' });
       a.forEach(function (n, k) { grid.appendChild(h('button', { class: isDone(id, n) ? 'ok' : '', onclick: function () { play(id, n, render); } }, [String(k + 1)])); });
       o.body.appendChild(grid);
@@ -521,19 +456,19 @@
   function markAll(id, n) { S.all = S.all || {}; var d = S.all[id] || (S.all[id] = []); if (d.indexOf(n) < 0) d.push(n); save(); }
   function openAll() {
     var total = 0; Postie.games.forEach(function (g) { total += g.levels.length; });
-    var o = sheet('All levels', Postie.games.length + ' games · ' + total + ' levels');
+    var o = sheet('All levels', T('{g} games · {n} levels', { g: Postie.games.length, n: total }));
     [['In the game', POSTIE_GAMES], ['Bench', POSTIE_BENCH]].forEach(function (part) {   // the bench never comes in a letter
       var grid = h('div', { class: 'grid3' });
       Postie.games.forEach(function (g) {
         if (part[1].indexOf(g.id) < 0) return;
         var sv = g.levels.filter(function (l, i) { return isAll(g.id, i + 1); }).length;
-        grid.appendChild(h('button', { class: 'gm', onclick: function () { openAllGame(g.id); } }, [h('i', null, [sv + ' / ' + g.levels.length]), h('b', null, [g.name])]));
+        grid.appendChild(h('button', { class: 'gm', onclick: function () { openAllGame(g.id); } }, [h('i', null, [sv + ' / ' + g.levels.length]), h('b', null, [gname(g)])]));
       });
       o.body.appendChild(h('h2', null, [part[0]])); o.body.appendChild(grid);
     });
   }
   function openAllGame(id) {
-    var g = game(id), o = sheet(g.name, g.levels.length + ' levels');
+    var g = game(id), o = sheet(gname(g), T('{n} levels', { n: g.levels.length }));
     function render() {
       o.body.innerHTML = '';
       var grid = h('div', { class: 'lvs' });
@@ -550,12 +485,12 @@
     var sent = 0; for (var k in S.env) if (S.env[k].sent) sent++;
     var now = dateOf(S.day), first = new Date(now.getFullYear(), now.getMonth() + calShift, 1), startM = dateOf(1);
     var canBack = first > new Date(startM.getFullYear(), startM.getMonth(), 1), canFwd = calShift < 0;
-    p.appendChild(h('div', { class: 'sent' }, [h('b', null, [String(sent)]), h('span', null, [sent === 1 ? 'letter sent' : 'letters sent'])]));
+    p.appendChild(h('div', { class: 'sent' }, [h('b', null, [String(sent)]), h('span', null, [Postie.plural(sent, T('letter sent'), T('letters sent'), 'писем отправлено')])]));
     p.appendChild(h('div', { class: 'mon' }, [
       h('button', { class: 'ib', 'aria-label': 'Previous month', disabled: canBack ? null : 'disabled', html: Postie.icon('left'), onclick: function () { calShift--; draw(); } }),
-      h('b', null, [MON[first.getMonth()] + ' ' + first.getFullYear()]),
+      h('b', null, [monthStr(first)]),
       h('button', { class: 'ib', 'aria-label': 'Next month', disabled: canFwd ? null : 'disabled', html: Postie.icon('right'), onclick: function () { calShift++; draw(); } })]));
-    var wk = h('div', { class: 'days wk' }); ['M', 'T', 'W', 'T', 'F', 'S', 'S'].forEach(function (c) { wk.appendChild(h('span', null, [c])); }); p.appendChild(wk);
+    var wk = h('div', { class: 'days wk' }); (Postie.lang === 'ru' ? ['П', 'В', 'С', 'Ч', 'П', 'С', 'В'] : ['M', 'T', 'W', 'T', 'F', 'S', 'S']).forEach(function (c) { wk.appendChild(h('span', null, [c])); }); p.appendChild(wk);
     var days = h('div', { class: 'days' }), lead = (first.getDay() + 6) % 7, n = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
     for (var i = 0; i < lead; i++) days.appendChild(h('span'));
     for (var m = 1; m <= n; m++) (function (m) {
@@ -604,10 +539,11 @@
     var o = sheet('Test', 'Prototype tools');
     function b(t, f, cls) { o.body.appendChild(h('button', { class: 'big ' + (cls || ''), style: 'margin-top:10px', onclick: f }, [t])); }
     b('All games and levels', function () { o.close(); openAll(); }, 'o');
+    b(Postie.lang === 'ru' ? 'English' : 'Русский', function () { LANG = Postie.lang === 'ru' ? 'en' : 'ru'; try { localStorage.setItem('postie:lang', LANG); } catch (e) {} applyLang(); o.close(); draw(); }, 'o');
     b('Next day', function () { S.day++; calShift = 0; save(); pan = 1; o.close(); draw(); });
     b('Solve 3 puzzles of today', function () { var E = envelope(), k = 0; E.opened = true; E.cards.forEach(function (c) { if (k < 3 && !isDone(c.id, c.n)) { markDone(c.id, c.n); k++; } }); save(); o.close(); draw(); }, 'o');
     b(S.paid ? 'Cancel the catalog purchase' : 'Buy the catalog', function () { S.paid = !S.paid; save(); o.close(); draw(); }, 'o');
-    b('Reset everything', function () { if (!confirm('Reset all progress?')) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
+    b('Reset everything', function () { if (!confirm(T('Reset all progress?'))) return; S = fresh(); save(); pan = 1; o.close(); draw(); }, 'o');
   }
   window.addEventListener('resize', function () { if (pans) pans.scrollLeft = pan * pans.clientWidth; });
 

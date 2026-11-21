@@ -19,6 +19,17 @@
     '.su-dots i.used{background:var(--ink)}' +
     '.su-board.won .su-p{box-shadow:0 0 0 4px var(--sage)}' +
     '.su-bump{animation:su-bump .22s ease-out}@keyframes su-bump{50%{transform:translate(-50%,-50%) scale(1.12)}}';
+  Postie.tr({
+    '<b>Tap</b> a person: they <b>give</b> 1 coin to each neighbour on a line. <b>Press and hold</b>: they <b>take</b> 1 coin from each. Get <b>everyone to exactly 0</b> in the taps you have (dots). No undo; going below 0 on the way is fine.':
+      '<b>Нажми</b> на человека: он <b>отдаёт</b> по 1 монете каждому соседу по линии. <b>Нажми и держи</b>: он <b>забирает</b> по 1 монете у каждого. Сведи <b>всех ровно к 0</b> за те нажатия, что есть (точки). Отмены нет; уходить ниже 0 по дороге можно.',
+    '<b>Tap</b>: give 1 coin to each neighbour.': '<b>Нажми</b>: человек отдаёт по 1 монете каждому соседу.',
+    '<b>Press and hold</b>: take 1 coin from each neighbour.': '<b>Нажми и держи</b>: человек забирает по 1 монете у каждого соседа.',
+    'Get <b>everyone to 0</b> in the taps you have.': 'Сведи <b>всех к 0</b> за те нажатия, что есть.',
+    'Taps': 'Нажатия',
+    'Everyone at 0 · {n} taps': 'У всех 0 · нажатий: {n}',
+    'Not everyone is at 0. Look at the numbers, then try again.': 'Не у всех 0. Посмотри на числа и попробуй снова.',
+    'Person {n}: {c} coins': 'Человек {n}, монет: {c}'
+  });
   function css() { if (document.getElementById('su-css')) return; var s = document.createElement('style'); s.id = 'su-css'; s.textContent = CSS; document.head.appendChild(s); }
   var still = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   function label(v) { return v < 0 ? '−' + (-v) : String(v); }
@@ -104,8 +115,8 @@
         setTimeout(function () {
           busy = false; draw();
           if (!still) [v].concat(s.nb[v]).forEach(function (j) { var q = nodes[j]; q.classList.remove('su-bump'); void q.offsetWidth; q.classList.add('su-bump'); });
-          if (s.status === 'won') { board.classList.add('won'); ctx.win('Everyone at 0 · ' + s.taps + ' taps'); }
-          else if (s.status === 'failed') { msg.className = 'msg bad'; msg.textContent = 'Not everyone is at 0. Look at the numbers, then try again.'; Postie.shake(board); }
+          if (s.status === 'won') { board.classList.add('won'); ctx.win(Postie.t('Everyone at 0 · {n} taps', { n: s.taps })); }
+          else if (s.status === 'failed') { msg.className = 'msg bad'; msg.textContent = Postie.t('Not everyone is at 0. Look at the numbers, then try again.'); Postie.shake(board); }
         }, T + 40);
       }
 
@@ -118,7 +129,7 @@
           var c = s.coins[v];
           el.className = 'su-p ' + (c < 0 ? 'neg' : c === 0 ? 'zero' : 'pos');
           el.firstChild.textContent = label(c);
-          el.setAttribute('aria-label', 'Person ' + (v + 1) + ': ' + label(c) + ' coins');
+          el.setAttribute('aria-label', Postie.t('Person {n}: {c} coins', { n: v + 1, c: label(c) }));
         });
         drawDots();
       }

@@ -1,6 +1,16 @@
 /* The Gap — screen. Gestures: swipe a square on the board (one finger), tap a flask. Undo steps back one move.
    While the finger is down a faint ghost shows where the square will stop (stazzi SPEC §4); the move happens on release. */
 (function () {
+  Postie.tr({
+    '<b>Swipe a square</b>: it slides until it hits something. If it stops at a numbered gap while moving toward it, it drops into that flask. <b>Tap a flask</b> to take its top square back out (its gap cell must be free). Finish with the board empty and <b>each shape alone in one flask</b>.':
+      '<b>Проведи пальцем по квадрату</b>: он едет до упора. Если он остановился у щели с номером и ехал в её сторону, он падает в колбу с этим номером. <b>Нажми на колбу</b>, чтобы достать её верхний квадрат обратно (клетка у щели должна быть свободна). В конце поле должно быть пустым, а <b>все квадраты одной формы — в одной колбе, без чужих</b>.',
+    'Undo': 'Отменить',
+    'Flask {n}': 'Колба {n}',
+    'Gap {n} is blocked: free its cell first.': 'Щель {n} закрыта: сначала освободи клетку у неё.',
+    'Flask {n} is empty.': 'Колба {n} пуста.',
+    'That square can’t move that way.': 'Этот квадрат туда не сдвинется.',
+    'Sorted in {n} moves (best {b})': 'Всё разложено. Ходов: {n} (лучший результат: {b})'
+  });
   var D = { right: [1, 0], left: [-1, 0], down: [0, 1], up: [0, -1] };
   var CSS = '.tg-wrap{position:relative;margin:34px auto 44px;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.tg-layer{position:absolute;inset:0}' +
@@ -96,7 +106,7 @@
             var c = f[k], p = c ? P(c) : null;
             st.appendChild(h('div', { class: 'sl', style: p ? 'border:1.5px solid ' + p.c + ';background:' + p.c : '', html: p ? Postie.shape(p.s, 'none') : '' }));
           }
-          var b = h('button', { class: 'tg-fl' + (done ? ' done' : ''), 'aria-label': 'Flask ' + (i + 1), 'data-flask': i + 1, onclick: function () { tapFlask(i + 1, b); } }, [h('div', { class: 'n' }, [String(i + 1)]), st]);
+          var b = h('button', { class: 'tg-fl' + (done ? ' done' : ''), 'aria-label': Postie.t('Flask {n}', { n: i + 1 }), 'data-flask': i + 1, onclick: function () { tapFlask(i + 1, b); } }, [h('div', { class: 'n' }, [String(i + 1)]), st]);
           fl.appendChild(b);
         });
       }
@@ -105,7 +115,7 @@
       function tapFlask(n, el) {
         if (busy) return;
         var prev = E.clone(s), m = E.tapFlask(s, n);
-        if (!m) { Postie.shake(el); msg.textContent = s.flasks[n - 1].length ? 'Gap ' + n + ' is blocked: free its cell first.' : 'Flask ' + n + ' is empty.'; return; }
+        if (!m) { Postie.shake(el); msg.textContent = Postie.t(s.flasks[n - 1].length ? 'Gap {n} is blocked: free its cell first.' : 'Flask {n} is empty.', { n: n }); return; }
         hist.push(prev); msg.textContent = '';
         var e = L.exits[n - 1], t = sq(m.color, m.to[0], m.to[1]);
         tiles[m.to[0] + ',' + m.to[1]] = t; layer.appendChild(t);
@@ -130,7 +140,7 @@
 
       function swipe(x, y, dir) {
         var t = tiles[x + ',' + y], prev = E.clone(s), m = E.swipe(s, x, y, dir);
-        if (!m) { Postie.shake(t); msg.textContent = 'That square can’t move that way.'; return; }
+        if (!m) { Postie.shake(t); msg.textContent = Postie.t('That square can’t move that way.'); return; }
         hist.push(prev); msg.textContent = ''; busy = true;
         delete tiles[x + ',' + y];
         var dur = 60 + 70 * m.steps;
@@ -145,7 +155,7 @@
           setTimeout(function () { t.remove(); busy = false; drawSide(); after(); }, dur + 160);
         }
       }
-      function after() { if (E.won(s)) ctx.win('Sorted in ' + s.moves + ' moves (best ' + L.best + ')'); }
+      function after() { if (E.won(s)) ctx.win(Postie.t('Sorted in {n} moves (best {b})', { n: s.moves, b: L.best })); }
 
       build();
       ctx.cleanup(function () { busy = true; });

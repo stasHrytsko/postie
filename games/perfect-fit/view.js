@@ -6,6 +6,31 @@
   function P(size) { return Postie.PIECES[SLOT[size]]; }
   var WHY = { edge: 'Keep the whole piece on the board.', taken: 'That space is already filled.', clue: null,
     pair: 'Cover both dots with the same piece.', seam: 'Keep a different piece on each side of the seam.' };
+  Postie.tr({
+    '<b>Tap a number</b>, then draw a piece of that many touching squares in the small builder. <b>Drag it onto the board</b> — no turning. Use every number to fill the board. A number on the board needs a piece of that size; two dots go in one piece; a seam splits two pieces. One Undo per try.':
+      '<b>Нажми на число</b> и нарисуй в маленьком конструкторе фигуру из стольких же клеток, соединённых сторонами. <b>Перетащи её на поле</b> — поворачивать нельзя. Используй все числа, чтобы заполнить поле. Число на поле требует фигуру такого же размера; две точки — внутри одной фигуры; шов разделяет две разные фигуры. Отменить ход можно один раз за попытку.',
+    'Keep the whole piece on the board.': 'Фигура должна целиком лежать на поле.',
+    'That space is already filled.': 'Это место уже занято.',
+    'Cover both dots with the same piece.': 'Накрой обе точки одной фигурой.',
+    'Keep a different piece on each side of the seam.': 'По разные стороны шва должны быть разные фигуры.',
+    'This number needs a piece of its size.': 'Этому числу нужна фигура такого же размера.',
+    'Doesn’t fit: use empty board cells.': 'Не помещается: клади фигуру на пустые клетки поля.',
+    'Pick a number first': 'Сначала выбери число',
+    'Pick a number': 'Выбери число',
+    '<b>Drag your piece</b> onto the board': '<b>Перетащи фигуру</b> на поле',
+    'Squares must touch along their sides': 'Клетки должны соприкасаться сторонами',
+    'Draw <b>{n}</b> squares': 'Нарисуй фигуру из <b>{n}</b> клеток',
+    '<b>Stuck:</b> the rest no longer fits.': '<b>Тупик:</b> оставшееся уже не помещается.',
+    'Restart to try again.': 'Начни заново.',
+    'Undo or restart.': 'Отмени ход или начни заново.',
+    'Number {n}': 'Число {n}',
+    'Clear': 'Очистить',
+    'Undo': 'Отменить',
+    'Pieces': 'Фигуры',
+    'Filled': 'Заполнено',
+    'Perfect fit · {n} piece': 'Всё впритык · фигур: {n}',
+    'Perfect fit · {n} pieces': 'Всё впритык · фигур: {n}'
+  });
   var css = '.pf-board{position:relative;margin:6px auto 4px;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.pf-c{position:absolute;border-radius:var(--r8);border:1.5px solid var(--line);background:var(--card);box-sizing:border-box}' +
     '.pf-c.ok{background:color-mix(in srgb,var(--aim) 55%,var(--card));border-color:var(--ink)}' +
@@ -101,7 +126,7 @@
         });
         nums.innerHTML = '';
         s.nums.forEach(function (v, i) {
-          nums.appendChild(h('button', { class: 'pf-n' + (sel === i ? ' on' : '') + (s.used[i] ? ' used' : ''), 'data-n': i, 'aria-label': 'Number ' + v, disabled: s.used[i] ? 'disabled' : null,
+          nums.appendChild(h('button', { class: 'pf-n' + (sel === i ? ' on' : '') + (s.used[i] ? ' used' : ''), 'data-n': i, 'aria-label': Postie.t('Number {n}', { n: v }), disabled: s.used[i] ? 'disabled' : null,
             onclick: function () { pick(i); }, html: '<span>' + v + '</span>' + Postie.shape(P(v).s, P(v).c) }));
         });
         ctr.innerHTML = '';
@@ -112,9 +137,9 @@
         stat.innerHTML = Postie.stat([['Pieces', placedN + ' / ' + total], ['Filled', filled + ' / ' + all], ['Undo', undoUsed ? 0 : 1]]);
         var cnt = sel >= 0 ? '<span class="pf-cnt' + (built.length === n ? ' full' : '') + '">' + built.length + '/' + n + '</span>' : '';
         msg.className = 'msg pf-msg' + (s.status === 'failed' ? ' bad' : '');
-        msg.innerHTML = s.status === 'failed' ? '<b>Stuck:</b> the rest no longer fits. ' + (undoUsed ? 'Restart to try again.' : 'Undo or restart.')
-          : note ? note : sel < 0 ? 'Pick a number' : rd ? '<b>Drag your piece</b> onto the board' + cnt
-          : built.length === n ? 'Squares must touch along their sides' + cnt : 'Draw <b>' + n + '</b> squares' + cnt;
+        msg.innerHTML = s.status === 'failed' ? Postie.t('<b>Stuck:</b> the rest no longer fits.') + ' ' + Postie.t(undoUsed ? 'Restart to try again.' : 'Undo or restart.')
+          : note ? Postie.t(note) : sel < 0 ? Postie.t('Pick a number') : rd ? Postie.t('<b>Drag your piece</b> onto the board') + cnt
+          : built.length === n ? Postie.t('Squares must touch along their sides') + cnt : Postie.t('Draw <b>{n}</b> squares', { n: n }) + cnt;
       }
       function pick(i) {
         if (s.status !== 'playing' || s.used[i]) return;
@@ -189,7 +214,7 @@
           if (E.place(s, sel, d.target)) {
             prev = undoUsed ? null : before; sel = -1; built = []; note = '';
             drawBoard(); drawTray();
-            if (E.won(s)) ctx.win('Perfect fit · ' + s.placed.length + (s.placed.length === 1 ? ' piece' : ' pieces'));
+            if (E.won(s)) ctx.win(Postie.t(s.placed.length === 1 ? 'Perfect fit · {n} piece' : 'Perfect fit · {n} pieces', { n: s.placed.length }));
             else if (E.lost(s)) Postie.shake(board);
             return;
           }

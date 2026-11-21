@@ -1,4 +1,23 @@
 /* Carpet Layers — screen. Gestures: drag a strip from the tray onto the board; tap a strip on the board to take it back (the top one in that cell). */
+Postie.tr({
+  'Copy the <b>pattern</b> exactly — position matters. <b>Drag a strip</b> from below onto the board: the strip you lay last is on top and hides what is under it, so lay the hidden parts first. <b>Tap a strip</b> on the board to take it back. You win when every strip is down and the board matches the pattern.':
+    'Повтори <b>узор</b> в точности — место тоже важно. <b>Перетащи полосу</b> снизу на поле: последняя положенная полоса ложится сверху и закрывает то, что под ней, поэтому сначала клади то, что окажется снизу. <b>Нажми на полосу</b> на поле, чтобы снять её. Уровень решён, когда все полосы лежат и поле совпадает с узором.',
+  'Pattern': 'Узор',
+  'Strips': 'Полосы',
+  'Pinned': 'Прибита гвоздём',
+  'Moves': 'Ходы',
+  'Best': 'Лучший',
+  'Drag a strip from below onto the board.': 'Перетащи полосу снизу на поле.',
+  'One strip is already down, but under the wrong one. Tap it to take it back.': 'Одна полоса уже лежит, но под ней должна быть другая. Нажми на неё, чтобы снять.',
+  'Strips with a pin are nailed down: they stay at the bottom.': 'Полосы с гвоздём прибиты: они остаются в самом низу.',
+  'Striped strips are glass: blue over butter, or butter over blue, shows sage.': 'Полосы в косую полоску — стеклянные: синий поверх жёлтого или жёлтый поверх синего даёт зелёный.',
+  'Pattern matched in {n} moves (best {b})': 'Узор собран. Ходов: {n} (лучший результат — {b})',
+  'The picture is right, but in the wrong place — it must sit exactly where the pattern shows it.': 'Рисунок верный, но не на месте — он должен лежать ровно там, где на узоре.',
+  'Every strip is down, but the board does not match the pattern. Tap a strip to take it back.': 'Все полосы лежат, но поле не совпадает с узором. Нажми на полосу, чтобы снять её.',
+  'All strips are down.': 'Все полосы лежат.',
+  'The whole strip must fit on the board.': 'Полоса должна целиком поместиться на поле.',
+  'This strip is pinned down.': 'Эта полоса прибита гвоздём.'
+});
 Postie.register({
   id: 'carpet-layers', name: 'Carpet Layers',
   rules: 'Copy the <b>pattern</b> exactly — position matters. <b>Drag a strip</b> from below onto the board: the strip you lay last is on top and hides what is under it, ' +
@@ -49,17 +68,17 @@ Postie.register({
     if (ctx.n === 2) hints.push('One strip is already down, but under the wrong one. Tap it to take it back.');
     if ((L.start || []).some(function (p) { return p[3]; })) hints.push('Strips with a pin are nailed down: they stay at the bottom.');
     if (L.strips.some(function (st) { return st.clear; })) hints.push('Striped strips are glass: blue over butter, or butter over blue, shows sage.');
-    hint.textContent = hints.join(' ');
+    hint.textContent = hints.map(function (t) { return Postie.t(t); }).join(' ');
     root.appendChild(h('div', { class: 'cl-top' }, [h('div', null, [h('div', { class: 'lbl', style: 'margin:0 0 4px;text-align:center' }, ['Pattern']), pat]), stat]));
     [board, tray, msg, hint].forEach(function (e) { root.appendChild(e); });
 
     function after() {
       draw();
-      if (E.won(s)) { msg.className = 'msg'; msg.textContent = ''; ctx.win('Pattern matched in ' + s.moves + ' moves (best ' + L.best + ')'); return; }
+      if (E.won(s)) { msg.className = 'msg'; msg.textContent = ''; ctx.win(Postie.t('Pattern matched in {n} moves (best {b})', { n: s.moves, b: L.best })); return; }
       if (E.stuck(L, s)) {
         msg.className = 'msg bad';
-        msg.textContent = E.shiftedMatch(L, s) ? 'The picture is right, but in the wrong place — it must sit exactly where the pattern shows it.'
-          : 'Every strip is down, but the board does not match the pattern. Tap a strip to take it back.';
+        msg.textContent = Postie.t(E.shiftedMatch(L, s) ? 'The picture is right, but in the wrong place — it must sit exactly where the pattern shows it.'
+          : 'Every strip is down, but the board does not match the pattern. Tap a strip to take it back.');
       } else { msg.className = 'msg'; msg.textContent = ''; }
     }
     function draw() {
@@ -107,7 +126,7 @@ Postie.register({
         if (!drag) return; place(e);
         var g = drag; drag = null; g.ghost.remove(); if (prev.parentNode) prev.remove(); g.el.style.opacity = '';
         if (!g.at) return;
-        if (!E.drop(L, s, g.i, g.at[0], g.at[1])) { Postie.shake(g.el); msg.className = 'msg'; msg.textContent = 'The whole strip must fit on the board.'; return; }
+        if (!E.drop(L, s, g.i, g.at[0], g.at[1])) { Postie.shake(g.el); msg.className = 'msg'; msg.textContent = Postie.t('The whole strip must fit on the board.'); return; }
         after();
       },
       cancel: function () { if (!drag) return; drag.ghost.remove(); drag.el.style.opacity = ''; if (prev.parentNode) prev.remove(); drag = null; }
@@ -121,7 +140,7 @@ Postie.register({
       end: function (c) {
         var t = tap; tap = null; if (!t || !c || c.r !== t.r || c.c !== t.c) return;
         var top = E.topAt(L, s, c.r, c.c); if (!top) return;
-        if (top.pinned) { Postie.shake(board); msg.className = 'msg'; msg.textContent = 'This strip is pinned down.'; return; }
+        if (top.pinned) { Postie.shake(board); msg.className = 'msg'; msg.textContent = Postie.t('This strip is pinned down.'); return; }
         E.removeAt(L, s, c.r, c.c); after();
       },
       cancel: function () { tap = null; }

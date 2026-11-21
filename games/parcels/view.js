@@ -2,6 +2,29 @@
    (author 2026-11-19, roadmap step 14; stazzi had none); a dead end shows the stuck bar with Restart, and Undo still works there. One rules text for every level: numbers, dots, or both (author 2026-11-19). */
 (function () {
   var RULES = '<b>Drag a frame</b> over cubes and let go. A parcel is either <b>one number</b> with exactly that many cubes (a 6 can be 1×6, 2×3, 3×2 or 6×1), or <b>one black and one white dot</b> with any cubes around them. The parcel ships and everything above it <b>falls</b>. Ship every cube.';
+  Postie.tr({
+    '<b>Drag a frame</b> over cubes and let go. A parcel is either <b>one number</b> with exactly that many cubes (a 6 can be 1×6, 2×3, 3×2 or 6×1), or <b>one black and one white dot</b> with any cubes around them. The parcel ships and everything above it <b>falls</b>. Ship every cube.':
+      '<b>Проведи рамку</b> по кубикам и отпусти. Посылка — это либо <b>одно число</b> и ровно столько кубиков (6 — это 1×6, 2×3, 3×2 или 6×1), либо <b>одна чёрная и одна белая точка</b> и сколько угодно кубиков вокруг. Посылка уходит, а всё, что над ней, <b>падает</b>. Отправь все кубики.',
+    'Frame <b>one number</b> with exactly that many cubes. Everything above <b>falls</b>.': 'Обведи рамкой <b>одно число</b> и ровно столько кубиков. Всё, что выше, <b>падает</b>.',
+    'Or frame <b>one black and one white dot</b> — any size.': 'Или обведи <b>одну чёрную и одну белую точку</b> — рамкой любого размера.',
+    'Ship <b>every cube</b>.': 'Отправь <b>все кубики</b>.',
+    'Undo': 'Отменить',
+    'Retry': 'Заново',
+    'Parcels': 'Посылки',
+    'Only cubes: a parcel has no empty cells.': 'Только кубики: в посылке не бывает пустых клеток.',
+    'A number and dots never share a parcel.': 'Число и точки не бывают в одной посылке.',
+    'A parcel needs one number, or one black and one white dot.': 'В посылке должно быть одно число или одна чёрная и одна белая точка.',
+    'Only one number per parcel.': 'В посылке может быть только одно число.',
+    'That frame holds {a} cubes — the number says {b}.': 'Кубиков в рамке: {a}, а число — {b}.',
+    'Dots go in pairs: exactly one black and one white.': 'Точки идут парой: ровно одна чёрная и одна белая.',
+    'No frame fits. Undo or restart.': 'Ни одна рамка не подходит. Отмени ход или начни заново.',
+    'All parcels shipped': 'Все посылки отправлены',
+    'empty': 'пусто',
+    'cube': 'кубик',
+    'cube with a white dot': 'кубик с белой точкой',
+    'cube with a black dot': 'кубик с чёрной точкой',
+    'number {n}': 'число {n}'
+  });
   /* own colours (author 2026-11-19: no mustard): plain cube — light kraft, number — blue, dots — ink and paper in both looks */
   var CSS = '' +
     '.pc-board{--pc-cube:#E4D9C3;--pc-edge:#D3C6AB;--pc-num:#4E7BAB;--pc-numtx:#FFFCF5;--pc-blk:#1E2A44;--pc-wht:#FFFCF5}' +
@@ -56,7 +79,7 @@
         s = hist.pop(); retry.style.display = 'none'; say(''); draw();
         if (ctx.back) ctx.back();
       }
-      function say(t, bad) { msg.className = 'msg' + (bad ? ' bad' : ''); msg.textContent = t; }
+      function say(t, bad) { msg.className = 'msg' + (bad ? ' bad' : ''); msg.textContent = Postie.t(t); }
 
       /* geometry: cell under a point, clamped to the board edge (a finger off the board keeps the frame on the nearest edge cell) */
       function pitch() { var b = grid.getBoundingClientRect(); return { b: b, cw: (b.width + gap) / L.w, ch: (b.height + gap) / L.h }; }
@@ -106,7 +129,7 @@
         if (err === 'many_numbers') return 'Only one number per parcel.';
         if (err === 'wrong_size') {
           var num = 0; for (var r = f[0]; r <= f[2]; r++) for (var c = f[1]; c <= f[3]; c++) if (s.g[r][c].v > 0) num = s.g[r][c].v;
-          return 'That frame holds ' + (f[2] - f[0] + 1) * (f[3] - f[1] + 1) + ' cubes — the number says ' + num + '.';
+          return Postie.t('That frame holds {a} cubes — the number says {b}.', { a: (f[2] - f[0] + 1) * (f[3] - f[1] + 1), b: num });
         }
         return 'Dots go in pairs: exactly one black and one white.';
       }
@@ -144,7 +167,7 @@
           var x = s.g[r][c], cls = 'cell', kids = [], lab = 'empty';
           if (!x) cls += ' gap';
           else if (x.v === 'B' || x.v === 'W') { cls += ' cube'; kids.push(h('span', { class: 'pc-dot' + (x.v === 'W' ? ' w' : '') })); lab = x.v === 'W' ? 'cube with a white dot' : 'cube with a black dot'; }
-          else if (x.v > 0) { cls += ' cube num'; kids.push(String(x.v)); lab = 'number ' + x.v; }
+          else if (x.v > 0) { cls += ' cube num'; kids.push(String(x.v)); lab = Postie.t('number {n}', { n: x.v }); }
           else { cls += ' cube'; lab = 'cube'; }
           grid.appendChild(h('div', { class: cls, 'data-r': r, 'data-c': c, 'data-id': x ? x.id : null, 'aria-label': lab }, kids));
         }

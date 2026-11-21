@@ -9,6 +9,25 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
   var P = { games: [], engines: {}, levels: {} };
   P.addLevels = function (id, arr) { P.levels[id] = arr; return arr; };
   P.engine = function (id, e) { P.engines[id] = e; return e; };
+  /* Language (author 2026-11-21: the prototype speaks Russian until the polish is done; English stays as the second language).
+     Every string is written in English in the code and is its own key: Postie.t('Undo') -> 'Отменить' when the language is ru.
+     A game adds its words with Postie.tr({ 'English': 'Русский', ... }) at the top of its view.js.
+     Text children, html and aria-label passed to Postie.h, stat labels and buttons are translated by the kit itself;
+     a string built from pieces goes through Postie.t('That frame holds {a} cubes', { a: n }). */
+  P.lang = 'en'; P.RU = {};
+  P.tr = function (d) { for (var k in d) P.RU[k] = d[k]; };
+  P.t = function (s, v) {
+    if (typeof s !== 'string') return s;
+    var r = P.lang === 'ru' && Object.prototype.hasOwnProperty.call(P.RU, s) ? P.RU[s] : s;
+    if (v) r = r.replace(/\{(\w+)\}/g, function (m, k) { return v[k] != null ? v[k] : m; });
+    return r;
+  };
+  /* Russian plural: P.plural(5, 'конверт', 'конверта', 'конвертов') -> 'конвертов'; in English the first two forms are one / many */
+  P.plural = function (n, one, few, many) {
+    if (P.lang !== 'ru') return n === 1 ? one : few;
+    var a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many;
+  };
   P.register = function (g) { g.engine = g.engine || P.engines[g.id]; g.levels = g.levels || P.levels[g.id] || []; P.games.push(g); return g; };
 
   /* Colours — the only ones games may use (Milk / Apricot / Sage). Colour is never the only channel: pair it with a shape. */
@@ -24,10 +43,11 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
     var e = document.createElement(tag);
     if (attrs) for (var k in attrs) {
       var v = attrs[k]; if (v == null || v === false) continue;
-      if (k === 'class') e.className = v; else if (k === 'html') e.innerHTML = v; else if (k === 'style') e.style.cssText = v;
+      if (k === 'class') e.className = v; else if (k === 'html') e.innerHTML = P.t(v); else if (k === 'style') e.style.cssText = v;
+      else if (k === 'aria-label' || k === 'title') e.setAttribute(k, P.t(String(v)));
       else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
     }
-    (kids || []).forEach(function (c) { if (c != null && c !== false) e.appendChild(typeof c === 'string' || typeof c === 'number' ? document.createTextNode(String(c)) : c); });
+    (kids || []).forEach(function (c) { if (c != null && c !== false) e.appendChild(typeof c === 'string' ? document.createTextNode(P.t(c)) : typeof c === 'number' ? document.createTextNode(String(c)) : c); });
     return e;
   };
 
@@ -92,7 +112,7 @@ var Postie = (typeof Postie !== 'undefined') ? Postie : (function () {
   var NOSTAT = { Best: 1, Undo: 1, Moves: 1, Taps: 1, Shots: 1, Swaps: 1, Move: 1 };
   P.stat = function (pairs) {
     return pairs.filter(function (p) { return !NOSTAT[p[0]] && !(p[0] === 'Pieces' && typeof p[1] === 'number'); })
-      .map(function (p) { return '<span>' + p[0] + ' <b>' + p[1] + '</b></span>'; }).join('');
+      .map(function (p) { return '<span>' + P.t(p[0]) + ' <b>' + p[1] + '</b></span>'; }).join('');
   };
   P.btn = function (label, onclick, kind) { return P.h('button', { class: 'btn ' + (kind || ''), onclick: onclick }, [label]); };
 

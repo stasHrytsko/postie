@@ -13,6 +13,17 @@
     '.kt-cell.big{color:var(--bad)}' +
     '.kt-cell.sel{background:var(--sage);color:#fff}';
   function css() { if (document.getElementById('kt-css')) return; var s = document.createElement('style'); s.id = 'kt-css'; s.textContent = CSS; document.head.appendChild(s); }
+  Postie.tr({
+    '<b>Tap a room, then a room next to it</b>: the wall goes, they become one and their numbers add up. Make the rooms match the <b>order</b> on top exactly.':
+      '<b>Нажми на комнату, потом на соседнюю</b>: стена исчезнет, комнаты станут одной, а их числа сложатся. Сделай так, чтобы комнаты в точности совпали с <b>заказом</b> сверху.',
+    '<b>Tap a room, then its neighbour</b>: the wall goes, their numbers add up.': '<b>Нажми на комнату, потом на соседнюю</b>: стена исчезнет, числа сложатся.',
+    'Make the rooms match the <b>order</b> on top.': 'Сделай комнаты такими, как в <b>заказе</b> сверху.',
+    'Undo': 'Отменить',
+    'Done': 'Готово',
+    'A room is bigger than any number in the order. Undo or restart.': 'Одна комната больше любого числа в заказе. Отмени ход или начни заново.',
+    'No wall left that fits the order. Undo or restart.': 'Какую стену ни снеси, комната выйдет больше любого числа в заказе. Отмени ход или начни заново.',
+    'room of {n}': 'комната размером {n}'
+  });
   function norm(m) { return (m[2] * 100 + m[3] < m[0] * 100 + m[1]) ? [m[2], m[3], m[0], m[1]] : m; }
 
   Postie.register({
@@ -40,7 +51,7 @@
       root.appendChild(order); root.appendChild(board); root.appendChild(msg);
       if (!ctx.demo) root.appendChild(h('div', { class: 'row' }, [undoB]));
 
-      function say(t, bad) { msg.className = 'msg' + (bad ? ' bad' : ''); msg.textContent = t; }
+      function say(t, bad) { msg.className = 'msg' + (bad ? ' bad' : ''); msg.textContent = Postie.t(t); }
       function snap() { return { cell: s.cell.slice(), size: s.size.slice(), knocks: s.knocks, status: s.status }; }
       function undo() { if (!hist.length || s.status === 'won') return; sel = null; var x = hist.pop(); s.cell = x.cell; s.size = x.size; s.knocks = x.knocks; s.status = x.status; say(''); draw(); if (ctx.back) ctx.back(); }
 
@@ -80,7 +91,7 @@
         hist.push(snap());
         if (!E.knock(s, m[0], m[1], m[2], m[3])) { hist.pop(); return; }
         sel = null; draw(); if (ctx.moved) ctx.moved(rep);
-        if (s.status === 'won') ctx.win('Done');
+        if (s.status === 'won') ctx.win(Postie.t('Done'));
         else if (s.status === 'failed') say(Math.max.apply(null, s.size) > s.max ? 'A room is bigger than any number in the order. Undo or restart.' : 'No wall left that fits the order. Undo or restart.', true);
       });
 
@@ -96,7 +107,7 @@
           var bw = [w(r - 1, c) ? 3 : 0, w(r, c + 1) ? 3 : 0, w(r + 1, c) ? 3 : 0, w(r, c - 1) ? 3 : 0];
           var label = shown[id] ? '' : String(s.size[id]); shown[id] = 1;
           board.appendChild(h('div', { class: 'kt-cell' + (id === selRoom ? ' sel' : '') + (label && s.size[id] > s.max ? ' big' : ''), 'data-r': r, 'data-c': c,
-            style: 'border-width:' + bw.map(function (x) { return x / 2 + 'px'; }).join(' '), 'aria-label': label ? 'room of ' + label : null }, label ? [label] : []));
+            style: 'border-width:' + bw.map(function (x) { return x / 2 + 'px'; }).join(' '), 'aria-label': label ? Postie.t('room of {n}', { n: label }) : null }, label ? [label] : []));
         }
       }
       draw();

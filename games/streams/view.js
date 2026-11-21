@@ -1,6 +1,18 @@
 /* Streams — screen. One finger: put it on the end of a line (at an open fork — on the fork) and drag through cells.
    Dragging back along a line pulls it back one cell per cell and returns the move. Undo steps back one cell. */
 (function () {
+  Postie.tr({
+    '<b>Drag the line</b> from the dark dot to the <b>fork</b>: it splits. Lead each branch to the ring with its number, through <b>every cell</b>. Later levels have a pool of moves: each cell costs 1, a <b>+N</b> cell gives N back. Drag a line back to undo it.':
+      '<b>Проведи линию</b> от тёмной точки до <b>развилки</b>: там она делится. Доведи каждую ветку до кольца её цвета, линии должны пройти через <b>все клетки</b>. Дальше появится запас ходов: каждая клетка стоит 1, клетка <b>+N</b> возвращает N. Чтобы отменить, проведи линию назад.',
+    'Drag the line to the <b>fork</b>: it splits. Lead each branch to its ring, through <b>every cell</b>.':
+      'Проведи линию до <b>развилки</b>: там она делится. Доведи каждую ветку до её кольца, через <b>все клетки</b>.',
+    'Later: each cell costs a move, <b>+N</b> gives moves back.': 'Дальше: каждая клетка стоит ход, <b>+N</b> возвращает ходы.',
+    'Undo': 'Отменить',
+    'Moves left': 'Осталось ходов',
+    'Out of moves — drag a line back to get some.': 'Ходы кончились — проведи линию назад, чтобы вернуть их.',
+    'Start from the end of a line.': 'Начни с конца линии.',
+    'Done': 'Готово'
+  });
   var CSS = '.st{position:relative;width:100%;margin:10px auto;touch-action:none;user-select:none;-webkit-user-select:none}' +
     '.st .grid{gap:0;margin:0}.st .cell{margin:2px;border-radius:var(--r8);font:700 15px var(--font)}' +
     '.st .cell.c-butter{color:var(--txt)}.st .cell.took{background:var(--card);border-color:var(--butter);color:var(--mut)}' +
@@ -60,13 +72,13 @@
       }
       function refuse(cell) {
         var el = grid.children[cell]; Postie.shake(el || wrap);
-        if (pool && s.energy < 1) { msg.className = 'msg bad'; msg.textContent = 'Out of moves — drag a line back to get some.'; }
+        if (pool && s.energy < 1) { msg.className = 'msg bad'; msg.textContent = Postie.t('Out of moves — drag a line back to get some.'); }
       }
       Postie.drag(grid, {
         start: function (c) {
           if (s.won) return false;
           var i = c.r * W + c.c;
-          if (!E.grabbable(L, s, i)) { msg.className = 'msg'; msg.textContent = 'Start from the end of a line.'; return false; }
+          if (!E.grabbable(L, s, i)) { msg.className = 'msg'; msg.textContent = Postie.t('Start from the end of a line.'); return false; }
           grab = i; blocked = -1; return true;
         },
         move: function (c, ev) {
@@ -92,7 +104,7 @@
         stat.innerHTML = pool ? Postie.stat([['Moves left', s.energy]]) : '';      // no pool — nothing to count
         undoBtn.disabled = !hist.length || s.won;
         if (!pool || s.energy > 0 || s.won) { if (msg.className === 'msg bad') msg.textContent = ''; msg.className = 'msg'; }
-        else { msg.className = 'msg bad'; msg.textContent = 'Out of moves — drag a line back to get some.'; }
+        else { msg.className = 'msg bad'; msg.textContent = Postie.t('Out of moves — drag a line back to get some.'); }
         var taken = {}; s.lines.forEach(function (l) { l.forEach(function (c) { taken[c] = 1; }); });
         grid.innerHTML = '';
         for (var i = 0; i < W * H; i++) {
